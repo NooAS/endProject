@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Kalkulator Wyceny</title>
+
+    <link rel="stylesheet" href="css/style.css" />
+
+    <!-- Ikony (opcjonalnie do modali / X) -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <!-- jsPDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
+
+</head>
+
+<body>
+
+    <!-- ========================= -->
+    <!--      NAGŁÓWEK            -->
+    <!-- ========================= -->
+    <header class="app-header">
+        <div class="container header-inner">
+            <h1>Kalkulator Wyceny</h1>
+
+            <div class="project-name-box">
+                <span>Nazwa projektu:</span>
+                <input id="projectName" type="text" placeholder="Np. Mieszkanie Dębowa 5" />
+            </div>
+        </div>
+    </header>
+
+
+    <!-- ========================= -->
+    <!--      UKŁAD DWUKOLUMNOWY   -->
+    <!-- ========================= -->
+    <main class="container app-main">
+
+        <!-- ========================= -->
+        <!--      PANEL LEWY          -->
+        <!-- ========================= -->
+        <aside class="sidebar">
+
+            <!-- USTAWIENIA PROJEKTU -->
+            <div class="panel">
+                <div class="panel-title">Ustawienia projektu</div>
+
+                <div class="setting-group">
+                    <div class="setting-label">Nazwa projektu:</div>
+                    <input id="projectNameInputLocal" class="input full-width" placeholder="Np. Kuchnia 12" />
+                </div>
+
+                <div class="setting-group">
+                    <label class="checkbox"><input id="cfgUseRooms" type="checkbox" checked> Używać pokoi</label>
+                    <label class="checkbox"><input id="cfgUseCategories" type="checkbox" checked> Używać kategorii</label>
+                    <label class="checkbox"><input id="cfgNumbering" type="checkbox" checked> Numeracja pozycji</label>
+                </div>
+
+                <div class="setting-group">
+                    <div class="setting-label">VAT (%)</div>
+                    <select id="cfgVat" class="input input-small">
+                        <option value="23">23</option>
+                        <option value="8">8</option>
+                        <option value="0">0</option>
+                    </select>
+                </div>
+
+                <div class="setting-group">
+                    <div class="setting-label">Tryb kalkulatora:</div>
+                    <label class="radio"><input type="radio" name="mode" value="simple" checked> Prosty</label>
+                    <label class="radio"><input type="radio" name="mode" value="extended"> Rozszerzony</label>
+                </div>
+
+                <button id="applyConfigBtn" class="btn full-width">Zastosuj</button>
+            </div>
+
+
+            <!-- KATEGORIE -->
+            <div class="panel">
+                <div class="panel-title">Kategorie i Szablony</div>
+                <button id="manageCategoriesBtn" class="btn secondary full-width">Zarządzaj kategoriami</button>
+            </div>
+
+
+            <!-- PDF -->
+            <div class="panel">
+                <div class="panel-title">Generowanie PDF</div>
+
+                <button id="pdfClientBtn" class="btn full-width">PDF dla klienta</button>
+                <button id="pdfOwnerBtn" class="btn secondary full-width" style="margin-top:8px;">PDF dla firmy</button>
+            </div>
+
+        </aside>
+
+
+        <!-- ========================= -->
+        <!--      PANEL GŁÓWNY        -->
+        <!-- ========================= -->
+        <section class="main-panel">
+
+            <!-- POZYCJE / POKOJE -->
+            <div class="panel">
+                <div class="panel-title">Pozycje</div>
+
+                <div id="roomControls" class="row">
+                    <input id="newRoomName" class="input" placeholder="Nazwa pokoju (opcjonalnie)" />
+                    <button id="addRoomBtn" class="btn">Dodaj pokój</button>
+                </div>
+
+                <div id="globalWorkControls" class="row" style="display:none;">
+                    <button id="addGlobalWorkBtn" class="btn">Dodaj pozycję</button>
+                </div>
+            </div>
+
+            <!-- LISTA PRAC -->
+            <div class="panel">
+                <div class="panel-title">Lista prac</div>
+                <div id="roomsContainer"></div>
+
+                <div class="summary-box">
+                    <p>Suma netto: <span id="sumNetto">0,00 zł</span></p>
+                    <p>Suma brutto: <span id="sumBrutto">0,00 zł</span></p>
+                </div>
+            </div>
+
+        </section>
+    </main>
+
+
+    <!-- ========================= -->
+    <!--           MODALE          -->
+    <!-- ========================= -->
+
+    <!-- MODAL KATEGORII -->
+    <div id="categoriesModal" class="modal-backdrop">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Kategorie i Szablony</h2>
+                <div class="modal-close" onclick="closeModal(categoriesModal)">✕</div>
+            </div>
+
+            <div class="modal-body" id="categoriesList"></div>
+        </div>
+    </div>
+
+
+    <!-- MODAL PDF -->
+    <div id="pdfDataModal" class="modal-backdrop">
+        <div class="modal">
+
+            <div class="modal-header">
+                <h2>Dane do PDF</h2>
+                <div class="modal-close" onclick="closeModal(pdfDataModal)">✕</div>
+            </div>
+
+            <div class="modal-body">
+
+                <input id="pdfProjectName" class="input full-width" placeholder="Nazwa projektu" style="margin-bottom:6px;" />
+                <input id="pdfObjectAddress" class="input full-width" placeholder="Adres inwestycji" style="margin-bottom:10px;" />
+
+                <div class="setting-label">Dane firmy wystawiającej:</div>
+                <input id="pdfCompanyName" class="input full-width" placeholder="Nazwa firmy" />
+                <input id="pdfCompanyPerson" class="input full-width" placeholder="Osoba kontaktowa" />
+                <input id="pdfCompanyPhone" class="input full-width" placeholder="Telefon" />
+                <input id="pdfCompanyEmail" class="input full-width" placeholder="E-mail" />
+                <input id="pdfCompanyNip" class="input full-width" placeholder="NIP" />
+                <input id="pdfCompanyAddress" class="input full-width" placeholder="Adres firmy" />
+
+                <label class="checkbox" style="margin-top:8px;">
+                    <input id="pdfSaveCompanyDefaults" type="checkbox"> Zapisz dane jako domyślne
+                </label>
+
+            </div>
+
+            <div class="modal-footer-buttons" style="margin-top:15px; display:flex; gap:10px;">
+                <button id="generateClientPdfBtn" class="btn full-width">Generuj PDF (klient)</button>
+                <button id="generateOwnerPdfBtn" class="btn secondary full-width">PDF dla firmy</button>
+            </div>
+
+        </div>
+    </div>
+
+
+    <!-- SCRIPT -->
+
+    <script src="js/script.js"></script>
+
+</body>
+
+</html>
