@@ -545,12 +545,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
             addTh("col-kod", config.useNumbering ? "Kod" : "Lp");
 
-            if (config.useCategories) {
-                addTh("col-cat", "Kat");
-                addTh("col-template", "Szablon");
-            } else {
-                addTh("col-nazwa", "Nazwa");
-            }
+            addTh("col-cat", "Kat");
+            addTh("col-template", "Szablon");
+            addTh("col-nazwa", "Nazwa");
+
 
             addTh("col-jm", "Jm");
             addTh("col-ilosc", "Ilość");
@@ -685,6 +683,22 @@ document.addEventListener("DOMContentLoaded", () => {
             tr.appendChild(makeTd("col-kod", work.id));
 
             // Kategorie + Szablon
+
+            // --- Nazwa (always) ---
+            const tdName = document.createElement("td");
+            tdName.classList.add("col-nazwa");
+
+            const nameInput = document.createElement("input");
+            nameInput.type = "text";
+            nameInput.className = "input";
+            nameInput.value = work.name;
+            nameInput.addEventListener("input", () => {
+                work.name = nameInput.value;
+            });
+
+            tdName.appendChild(nameInput);
+            tr.appendChild(tdName);
+
             if (config.useCategories) {
                 // --- CATEGORY ---
                 const tdCat = document.createElement("td");

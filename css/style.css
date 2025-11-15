@@ -317,23 +317,12 @@ body {
 
 /* Убрать колонку Kod */
 
-.works-table th:nth-child(1),
-.works-table td:nth-child(1) {
-    display: none !important;
-}
-
 .works-table .col-kod {
     display: none !important;
 }
 
 
 /* ===== РАСШИРЯЕМ КОЛОНКУ NAZWA ===== */
-
-.works-table .col-nazwa {
-    width: 220px !important;
-    white-space: normal !important;
-    overflow: visible !important;
-}
 
 
 /* Разрешить перенос текста внутри ячеек Nazwa */
@@ -349,20 +338,8 @@ body {
 
 /* Убрать колонку Kod */
 
-.works-table th:nth-child(1),
-.works-table td:nth-child(1),
-.works-table .col-kod {
-    display: none !important;
-}
-
 
 /* Назва — может быть длинной */
-
-.works-table .col-nazwa {
-    width: 250px !important;
-    white-space: normal !important;
-    overflow: visible !important;
-}
 
 
 /* Остальные колонки */
@@ -374,7 +351,13 @@ body {
 /* Nazwa — средняя */
 
 .works-table .col-nazwa {
-    width: 180px;
+    width: 260px;
+    white-space: normal;
+}
+
+.works-table td input,
+.works-table td select {
+    min-width: 60px;
 }
 
 
@@ -460,7 +443,6 @@ body {
     width: 100%;
     border-collapse: collapse;
     font-size: 13px;
-    table-layout: auto !important;
 }
 
 .works-table-wrapper {
@@ -630,46 +612,6 @@ body {
    RESPONSIVE TABLE -> CARDS (MOBILE MODE)
    ========================================== */
 
-@media (max-width: 768px) {
-    .works-table,
-    .works-table thead,
-    .works-table tbody,
-    .works-table tr,
-    .works-table th,
-    .works-table td {
-        display: block;
-        width: 100%;
-    }
-    .works-table thead {
-        display: none;
-        /* прячем заголовок таблицы */
-    }
-    .works-table tr {
-        background: #fff;
-        margin-bottom: 12px;
-        padding: 12px;
-        border-radius: 10px;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-    }
-    .works-table td {
-        padding: 6px 0 !important;
-        border: none !important;
-    }
-    .works-table td::before {
-        content: attr(data-label);
-        font-size: 12px;
-        font-weight: 600;
-        color: #6b7280;
-        display: block;
-        margin-bottom: 2px;
-    }
-    /* Кнопка удаления на всю ширину */
-    .works-table .col-akcje button {
-        width: 100%;
-        margin-top: 6px;
-    }
-}
-
 
 /* ==========================================
    VARIANT 3: Accordion cards (mobile)
@@ -755,4 +697,14 @@ body {
 
 .searchable-select .dropdown-item.selected {
     background: #e0e7ff;
+}
+
+
+/* ======== Stabilizacja kolumn w tabeli ======== */
+
+.works-table th,
+.works-table td {
+    vertical-align: middle;
+    padding: 6px 8px;
+    white-space: nowrap;
 }
