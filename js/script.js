@@ -681,26 +681,23 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             // Name (simple mode)
+            // Name (simple mode)
             if (!config.useCategories) {
-                tdName = document.createElement("div");
+                const tdName = document.createElement("td");
                 tdName.classList.add("col-nazwa");
 
-                nameInput = document.createElement("input");
+                const nameInput = document.createElement("input");
                 nameInput.type = "text";
-                nameInput.className = "input full-width";
-                nameInput.placeholder = "Nazwa pracy";
-                nameInput.value = work.name || "";
-
+                nameInput.className = "input";
+                nameInput.value = work.name;
                 nameInput.addEventListener("input", () => {
                     work.name = nameInput.value;
-                    header.querySelector("span").textContent = work.name || "Nowa pozycja";
                 });
 
                 tdName.appendChild(nameInput);
-
-                // 🔥 ВАЖНО: теперь добавляем *в body*, а не в tr
-                body.appendChild(tdName);
+                tr.appendChild(tdName); // ✅ Правильно
             }
+
 
             // Unit
             const tdUnit = document.createElement("td");
@@ -838,17 +835,21 @@ document.addEventListener("DOMContentLoaded", () => {
         const header = document.createElement("div");
         header.className = "work-acc-header";
         header.innerHTML = `
-        <span>${work.name || "Nowa pozycja"}</span>
-        <span class="work-acc-arrow">▶</span>
-    `;
+    <span>${work.name || "Nowa pozycja"}</span>
+    <span class="work-acc-arrow">▶</span>
+`;
         acc.appendChild(header);
 
+        // === body создаётся здесь — ЭТО ВАЖНО ===
         const body = document.createElement("div");
         body.className = "work-acc-body";
         acc.appendChild(body);
-        // ====== NAZWA (всегда показываем в мобильной версии) ======
-        const tdName = document.createElement("div");
-        tdName.className = "row-mobile-field";
+
+        // === ВСТАВЛЯЕШЬ КОД С НАЗВАНИЕМ СЮДА ===
+
+        // ====== NAZWA – ВСЕГДА в мобильной версии ======
+        const nameFieldWrapper = document.createElement("div");
+        nameFieldWrapper.classList.add("mobile-field");
 
         const nameLabel = document.createElement("div");
         nameLabel.textContent = "Nazwa pozycji";
@@ -865,15 +866,13 @@ document.addEventListener("DOMContentLoaded", () => {
             header.querySelector("span").textContent = work.name || "Nowa pozycja";
         });
 
-        tdName.appendChild(nameLabel);
-        tdName.appendChild(nameInput);
-        body.appendChild(tdName);
+        nameFieldWrapper.appendChild(nameLabel);
+        nameFieldWrapper.appendChild(nameInput);
+        body.appendChild(nameFieldWrapper);
+
+        // === ПОСЛЕ ЭТОГО → дальше идут JM, Ilość, Cena, Mat, Rob ...
 
 
-        header.addEventListener("click", () => {
-            body.classList.toggle("open");
-            header.classList.toggle("open");
-        });
 
         // ===== Поля внутри аккордеона =====
         function addField(label, element) {
@@ -890,27 +889,7 @@ document.addEventListener("DOMContentLoaded", () => {
             body.appendChild(wrap);
         }
 
-        // Nazwa (если simple mode)
-        if (!config.useCategories) {
-            tdName = document.createElement("div");
-            tdName.classList.add("col-nazwa");
 
-            nameInput = document.createElement("input");
-            nameInput.type = "text";
-            nameInput.className = "input full-width";
-            nameInput.placeholder = "Nazwa pracy";
-            nameInput.value = work.name || "";
-
-            nameInput.addEventListener("input", () => {
-                work.name = nameInput.value;
-                header.querySelector("span").textContent = work.name || "Nowa pozycja";
-            });
-
-            tdName.appendChild(nameInput);
-
-            // 🔥 ВАЖНО: теперь добавляем *в body*, а не в tr
-            body.appendChild(tdName);
-        }
 
         // Jednostka
         const unitSel = document.createElement("select");
