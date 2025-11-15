@@ -477,3 +477,150 @@ body {
 #pdfDataModal .modal-body .input {
     margin-bottom: 10px;
 }
+
+
+/* =============================== */
+
+
+/*    SUPER SAFE MOBILE TABLE      */
+
+
+/* =============================== */
+
+
+/* =========================================================
+   🔥 ПОЛНОСТЬЮ РАБОЧАЯ МОБИЛЬНАЯ ВЕРСТКА ТАБЛИЦЫ
+   ========================================================= */
+
+
+/* ===============================
+   ✔ МАКСИМАЛЬНО ЖЁСТКИЕ МОБИЛЬНЫЕ ПРАВИЛА
+   =============================== */
+
+
+/* =============================== */
+
+
+/*           MOBILE ADAPTIVE       */
+
+
+/* =============================== */
+
+
+/* === Планшеты и ниже (до 992px) === */
+
+@media (max-width: 992px) {
+    .header-inner {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    .app-main {
+        gap: 16px;
+    }
+    .sidebar {
+        width: 280px;
+    }
+    .panel {
+        padding: 16px;
+    }
+    .works-table {
+        font-size: 12px;
+    }
+}
+
+
+/* === Телефоны (до 768px) === */
+
+@media (max-width: 768px) {
+    .container {
+        max-width: 100%;
+        padding: 0 14px;
+    }
+    .header-inner {
+        flex-direction: column;
+        gap: 8px;
+        text-align: center;
+        width: 100%;
+    }
+    .header-inner h1 {
+        font-size: 20px;
+    }
+    .project-name-box {
+        flex-direction: column;
+        width: 100%;
+    }
+    .project-name-box input {
+        width: 100%;
+    }
+    /* === Главный layout → одна колонка === */
+    .app-main {
+        flex-direction: column;
+    }
+    .sidebar {
+        width: 100%;
+    }
+    .main-panel {
+        width: 100%;
+    }
+    /* Panels */
+    .panel {
+        padding: 16px;
+    }
+    /* Inputs */
+    .input {
+        width: 100%;
+    }
+    /* Buttons */
+    .btn {
+        width: 100%;
+        padding: 10px 14px;
+        font-size: 15px;
+    }
+    /* Summary */
+    .summary-box {
+        flex-direction: column;
+        gap: 6px;
+    }
+    /* Таблица прокручиваемая */
+    .works-table-wrapper {
+        overflow-x: auto;
+        display: block;
+        width: 100%;
+    }
+    .works-table {
+        min-width: 800px;
+        font-size: 12px;
+    }
+}
+
+
+/* === Маленькие телефоны (до 480px) === */
+
+@media (max-width: 480px) {
+    .header-inner h1 {
+        font-size: 18px;
+    }
+    .panel-title {
+        font-size: 16px;
+    }
+    .input-small {
+        width: 100%;
+    }
+    .btn {
+        padding: 12px 16px;
+        font-size: 14px;
+    }
+    /* Уменьшаем табличные колонки */
+    .works-table th,
+    .works-table td {
+        padding: 4px 6px;
+    }
+    .modal {
+        padding: 14px 18px;
+        max-width: 95%;
+    }
+    .modal-header h2 {
+        font-size: 16px;
+    }
+}

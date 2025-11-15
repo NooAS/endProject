@@ -627,7 +627,11 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         table.appendChild(tbody);
-        roomCard.appendChild(table);
+        const tableWrapper = document.createElement("div");
+        tableWrapper.className = "works-table-wrapper";
+        tableWrapper.appendChild(table);
+
+        roomCard.appendChild(tableWrapper);
         roomsContainer.appendChild(roomCard);
     }
 
@@ -649,7 +653,6 @@ document.addEventListener("DOMContentLoaded", () => {
         //                          KATEGORIA i SZABLON
         // ====================================================================
         if (config.useCategories) {
-
             // === Kategoria ===
             const tdCat = document.createElement("td");
             tdCat.classList.add("col-cat");
@@ -657,18 +660,18 @@ document.addEventListener("DOMContentLoaded", () => {
             categorySelect = document.createElement("select");
             categorySelect.className = "input";
 
-            // pusta opcja
             const emptyOpt = document.createElement("option");
             emptyOpt.value = "";
             emptyOpt.textContent = "—";
             categorySelect.appendChild(emptyOpt);
 
-            // opcje kategorii
             project.categories.forEach(cat => {
                 const opt = document.createElement("option");
                 opt.value = String(cat.id);
                 opt.textContent = cat.name;
-                if (work.categoryId === cat.id) opt.selected = true;
+                if (work.categoryId === cat.id) {
+                    opt.selected = true;
+                }
                 categorySelect.appendChild(opt);
             });
 
@@ -678,7 +681,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 work.templateId = null;
                 fillTemplateSelect();
                 work.name = "";
-                nameInput.value = "";
+                if (nameInput) {
+                    nameInput.value = "";
+                }
             });
 
             tdCat.appendChild(categorySelect);
@@ -712,14 +717,18 @@ document.addEventListener("DOMContentLoaded", () => {
                 templateSelect.appendChild(optEmpty);
 
                 const catId = work.categoryId;
-                if (!catId) return;
+                if (!catId) {
+                    return;
+                }
 
                 const templates = project.getTemplatesForCategory(catId);
                 templates.forEach(tpl => {
                     const opt = document.createElement("option");
                     opt.value = String(tpl.id);
                     opt.textContent = tpl.name;
-                    if (work.templateId === tpl.id) opt.selected = true;
+                    if (work.templateId === tpl.id) {
+                        opt.selected = true;
+                    }
                     templateSelect.appendChild(opt);
                 });
             }
@@ -729,17 +738,21 @@ document.addEventListener("DOMContentLoaded", () => {
             templateSelect.addEventListener("change", () => {
                 const val = templateSelect.value;
                 work.templateId = val ? Number(val) : null;
+
                 const cat = project.getCategoryById(work.categoryId);
                 let tpl = null;
                 if (cat && Array.isArray(cat.templates)) {
                     tpl = cat.templates.find(t => t.id === work.templateId) || null;
                 }
 
-
-                if (!tpl) return;
+                if (!tpl) {
+                    return;
+                }
 
                 work.name = tpl.name;
-                nameInput.value = tpl.name;
+                if (nameInput) {
+                    nameInput.value = tpl.name;
+                }
 
                 if (useTplPricesCheckbox.checked && tpl.defaults) {
                     work.clientPrice = tpl.defaults.clientPrice || 0;
@@ -747,8 +760,12 @@ document.addEventListener("DOMContentLoaded", () => {
                     work.laborPrice = tpl.defaults.laborPrice || 0;
 
                     clientPriceInput.value = work.clientPrice;
-                    if (materialPriceInput) materialPriceInput.value = work.materialPrice;
-                    if (laborPriceInput) laborPriceInput.value = work.laborPrice;
+                    if (materialPriceInput) {
+                        materialPriceInput.value = work.materialPrice;
+                    }
+                    if (laborPriceInput) {
+                        laborPriceInput.value = work.laborPrice;
+                    }
 
                     refreshRowTotals();
                     updateTotals();
@@ -768,8 +785,12 @@ document.addEventListener("DOMContentLoaded", () => {
                     work.laborPrice = tpl.defaults.laborPrice || 0;
 
                     clientPriceInput.value = work.clientPrice;
-                    if (materialPriceInput) materialPriceInput.value = work.materialPrice;
-                    if (laborPriceInput) laborPriceInput.value = work.laborPrice;
+                    if (materialPriceInput) {
+                        materialPriceInput.value = work.materialPrice;
+                    }
+                    if (laborPriceInput) {
+                        laborPriceInput.value = work.laborPrice;
+                    }
 
                     refreshRowTotals();
                     updateTotals();
@@ -788,7 +809,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         // ====================================================================
-        //                             NAZWA
+        //                             NAZWA (только без категорий)
         // ====================================================================
         let tdName = null;
 
@@ -809,7 +830,6 @@ document.addEventListener("DOMContentLoaded", () => {
             tr.appendChild(tdName);
         }
 
-
         // ====================================================================
         //                             JEDNOSTKA
         // ====================================================================
@@ -822,7 +842,9 @@ document.addEventListener("DOMContentLoaded", () => {
             const opt = document.createElement("option");
             opt.value = u;
             opt.textContent = u;
-            if (u === work.unit) opt.selected = true;
+            if (u === work.unit) {
+                opt.selected = true;
+            }
             selectUnit.appendChild(opt);
         });
 
@@ -911,7 +933,7 @@ document.addEventListener("DOMContentLoaded", () => {
         tr.appendChild(tdCost);
 
         // ====================================================================
-        //                                   ZYSK
+        //                                   ЗЫСК
         // ====================================================================
         const tdProfit = document.createElement("td");
         tdProfit.classList.add("col-zysk");
@@ -935,20 +957,17 @@ document.addEventListener("DOMContentLoaded", () => {
         tr.appendChild(tdActions);
 
         // ====================================================================
-        //                     PRZELICZANIE SUM
+        //                     PRZELИЧАНИЕ СУМ
         // ====================================================================
         function refreshRowTotals() {
-
             tdClientTotal.textContent = formatCurrency(work.clientTotal);
             tdCost.textContent = formatCurrency(work.companyCost);
 
             const profit = work.profit;
             tdProfit.textContent = formatCurrency(profit);
 
-            // сброс классов
             tdProfit.classList.remove("profit-positive", "profit-negative");
 
-            // подсветка
             if (profit > 0.01) {
                 tdProfit.classList.add("profit-positive");
             } else if (profit < -0.01) {
@@ -956,10 +975,8 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
 
-
         refreshRowTotals();
 
-        // ===== Live update =====
         inputQty.addEventListener("input", () => {
             work.quantity = parseFloat(inputQty.value) || 0;
             refreshRowTotals();
@@ -986,8 +1003,47 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         }
 
+        // ====================================================================
+        //                 DATA-LABEL ДЛЯ МОБИЛЬНОГО ВИДА
+        // ====================================================================
+        (function applyMobileLabels() {
+            const labels = [];
+
+            labels.push(config.useNumbering ? "Kod" : "Lp");
+
+            if (config.useCategories) {
+                labels.push("Kat");
+                labels.push("Szablon");
+            } else {
+                labels.push("Nazwa");
+            }
+
+            labels.push("Jm");
+            labels.push("Ilość");
+            labels.push("Cena kl.");
+
+            if (config.mode === "extended") {
+                labels.push("Mat.");
+                labels.push("Rob.");
+            }
+
+            labels.push("Suma kl.");
+            labels.push("Koszt firmy");
+            labels.push("Zysk");
+            labels.push("Akcje");
+
+            const tds = tr.querySelectorAll("td");
+            for (let i = 0; i < tds.length; i++) {
+                const label = labels[i] || "";
+                tds[i].setAttribute("data-label", label);
+            }
+        })();
+
         return tr;
     }
+
+
+
 
 
     /* ===== Dodawanie pokoi / pozycji ===== */
