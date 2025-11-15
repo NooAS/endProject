@@ -1398,6 +1398,36 @@ document.addEventListener("DOMContentLoaded", () => {
     renderProject();
 });
 
+
+
+function relocatePdfPanel() {
+    const pdfPanel = document.getElementById("pdfPanel");
+    const placeholder = document.getElementById("pdfPanelMobilePlaceholder");
+
+    if (!pdfPanel || !placeholder) return;
+
+    if (window.innerWidth < 768) {
+        // MOBILE → переносим PDF под Lista prac
+        if (!placeholder.contains(pdfPanel)) {
+            placeholder.appendChild(pdfPanel);
+        }
+    } else {
+        // DESKTOP → возвращаем PDF в sidebar
+        const sidebar = document.querySelector(".sidebar");
+        if (sidebar && !sidebar.contains(pdfPanel)) {
+            sidebar.appendChild(pdfPanel);
+        }
+    }
+}
+
+// запуск при загрузке и при ресайзе
+window.addEventListener("resize", relocatePdfPanel);
+window.addEventListener("DOMContentLoaded", relocatePdfPanel);
+
+
+
+
+
 /* =========================
    PDF FUNKCJE (НЕ ТРОГАЕМ)
 ========================= */

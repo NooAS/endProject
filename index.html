@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="pl">
 
-
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -9,22 +8,15 @@
     <title>Kalkulator Wyceny</title>
 
     <link rel="stylesheet" href="css/style.css" />
-
-    <!-- Ikony (opcjonalnie do modali / X) -->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
     <!-- jsPDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
-
-
 </head>
 
 <body>
 
-    <!-- ========================= -->
-    <!--      NAGŁÓWEK            -->
-    <!-- ========================= -->
     <header class="app-header">
         <div class="container header-inner">
             <h1>Kalkulator Wyceny</h1>
@@ -36,14 +28,10 @@
         </div>
     </header>
 
-
-    <!-- ========================= -->
-    <!--      UKŁAD DWUKOLUMNOWY   -->
-    <!-- ========================= -->
     <main class="container app-main">
 
         <!-- ========================= -->
-        <!--      PANEL LEWY          -->
+        <!--      LEWA KOLUMNA        -->
         <!-- ========================= -->
         <aside class="sidebar">
 
@@ -65,10 +53,10 @@
                 <div class="setting-group">
                     <div class="setting-label">VAT (%)</div>
                     <select id="cfgVat" class="input input-small">
-                        <option value="23">23</option>
-                        <option value="8">8</option>
-                        <option value="0">0</option>
-                    </select>
+                    <option value="23">23</option>
+                    <option value="8">8</option>
+                    <option value="0">0</option>
+                </select>
                 </div>
 
                 <div class="setting-group">
@@ -80,15 +68,21 @@
                 <button id="applyConfigBtn" class="btn full-width">Zastosuj</button>
             </div>
 
-
             <!-- KATEGORIE -->
             <div class="panel">
                 <div class="panel-title">Kategorie i Szablony</div>
                 <button id="manageCategoriesBtn" class="btn secondary full-width">Zarządzaj kategoriami</button>
             </div>
 
-        </aside>
+            <!-- PDF (SIDEBAR DEFAULT) -->
+            <div id="pdfPanel" class="panel">
+                <div class="panel-title">Generowanie PDF</div>
 
+                <button id="pdfClientBtn" class="btn full-width">PDF dla klienta</button>
+                <button id="pdfOwnerBtn" class="btn secondary full-width" style="margin-top:8px;">PDF dla firmy</button>
+            </div>
+
+        </aside>
 
         <!-- ========================= -->
         <!--      PANEL GŁÓWNY        -->
@@ -112,54 +106,45 @@
             <!-- LISTA PRAC -->
             <div class="panel">
                 <div class="panel-title">Lista prac</div>
+
                 <div id="roomsContainer"></div>
 
                 <div class="summary-box">
                     <p>Suma netto: <span id="sumNetto">0,00 zł</span></p>
                     <p>Suma brutto: <span id="sumBrutto">0,00 zł</span></p>
                 </div>
-            </div>
-            <div class="panel">
-                <div class="panel-title">Generowanie PDF</div>
 
-                <button id="pdfClientBtn" class="btn full-width">PDF dla klienta</button>
-                <button id="pdfOwnerBtn" class="btn secondary full-width" style="margin-top:8px;">PDF dla firmy</button>
+                <!-- 🔥 MOBILE placeholder ONLY -->
             </div>
-
+            <div id="pdfPanelMobilePlaceholder"></div>
         </section>
-    </main>
 
+    </main>
 
     <!-- ========================= -->
     <!--           MODALE          -->
     <!-- ========================= -->
 
-    <!-- MODAL KATEGORII -->
     <div id="categoriesModal" class="modal-backdrop">
         <div class="modal">
             <div class="modal-header">
                 <h2>Kategorie i Szablony</h2>
                 <div class="modal-close" onclick="closeModal(categoriesModal)">✕</div>
             </div>
-
             <div class="modal-body" id="categoriesList"></div>
         </div>
     </div>
 
-
-    <!-- MODAL PDF -->
     <div id="pdfDataModal" class="modal-backdrop">
         <div class="modal">
-
             <div class="modal-header">
                 <h2>Dane do PDF</h2>
                 <div class="modal-close" onclick="closeModal(pdfDataModal)">✕</div>
             </div>
 
             <div class="modal-body">
-
-                <input id="pdfProjectName" class="input full-width" placeholder="Nazwa projektu" style="margin-bottom:6px;" />
-                <input id="pdfObjectAddress" class="input full-width" placeholder="Adres inwestycji" style="margin-bottom:10px;" />
+                <input id="pdfProjectName" class="input full-width" placeholder="Nazwa projektu" />
+                <input id="pdfObjectAddress" class="input full-width" placeholder="Adres inwestycji" />
 
                 <div class="setting-label">Dane firmy wystawiającej:</div>
                 <input id="pdfCompanyName" class="input full-width" placeholder="Nazwa firmy" />
@@ -169,10 +154,9 @@
                 <input id="pdfCompanyNip" class="input full-width" placeholder="NIP" />
                 <input id="pdfCompanyAddress" class="input full-width" placeholder="Adres firmy" />
 
-                <label class="checkbox" style="margin-top:8px;">
-                    <input id="pdfSaveCompanyDefaults" type="checkbox"> Zapisz dane jako domyślne
-                </label>
-
+                <label class="checkbox">
+                <input id="pdfSaveCompanyDefaults" type="checkbox"> Zapisz dane jako domyślne
+            </label>
             </div>
 
             <div class="modal-footer-buttons" style="margin-top:15px; display:flex; gap:10px;">
@@ -182,9 +166,6 @@
 
         </div>
     </div>
-
-
-    <!-- SCRIPT -->
 
     <script src="js/script.js"></script>
 
