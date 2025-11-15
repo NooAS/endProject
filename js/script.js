@@ -845,6 +845,16 @@ document.addEventListener("DOMContentLoaded", () => {
         body.className = "work-acc-body";
         acc.appendChild(body);
 
+        // ===== Аккордеон — открытие / закрытие =====
+        header.addEventListener("click", () => {
+            const isOpen = acc.classList.toggle("open");
+            body.style.display = isOpen ? "block" : "none";
+
+            const arrow = header.querySelector(".work-acc-arrow");
+            arrow.style.transform = isOpen ? "rotate(90deg)" : "rotate(0deg)";
+        });
+
+
         // === ВСТАВЛЯЕШЬ КОД С НАЗВАНИЕМ СЮДА ===
 
         // ====== NAZWA – ВСЕГДА в мобильной версии ======
