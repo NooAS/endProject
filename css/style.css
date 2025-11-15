@@ -624,3 +624,48 @@ body {
         font-size: 16px;
     }
 }
+
+
+/* ==========================================
+   RESPONSIVE TABLE -> CARDS (MOBILE MODE)
+   ========================================== */
+
+@media (max-width: 768px) {
+    .works-table,
+    .works-table thead,
+    .works-table tbody,
+    .works-table tr,
+    .works-table th,
+    .works-table td {
+        display: block;
+        width: 100%;
+    }
+    .works-table thead {
+        display: none;
+        /* прячем заголовок таблицы */
+    }
+    .works-table tr {
+        background: #fff;
+        margin-bottom: 12px;
+        padding: 12px;
+        border-radius: 10px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    }
+    .works-table td {
+        padding: 6px 0 !important;
+        border: none !important;
+    }
+    .works-table td::before {
+        content: attr(data-label);
+        font-size: 12px;
+        font-weight: 600;
+        color: #6b7280;
+        display: block;
+        margin-bottom: 2px;
+    }
+    /* Кнопка удаления на всю ширину */
+    .works-table .col-akcje button {
+        width: 100%;
+        margin-top: 6px;
+    }
+}
