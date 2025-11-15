@@ -682,19 +682,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
             // Name (simple mode)
             if (!config.useCategories) {
-                const tdName = document.createElement("td");
+                tdName = document.createElement("div");
                 tdName.classList.add("col-nazwa");
 
-                const nameInput = document.createElement("input");
+                nameInput = document.createElement("input");
                 nameInput.type = "text";
-                nameInput.className = "input";
-                nameInput.value = work.name;
+                nameInput.className = "input full-width";
+                nameInput.placeholder = "Nazwa pracy";
+                nameInput.value = work.name || "";
+
                 nameInput.addEventListener("input", () => {
                     work.name = nameInput.value;
+                    header.querySelector("span").textContent = work.name || "Nowa pozycja";
                 });
 
                 tdName.appendChild(nameInput);
-                tr.appendChild(tdName);
+
+                // 🔥 ВАЖНО: теперь добавляем *в body*, а не в tr
+                body.appendChild(tdName);
             }
 
             // Unit
@@ -841,6 +846,29 @@ document.addEventListener("DOMContentLoaded", () => {
         const body = document.createElement("div");
         body.className = "work-acc-body";
         acc.appendChild(body);
+        // ====== NAZWA (всегда показываем в мобильной версии) ======
+        const tdName = document.createElement("div");
+        tdName.className = "row-mobile-field";
+
+        const nameLabel = document.createElement("div");
+        nameLabel.textContent = "Nazwa pozycji";
+        nameLabel.className = "mobile-label";
+
+        const nameInput = document.createElement("input");
+        nameInput.type = "text";
+        nameInput.className = "input full-width";
+        nameInput.placeholder = "Nazwa";
+        nameInput.value = work.name || "";
+
+        nameInput.addEventListener("input", () => {
+            work.name = nameInput.value;
+            header.querySelector("span").textContent = work.name || "Nowa pozycja";
+        });
+
+        tdName.appendChild(nameLabel);
+        tdName.appendChild(nameInput);
+        body.appendChild(tdName);
+
 
         header.addEventListener("click", () => {
             body.classList.toggle("open");
@@ -864,15 +892,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Nazwa (если simple mode)
         if (!config.useCategories) {
-            const nameInput = document.createElement("input");
-            nameInput.className = "input";
-            nameInput.value = work.name;
+            tdName = document.createElement("div");
+            tdName.classList.add("col-nazwa");
+
+            nameInput = document.createElement("input");
+            nameInput.type = "text";
+            nameInput.className = "input full-width";
+            nameInput.placeholder = "Nazwa pracy";
+            nameInput.value = work.name || "";
+
             nameInput.addEventListener("input", () => {
                 work.name = nameInput.value;
                 header.querySelector("span").textContent = work.name || "Nowa pozycja";
             });
 
-            addField("Nazwa", nameInput);
+            tdName.appendChild(nameInput);
+
+            // 🔥 ВАЖНО: теперь добавляем *в body*, а не в tr
+            body.appendChild(tdName);
         }
 
         // Jednostka
