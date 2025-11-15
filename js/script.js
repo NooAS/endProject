@@ -1,7 +1,5 @@
 "use strict";
 
-console.log("SCRIPT LOADED!!!!");
-
 
 /* =========================
    MODELE DANYCH
@@ -195,6 +193,32 @@ function saveCompanyDataToStorage(data) {
     }
 }
 
+/* ============== LOCAL STORAGE: Categories ============== */
+
+function saveCategoriesToStorage(project) {
+    try {
+        const data = {
+            categories: project.categories,
+            catAutoId: project._catAutoId,
+            tplAutoId: project._tplAutoId
+        };
+        localStorage.setItem("wycenaCategories", JSON.stringify(data));
+    } catch (e) {
+        console.warn("Cannot save categories", e);
+    }
+}
+
+function loadCategoriesFromStorage() {
+    try {
+        const raw = localStorage.getItem("wycenaCategories");
+        if (!raw) return null;
+        return JSON.parse(raw);
+    } catch {
+        return null;
+    }
+}
+
+
 function loadPdfSettingsFromStorage() {
     try {
         const raw = localStorage.getItem("wycenaPdfSettings");
@@ -222,6 +246,15 @@ function savePdfSettingsToStorage(settings) {
 
 const config = new Config();
 let project = new Project(config);
+
+// ----- Load categories from storage -----
+const savedCats = loadCategoriesFromStorage();
+if (savedCats) {
+    project.categories = savedCats.categories || [];
+    project._catAutoId = savedCats.catAutoId || 1;
+    project._tplAutoId = savedCats.tplAutoId || 1;
+}
+
 
 // режим нетто/брутто для PDF (глобально, чтобы видеть его и PDF-функции)
 let pdfPriceMode = loadPdfSettingsFromStorage().priceMode; // 'netto' | 'brutto'
@@ -362,6 +395,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const wrapper = document.createElement("div");
         wrapper.className = "row";
+        wrapper.className = "works-table-wrapper";
+
         wrapper.style.marginTop = "8px";
         wrapper.style.marginBottom = "4px";
 
@@ -459,11 +494,14 @@ document.addEventListener("DOMContentLoaded", () => {
         const title = document.createElement("div");
         title.className = "room-title";
         title.textContent = config.useRooms ? `${room.number}. ${room.name}` : "Pozycje";
+
         const meta = document.createElement("div");
         meta.className = "room-meta";
         meta.textContent = `ID: ${room.id}`;
+
         titleBox.appendChild(title);
         titleBox.appendChild(meta);
+        header.appendChild(titleBox);
 
         const actions = document.createElement("div");
         actions.className = "room-actions row";
@@ -485,70 +523,97 @@ document.addEventListener("DOMContentLoaded", () => {
             actions.appendChild(deleteRoomBtn);
         }
 
-        header.appendChild(titleBox);
         header.appendChild(actions);
         roomCard.appendChild(header);
 
-        // tabela prac
+        // tabela
         const table = document.createElement("table");
         table.className = "works-table";
 
         const thead = document.createElement("thead");
         const headRow = document.createElement("tr");
 
+        // KOD
         const thCode = document.createElement("th");
+        thCode.classList.add("col-kod");
         thCode.textContent = config.useNumbering ? "Kod" : "Lp";
         headRow.appendChild(thCode);
 
+        // Kategoria + Szablon (opcjonalnie)
         if (config.useCategories) {
             const thCat = document.createElement("th");
+            thCat.classList.add("col-cat");
             thCat.textContent = "Kat";
             headRow.appendChild(thCat);
 
             const thTpl = document.createElement("th");
+            thTpl.classList.add("col-template");
             thTpl.textContent = "Szablon";
             headRow.appendChild(thTpl);
         }
 
-        const thName = document.createElement("th");
-        thName.textContent = "Nazwa";
-        headRow.appendChild(thName);
+        // Nazwa
+        if (!config.useCategories) {
+            const thName = document.createElement("th");
+            thName.classList.add("col-nazwa");
 
+            thName.textContent = "Nazwa";
+            headRow.appendChild(thName);
+        }
+
+
+        // Jm
         const thUnit = document.createElement("th");
+        thUnit.classList.add("col-jm");
         thUnit.textContent = "Jm";
         headRow.appendChild(thUnit);
 
+        // Ilość
         const thQty = document.createElement("th");
+        thQty.classList.add("col-ilosc");
         thQty.textContent = "Ilość";
         headRow.appendChild(thQty);
 
+        // Cena klienta
         const thClientPrice = document.createElement("th");
+        thClientPrice.classList.add("col-cenakl");
         thClientPrice.textContent = "Cena kl.";
         headRow.appendChild(thClientPrice);
 
+        // Extended: Mat + Rob
         if (config.mode === "extended") {
             const thMat = document.createElement("th");
+            thMat.classList.add("col-mat");
             thMat.textContent = "Mat.";
             headRow.appendChild(thMat);
 
             const thLab = document.createElement("th");
+            thLab.classList.add("col-rob");
             thLab.textContent = "Rob.";
             headRow.appendChild(thLab);
         }
 
+        // Suma kl.
         const thClientTotal = document.createElement("th");
+        thClientTotal.classList.add("col-sumakl");
         thClientTotal.textContent = "Suma kl.";
         headRow.appendChild(thClientTotal);
 
+        // Koszt firmy
         const thCost = document.createElement("th");
+        thCost.classList.add("col-kosztfirmy");
         thCost.textContent = "Koszt firm.";
         headRow.appendChild(thCost);
 
+        // Zysk
         const thProfit = document.createElement("th");
+        thProfit.classList.add("col-zysk");
         thProfit.textContent = "Zysk";
         headRow.appendChild(thProfit);
 
+        // Akcje
         const thActions = document.createElement("th");
+        thActions.classList.add("col-akcje");
         thActions.textContent = "Akcje";
         headRow.appendChild(thActions);
 
@@ -556,41 +621,49 @@ document.addEventListener("DOMContentLoaded", () => {
         table.appendChild(thead);
 
         const tbody = document.createElement("tbody");
+
         room.works.forEach(work => {
-            const row = createWorkRow(room, work);
-            tbody.appendChild(row);
+            tbody.appendChild(createWorkRow(room, work));
         });
 
         table.appendChild(tbody);
         roomCard.appendChild(table);
-
         roomsContainer.appendChild(roomCard);
     }
+
 
     function createWorkRow(room, work) {
         const tr = document.createElement("tr");
         tr.dataset.workId = work.id;
 
-        // Kod
+        // ===== KOD (скрытая колонка) =====
         const tdCode = document.createElement("td");
-        tdCode.className = "work-code";
+        tdCode.classList.add("col-kod");
         tdCode.textContent = work.id;
         tr.appendChild(tdCode);
 
         let categorySelect, templateSelect, nameInput;
         let clientPriceInput, materialPriceInput, laborPriceInput;
 
-        // Kategorie + szablon
+        // ====================================================================
+        //                          KATEGORIA i SZABLON
+        // ====================================================================
         if (config.useCategories) {
+
+            // === Kategoria ===
             const tdCat = document.createElement("td");
+            tdCat.classList.add("col-cat");
+
             categorySelect = document.createElement("select");
             categorySelect.className = "input";
 
+            // pusta opcja
             const emptyOpt = document.createElement("option");
             emptyOpt.value = "";
             emptyOpt.textContent = "—";
             categorySelect.appendChild(emptyOpt);
 
+            // opcje kategorii
             project.categories.forEach(cat => {
                 const opt = document.createElement("option");
                 opt.value = String(cat.id);
@@ -604,66 +677,71 @@ document.addEventListener("DOMContentLoaded", () => {
                 work.categoryId = val ? Number(val) : null;
                 work.templateId = null;
                 fillTemplateSelect();
-                if (!work.templateId) {
-                    work.name = "";
-                    nameInput.value = "";
-                }
+                work.name = "";
+                nameInput.value = "";
             });
 
             tdCat.appendChild(categorySelect);
             tr.appendChild(tdCat);
 
+            // === Szablon ===
             const tdTpl = document.createElement("td");
+            tdTpl.classList.add("col-template");
+
             templateSelect = document.createElement("select");
             templateSelect.className = "input";
 
             const useTplPricesLabel = document.createElement("label");
             useTplPricesLabel.className = "checkbox";
+
             const useTplPricesCheckbox = document.createElement("input");
             useTplPricesCheckbox.type = "checkbox";
+
             const useTplSpan = document.createElement("span");
             useTplSpan.textContent = "Ceny z szablonu";
+
             useTplPricesLabel.appendChild(useTplPricesCheckbox);
             useTplPricesLabel.appendChild(useTplSpan);
 
             function fillTemplateSelect() {
                 templateSelect.innerHTML = "";
+
                 const optEmpty = document.createElement("option");
                 optEmpty.value = "";
                 optEmpty.textContent = "—";
                 templateSelect.appendChild(optEmpty);
 
                 const catId = work.categoryId;
-                if (catId) {
-                    const templates = project.getTemplatesForCategory(catId);
-                    templates.forEach(tpl => {
-                        const opt = document.createElement("option");
-                        opt.value = String(tpl.id);
-                        opt.textContent = tpl.name;
-                        if (work.templateId === tpl.id) opt.selected = true;
-                        templateSelect.appendChild(opt);
-                    });
-                }
+                if (!catId) return;
+
+                const templates = project.getTemplatesForCategory(catId);
+                templates.forEach(tpl => {
+                    const opt = document.createElement("option");
+                    opt.value = String(tpl.id);
+                    opt.textContent = tpl.name;
+                    if (work.templateId === tpl.id) opt.selected = true;
+                    templateSelect.appendChild(opt);
+                });
             }
 
             fillTemplateSelect();
 
             templateSelect.addEventListener("change", () => {
                 const val = templateSelect.value;
-                if (!val) {
-                    work.templateId = null;
-                    return;
-                }
-                const tplId = Number(val);
-                work.templateId = tplId;
+                work.templateId = val ? Number(val) : null;
                 const cat = project.getCategoryById(work.categoryId);
-                const tpl = cat ? cat.templates.find(t => t.id === tplId) : null;
+                let tpl = null;
+                if (cat && Array.isArray(cat.templates)) {
+                    tpl = cat.templates.find(t => t.id === work.templateId) || null;
+                }
+
+
                 if (!tpl) return;
 
                 work.name = tpl.name;
                 nameInput.value = tpl.name;
 
-                if (useTplPricesCheckbox.checked && tpl && tpl.defaults) {
+                if (useTplPricesCheckbox.checked && tpl.defaults) {
                     work.clientPrice = tpl.defaults.clientPrice || 0;
                     work.materialPrice = tpl.defaults.materialPrice || 0;
                     work.laborPrice = tpl.defaults.laborPrice || 0;
@@ -679,11 +757,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
             useTplPricesCheckbox.addEventListener("change", () => {
                 const cat = project.getCategoryById(work.categoryId);
-                const tpl = cat && work.templateId ?
-                    cat.templates.find(t => t.id === work.templateId) :
-                    null;
+                let tpl = null;
+                if (cat && Array.isArray(cat.templates)) {
+                    tpl = cat.templates.find(t => t.id === work.templateId) || null;
+                }
 
-                if (useTplPricesCheckbox.checked && tpl && tpl.defaults) {
+                if (tpl && tpl.defaults && useTplPricesCheckbox.checked) {
                     work.clientPrice = tpl.defaults.clientPrice || 0;
                     work.materialPrice = tpl.defaults.materialPrice || 0;
                     work.laborPrice = tpl.defaults.laborPrice || 0;
@@ -708,21 +787,35 @@ document.addEventListener("DOMContentLoaded", () => {
             tr.appendChild(tdTpl);
         }
 
-        // Nazwa pracy
-        const tdName = document.createElement("td");
-        nameInput = document.createElement("input");
-        nameInput.type = "text";
-        nameInput.className = "input";
-        nameInput.placeholder = "Nazwa pracy";
-        nameInput.value = work.name || "";
-        nameInput.addEventListener("input", () => {
-            work.name = nameInput.value;
-        });
-        tdName.appendChild(nameInput);
-        tr.appendChild(tdName);
+        // ====================================================================
+        //                             NAZWA
+        // ====================================================================
+        let tdName = null;
 
-        // Jednostka
+        if (!config.useCategories) {
+            tdName = document.createElement("td");
+            tdName.classList.add("col-nazwa");
+
+            nameInput = document.createElement("input");
+            nameInput.type = "text";
+            nameInput.className = "input";
+            nameInput.placeholder = "Nazwa pracy";
+            nameInput.value = work.name || "";
+            nameInput.addEventListener("input", () => {
+                work.name = nameInput.value;
+            });
+
+            tdName.appendChild(nameInput);
+            tr.appendChild(tdName);
+        }
+
+
+        // ====================================================================
+        //                             JEDNOSTKA
+        // ====================================================================
         const tdUnit = document.createElement("td");
+        tdUnit.classList.add("col-jm");
+
         const selectUnit = document.createElement("select");
         selectUnit.className = "input";
         ["m2", "szt", "mb", "kg"].forEach(u => {
@@ -732,71 +825,104 @@ document.addEventListener("DOMContentLoaded", () => {
             if (u === work.unit) opt.selected = true;
             selectUnit.appendChild(opt);
         });
+
         selectUnit.addEventListener("change", () => {
             work.unit = selectUnit.value;
         });
+
         tdUnit.appendChild(selectUnit);
         tr.appendChild(tdUnit);
 
-        // Ilość
+        // ====================================================================
+        //                               ILOŚĆ
+        // ====================================================================
         const tdQty = document.createElement("td");
+        tdQty.classList.add("col-ilosc");
+
         const inputQty = document.createElement("input");
         inputQty.type = "number";
         inputQty.min = "0";
         inputQty.step = "0.01";
         inputQty.className = "input";
         inputQty.value = work.quantity || "";
+
         tdQty.appendChild(inputQty);
         tr.appendChild(tdQty);
 
-        // Cena dla klienta
+        // ====================================================================
+        //                        CENA DLA KLIENTA
+        // ====================================================================
         const tdClientPrice = document.createElement("td");
+        tdClientPrice.classList.add("col-cenakl");
+
         clientPriceInput = document.createElement("input");
         clientPriceInput.type = "number";
         clientPriceInput.min = "0";
         clientPriceInput.step = "0.01";
         clientPriceInput.className = "input";
         clientPriceInput.value = work.clientPrice || "";
+
         tdClientPrice.appendChild(clientPriceInput);
         tr.appendChild(tdClientPrice);
 
-        // Pola materiał / robocizna (tylko w rozszerzonym trybie)
+        // ====================================================================
+        //                    MATERIAŁ / ROBOCIZNA (EXTENDED)
+        // ====================================================================
         if (config.mode === "extended") {
             const tdMat = document.createElement("td");
+            tdMat.classList.add("col-mat");
+
             materialPriceInput = document.createElement("input");
             materialPriceInput.type = "number";
             materialPriceInput.min = "0";
             materialPriceInput.step = "0.01";
             materialPriceInput.className = "input";
             materialPriceInput.value = work.materialPrice || "";
+
             tdMat.appendChild(materialPriceInput);
             tr.appendChild(tdMat);
 
             const tdLab = document.createElement("td");
+            tdLab.classList.add("col-rob");
+
             laborPriceInput = document.createElement("input");
             laborPriceInput.type = "number";
             laborPriceInput.min = "0";
             laborPriceInput.step = "0.01";
             laborPriceInput.className = "input";
             laborPriceInput.value = work.laborPrice || "";
+
             tdLab.appendChild(laborPriceInput);
             tr.appendChild(tdLab);
         }
 
-        // Suma dla klienta
+        // ====================================================================
+        //                            SUMA KLIENTA
+        // ====================================================================
         const tdClientTotal = document.createElement("td");
+        tdClientTotal.classList.add("col-sumakl");
         tr.appendChild(tdClientTotal);
 
-        // Koszt firmy
+        // ====================================================================
+        //                             KOSZT FIRMY
+        // ====================================================================
         const tdCost = document.createElement("td");
+        tdCost.classList.add("col-kosztfirmy");
         tr.appendChild(tdCost);
 
-        // Zysk
+        // ====================================================================
+        //                                   ZYSK
+        // ====================================================================
         const tdProfit = document.createElement("td");
+        tdProfit.classList.add("col-zysk");
         tr.appendChild(tdProfit);
 
-        // Akcje
+        // ====================================================================
+        //                                  AKCJE
+        // ====================================================================
         const tdActions = document.createElement("td");
+        tdActions.classList.add("col-akcje");
+
         const deleteBtn = document.createElement("button");
         deleteBtn.className = "btn secondary";
         deleteBtn.textContent = "Usuń";
@@ -804,26 +930,36 @@ document.addEventListener("DOMContentLoaded", () => {
             room.removeWork(work.id);
             renderProject();
         });
+
         tdActions.appendChild(deleteBtn);
         tr.appendChild(tdActions);
 
-        // Funkcja odświeżenia sum wiersza
+        // ====================================================================
+        //                     PRZELICZANIE SUM
+        // ====================================================================
         function refreshRowTotals() {
-            const clientTotal = work.clientTotal;
-            const companyCost = work.companyCost;
-            const profit = work.profit;
 
-            tdClientTotal.textContent = formatCurrency(clientTotal);
-            tdCost.textContent = formatCurrency(companyCost);
+            tdClientTotal.textContent = formatCurrency(work.clientTotal);
+            tdCost.textContent = formatCurrency(work.companyCost);
+
+            const profit = work.profit;
             tdProfit.textContent = formatCurrency(profit);
+
+            // сброс классов
             tdProfit.classList.remove("profit-positive", "profit-negative");
-            if (profit > 0.001) tdProfit.classList.add("profit-positive");
-            else if (profit < -0.001) tdProfit.classList.add("profit-negative");
+
+            // подсветка
+            if (profit > 0.01) {
+                tdProfit.classList.add("profit-positive");
+            } else if (profit < -0.01) {
+                tdProfit.classList.add("profit-negative");
+            }
         }
+
 
         refreshRowTotals();
 
-        // Reaktywne aktualizacje
+        // ===== Live update =====
         inputQty.addEventListener("input", () => {
             work.quantity = parseFloat(inputQty.value) || 0;
             refreshRowTotals();
@@ -852,6 +988,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         return tr;
     }
+
 
     /* ===== Dodawanie pokoi / pozycji ===== */
 
@@ -901,9 +1038,11 @@ document.addEventListener("DOMContentLoaded", () => {
             if (!name) return;
 
             project.addCategory(name);
+            saveCategoriesToStorage(project);
             addCatInput.value = "";
             renderCategoriesModal();
-            renderProject(); // обновить селекты категорий в таблице
+            renderProject();
+
         });
 
         addCatRow.appendChild(addCatInput);
@@ -958,8 +1097,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 const newName = prompt("Nowa nazwa kategorii:", cat.name);
                 if (newName && newName.trim()) {
                     cat.name = newName.trim();
+                    saveCategoriesToStorage(project);
                     renderCategoriesModal();
                     renderProject();
+
                 }
             });
 
@@ -970,8 +1111,10 @@ document.addEventListener("DOMContentLoaded", () => {
             deleteCatBtn.addEventListener("click", () => {
                 if (confirm(`Usunąć kategorię "${cat.name}"?`)) {
                     project.categories = project.categories.filter(c => c.id !== cat.id);
+                    saveCategoriesToStorage(project);
                     renderCategoriesModal();
                     renderProject();
+
                 }
             });
 
@@ -1055,6 +1198,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     laborPrice: parseFloat(tplLabPriceInput.value) || 0
                 } : null;
                 project.addTemplateToCategory(cat.id, { name, defaults });
+                saveCategoriesToStorage(project);
                 tplNameInput.value = "";
                 tplClientPriceInput.value = "";
                 tplMatPriceInput.value = "";
@@ -1110,9 +1254,10 @@ document.addEventListener("DOMContentLoaded", () => {
                             materialPrice: parseFloat(newMat) || 0,
                             laborPrice: parseFloat(newLab) || 0
                         };
-
+                        saveCategoriesToStorage(project);
                         renderCategoriesModal();
                         renderProject();
+
                     });
 
                     const deleteTpl = document.createElement("span");
@@ -1122,8 +1267,10 @@ document.addEventListener("DOMContentLoaded", () => {
                     deleteTpl.addEventListener("click", () => {
                         if (confirm(`Usunąć "${tpl.name}"?`)) {
                             cat.templates = cat.templates.filter(t => t.id !== tpl.id);
+                            saveCategoriesToStorage(project);
                             renderCategoriesModal();
                             renderProject();
+
                         }
                     });
 
@@ -1267,17 +1414,6 @@ document.addEventListener("DOMContentLoaded", () => {
     // ===== Inicjalizacja =====
 
     // przykładowa kategoria i szablony
-    const demoCat = project.addCategory("Elektryka");
-    if (demoCat) {
-        project.addTemplateToCategory(demoCat.id, {
-            name: "Montaż gniazdka",
-            defaults: { clientPrice: 30, materialPrice: 10, laborPrice: 15 }
-        });
-        project.addTemplateToCategory(demoCat.id, {
-            name: "Montaż lampy",
-            defaults: { clientPrice: 50, materialPrice: 20, laborPrice: 20 }
-        });
-    }
 
     applyConfig();
     renderProject();

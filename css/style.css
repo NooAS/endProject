@@ -19,7 +19,7 @@ body {
 /* Containers */
 
 .container {
-    max-width: 1400px;
+    max-width: 90%;
     margin: 0 auto;
     padding: 0 20px;
 }
@@ -55,6 +55,11 @@ body {
     border-radius: 6px;
     border: 1px solid #cbd2e1;
     width: 260px;
+    display: none;
+}
+
+.project-name-box span {
+    display: none;
 }
 
 
@@ -307,4 +312,168 @@ body {
 .modal-open {
     overflow: hidden;
     /* blokada scrolla */
+}
+
+
+/* Убрать колонку Kod */
+
+.works-table th:nth-child(1),
+.works-table td:nth-child(1) {
+    display: none !important;
+}
+
+.works-table .col-kod {
+    display: none !important;
+}
+
+
+/* ===== РАСШИРЯЕМ КОЛОНКУ NAZWA ===== */
+
+.works-table .col-nazwa {
+    width: 220px !important;
+    white-space: normal !important;
+    overflow: visible !important;
+}
+
+
+/* Разрешить перенос текста внутри ячеек Nazwa */
+
+.works-table .col-nazwa input {
+    white-space: normal !important;
+    overflow: visible !important;
+}
+
+
+/* ===== ОСТАЛЬНЫЕ КОЛОНКИ ===== */
+
+
+/* Убрать колонку Kod */
+
+.works-table th:nth-child(1),
+.works-table td:nth-child(1),
+.works-table .col-kod {
+    display: none !important;
+}
+
+
+/* Назва — может быть длинной */
+
+.works-table .col-nazwa {
+    width: 250px !important;
+    white-space: normal !important;
+    overflow: visible !important;
+}
+
+
+/* Остальные колонки */
+
+
+/* Категория */
+
+
+/* Nazwa — средняя */
+
+.works-table .col-nazwa {
+    width: 180px;
+}
+
+
+/* Категория + шаблон — небольшие */
+
+.works-table .col-cat {
+    width: 100px;
+}
+
+.works-table .col-template {
+    width: 120px;
+}
+
+
+/* Единица измерения */
+
+.works-table .col-jm {
+    width: 70px;
+}
+
+
+/* Кол-во, цена, материалы, робочизна — важные */
+
+.works-table .col-ilosc {
+    width: 120px;
+}
+
+.works-table .col-cenakl {
+    width: 140px;
+}
+
+.works-table .col-mat {
+    width: 140px;
+}
+
+.works-table .col-rob {
+    width: 140px;
+}
+
+
+/* Автоматические — можно переносить строки */
+
+.works-table .col-sumakl,
+.works-table .col-kosztfirmy,
+.works-table .col-zysk {
+    min-width: 20px;
+    white-space: normal !important;
+    text-align: right;
+}
+
+
+/* Акции */
+
+.works-table .col-akcje {
+    width: 80px;
+}
+
+
+/* ===== НЕ ОБРЕЗАТЬ INPUT И SELECT ===== */
+
+.works-table td input,
+.works-table td select {
+    width: 100%;
+    min-width: 50px;
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip;
+}
+
+.profit-positive {
+    color: #16a34a !important;
+    /* зелёный */
+    font-weight: 600;
+}
+
+.profit-negative {
+    color: #dc2626 !important;
+    /* красный */
+    font-weight: 600;
+}
+
+.works-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    table-layout: auto !important;
+}
+
+.works-table-wrapper {
+    overflow-x: auto;
+    width: 100%;
+}
+
+
+/* Akcje */
+
+
+/* Отступы между инпутами в модалке PDF */
+
+#pdfDataModal .modal-body .input {
+    margin-bottom: 10px;
 }
