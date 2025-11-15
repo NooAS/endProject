@@ -486,7 +486,7 @@ document.addEventListener("DOMContentLoaded", () => {
         roomCard.className = "room-card";
         roomCard.dataset.roomId = String(room.id);
 
-        // header
+        // ===== HEADER =====
         const header = document.createElement("div");
         header.className = "room-header";
 
@@ -526,521 +526,444 @@ document.addEventListener("DOMContentLoaded", () => {
         header.appendChild(actions);
         roomCard.appendChild(header);
 
-        // tabela
-        const table = document.createElement("table");
-        table.className = "works-table";
+        // ===============================================================
+        // DESKTOP MODE — таблица
+        // ===============================================================
+        if (window.innerWidth > 768) {
+            const table = document.createElement("table");
+            table.className = "works-table";
 
-        const thead = document.createElement("thead");
-        const headRow = document.createElement("tr");
+            const thead = document.createElement("thead");
+            const headRow = document.createElement("tr");
 
-        // KOD
-        const thCode = document.createElement("th");
-        thCode.classList.add("col-kod");
-        thCode.textContent = config.useNumbering ? "Kod" : "Lp";
-        headRow.appendChild(thCode);
+            function addTh(cls, text) {
+                const th = document.createElement("th");
+                th.classList.add(cls);
+                th.textContent = text;
+                headRow.appendChild(th);
+            }
 
-        // Kategoria + Szablon (opcjonalnie)
-        if (config.useCategories) {
-            const thCat = document.createElement("th");
-            thCat.classList.add("col-cat");
-            thCat.textContent = "Kat";
-            headRow.appendChild(thCat);
+            addTh("col-kod", config.useNumbering ? "Kod" : "Lp");
 
-            const thTpl = document.createElement("th");
-            thTpl.classList.add("col-template");
-            thTpl.textContent = "Szablon";
-            headRow.appendChild(thTpl);
+            if (config.useCategories) {
+                addTh("col-cat", "Kat");
+                addTh("col-template", "Szablon");
+            } else {
+                addTh("col-nazwa", "Nazwa");
+            }
+
+            addTh("col-jm", "Jm");
+            addTh("col-ilosc", "Ilość");
+            addTh("col-cenakl", "Cena kl.");
+
+            if (config.mode === "extended") {
+                addTh("col-mat", "Mat.");
+                addTh("col-rob", "Rob.");
+            }
+
+            addTh("col-sumakl", "Suma kl.");
+            addTh("col-kosztfirmy", "Koszt firm.");
+            addTh("col-zysk", "Zysk");
+            addTh("col-akcje", "Akcje");
+
+            thead.appendChild(headRow);
+            table.appendChild(thead);
+
+            const tbody = document.createElement("tbody");
+
+            room.works.forEach(work => {
+                tbody.appendChild(createWorkRow(room, work, true)); // desktop mode
+            });
+
+            table.appendChild(tbody);
+
+            const tableWrapper = document.createElement("div");
+            tableWrapper.className = "works-table-wrapper";
+            tableWrapper.appendChild(table);
+
+            roomCard.appendChild(tableWrapper);
         }
 
-        // Nazwa
-        if (!config.useCategories) {
-            const thName = document.createElement("th");
-            thName.classList.add("col-nazwa");
+        // ===============================================================
+        // MOBILE MODE — аккордеоны
+        // ===============================================================
+        else {
+            const worksContainer = document.createElement("div");
+            worksContainer.className = "room-works-container";
 
-            thName.textContent = "Nazwa";
-            headRow.appendChild(thName);
+            room.works.forEach(work => {
+                const acc = createWorkRow(room, work, false);
+                worksContainer.appendChild(acc);
+            });
+
+            roomCard.appendChild(worksContainer);
         }
 
-
-        // Jm
-        const thUnit = document.createElement("th");
-        thUnit.classList.add("col-jm");
-        thUnit.textContent = "Jm";
-        headRow.appendChild(thUnit);
-
-        // Ilość
-        const thQty = document.createElement("th");
-        thQty.classList.add("col-ilosc");
-        thQty.textContent = "Ilość";
-        headRow.appendChild(thQty);
-
-        // Cena klienta
-        const thClientPrice = document.createElement("th");
-        thClientPrice.classList.add("col-cenakl");
-        thClientPrice.textContent = "Cena kl.";
-        headRow.appendChild(thClientPrice);
-
-        // Extended: Mat + Rob
-        if (config.mode === "extended") {
-            const thMat = document.createElement("th");
-            thMat.classList.add("col-mat");
-            thMat.textContent = "Mat.";
-            headRow.appendChild(thMat);
-
-            const thLab = document.createElement("th");
-            thLab.classList.add("col-rob");
-            thLab.textContent = "Rob.";
-            headRow.appendChild(thLab);
-        }
-
-        // Suma kl.
-        const thClientTotal = document.createElement("th");
-        thClientTotal.classList.add("col-sumakl");
-        thClientTotal.textContent = "Suma kl.";
-        headRow.appendChild(thClientTotal);
-
-        // Koszt firmy
-        const thCost = document.createElement("th");
-        thCost.classList.add("col-kosztfirmy");
-        thCost.textContent = "Koszt firm.";
-        headRow.appendChild(thCost);
-
-        // Zysk
-        const thProfit = document.createElement("th");
-        thProfit.classList.add("col-zysk");
-        thProfit.textContent = "Zysk";
-        headRow.appendChild(thProfit);
-
-        // Akcje
-        const thActions = document.createElement("th");
-        thActions.classList.add("col-akcje");
-        thActions.textContent = "Akcje";
-        headRow.appendChild(thActions);
-
-        thead.appendChild(headRow);
-        table.appendChild(thead);
-
-        const tbody = document.createElement("tbody");
-
-        room.works.forEach(work => {
-            tbody.appendChild(createWorkRow(room, work));
-        });
-
-        table.appendChild(tbody);
-        const tableWrapper = document.createElement("div");
-        tableWrapper.className = "works-table-wrapper";
-        tableWrapper.appendChild(table);
-
-        roomCard.appendChild(tableWrapper);
         roomsContainer.appendChild(roomCard);
     }
 
 
-    function createWorkRow(room, work) {
-        const tr = document.createElement("tr");
-        tr.dataset.workId = work.id;
 
-        // ===== KOD (скрытая колонка) =====
-        const tdCode = document.createElement("td");
-        tdCode.classList.add("col-kod");
-        tdCode.textContent = work.id;
-        tr.appendChild(tdCode);
+    function createWorkRow(room, work, isDesktop) {
 
-        let categorySelect, templateSelect, nameInput;
-        let clientPriceInput, materialPriceInput, laborPriceInput;
+        // =====================================================================
+        // DESKTOP — возвращаем старую строку таблицы
+        // =====================================================================
+        if (isDesktop) {
+            const tr = document.createElement("tr");
+            tr.dataset.workId = work.id;
 
-        // ====================================================================
-        //                          KATEGORIA i SZABLON
-        // ====================================================================
-        if (config.useCategories) {
-            // === Kategoria ===
-            const tdCat = document.createElement("td");
-            tdCat.classList.add("col-cat");
-
-            categorySelect = document.createElement("select");
-            categorySelect.className = "input";
-
-            const emptyOpt = document.createElement("option");
-            emptyOpt.value = "";
-            emptyOpt.textContent = "—";
-            categorySelect.appendChild(emptyOpt);
-
-            project.categories.forEach(cat => {
-                const opt = document.createElement("option");
-                opt.value = String(cat.id);
-                opt.textContent = cat.name;
-                if (work.categoryId === cat.id) {
-                    opt.selected = true;
-                }
-                categorySelect.appendChild(opt);
-            });
-
-            categorySelect.addEventListener("change", () => {
-                const val = categorySelect.value;
-                work.categoryId = val ? Number(val) : null;
-                work.templateId = null;
-                fillTemplateSelect();
-                work.name = "";
-                if (nameInput) {
-                    nameInput.value = "";
-                }
-            });
-
-            tdCat.appendChild(categorySelect);
-            tr.appendChild(tdCat);
-
-            // === Szablon ===
-            const tdTpl = document.createElement("td");
-            tdTpl.classList.add("col-template");
-
-            templateSelect = document.createElement("select");
-            templateSelect.className = "input";
-
-            const useTplPricesLabel = document.createElement("label");
-            useTplPricesLabel.className = "checkbox";
-
-            const useTplPricesCheckbox = document.createElement("input");
-            useTplPricesCheckbox.type = "checkbox";
-
-            const useTplSpan = document.createElement("span");
-            useTplSpan.textContent = "Ceny z szablonu";
-
-            useTplPricesLabel.appendChild(useTplPricesCheckbox);
-            useTplPricesLabel.appendChild(useTplSpan);
-
-            function fillTemplateSelect() {
-                templateSelect.innerHTML = "";
-
-                const optEmpty = document.createElement("option");
-                optEmpty.value = "";
-                optEmpty.textContent = "—";
-                templateSelect.appendChild(optEmpty);
-
-                const catId = work.categoryId;
-                if (!catId) {
-                    return;
-                }
-
-                const templates = project.getTemplatesForCategory(catId);
-                templates.forEach(tpl => {
-                    const opt = document.createElement("option");
-                    opt.value = String(tpl.id);
-                    opt.textContent = tpl.name;
-                    if (work.templateId === tpl.id) {
-                        opt.selected = true;
-                    }
-                    templateSelect.appendChild(opt);
-                });
+            function makeTd(cls, value) {
+                const td = document.createElement("td");
+                td.classList.add(cls);
+                td.textContent = value;
+                return td;
             }
 
-            fillTemplateSelect();
+            // Kod
+            tr.appendChild(makeTd("col-kod", work.id));
 
-            templateSelect.addEventListener("change", () => {
-                const val = templateSelect.value;
-                work.templateId = val ? Number(val) : null;
+            // Kategorie
+            if (config.useCategories) {
+                const tdCat = document.createElement("td");
+                tdCat.classList.add("col-cat");
 
-                const cat = project.getCategoryById(work.categoryId);
-                let tpl = null;
-                if (cat && Array.isArray(cat.templates)) {
-                    tpl = cat.templates.find(t => t.id === work.templateId) || null;
-                }
+                const selectCat = document.createElement("select");
+                selectCat.className = "input";
 
-                if (!tpl) {
-                    return;
-                }
+                const emptyOpt = document.createElement("option");
+                emptyOpt.value = "";
+                emptyOpt.textContent = "—";
+                selectCat.appendChild(emptyOpt);
 
-                work.name = tpl.name;
-                if (nameInput) {
-                    nameInput.value = tpl.name;
-                }
+                project.categories.forEach(cat => {
+                    const opt = document.createElement("option");
+                    opt.value = cat.id;
+                    opt.textContent = cat.name;
+                    if (work.categoryId === cat.id) opt.selected = true;
+                    selectCat.appendChild(opt);
+                });
 
-                if (useTplPricesCheckbox.checked && tpl.defaults) {
-                    work.clientPrice = tpl.defaults.clientPrice || 0;
-                    work.materialPrice = tpl.defaults.materialPrice || 0;
-                    work.laborPrice = tpl.defaults.laborPrice || 0;
+                selectCat.addEventListener("change", () => {
+                    work.categoryId = selectCat.value ? Number(selectCat.value) : null;
+                });
 
-                    clientPriceInput.value = work.clientPrice;
-                    if (materialPriceInput) {
-                        materialPriceInput.value = work.materialPrice;
-                    }
-                    if (laborPriceInput) {
-                        laborPriceInput.value = work.laborPrice;
-                    }
+                tdCat.appendChild(selectCat);
+                tr.appendChild(tdCat);
 
-                    refreshRowTotals();
-                    updateTotals();
-                }
+                // Szablon
+                const tdTpl = document.createElement("td");
+                tdTpl.classList.add("col-template");
+
+                const selectTpl = document.createElement("select");
+                selectTpl.className = "input";
+
+                const emptyTpl = document.createElement("option");
+                emptyTpl.value = "";
+                emptyTpl.textContent = "—";
+                selectTpl.appendChild(emptyTpl);
+
+                const templates = project.getTemplatesForCategory(work.categoryId);
+                templates.forEach(tpl => {
+                    const opt = document.createElement("option");
+                    opt.value = tpl.id;
+                    opt.textContent = tpl.name;
+                    if (work.templateId === tpl.id) opt.selected = true;
+                    selectTpl.appendChild(opt);
+                });
+
+                selectTpl.addEventListener("change", () => {
+                    work.templateId = selectTpl.value ? Number(selectTpl.value) : null;
+                });
+
+                tdTpl.appendChild(selectTpl);
+                tr.appendChild(tdTpl);
+            }
+
+            // Name (simple mode)
+            if (!config.useCategories) {
+                const tdName = document.createElement("td");
+                tdName.classList.add("col-nazwa");
+
+                const nameInput = document.createElement("input");
+                nameInput.type = "text";
+                nameInput.className = "input";
+                nameInput.value = work.name;
+                nameInput.addEventListener("input", () => {
+                    work.name = nameInput.value;
+                });
+
+                tdName.appendChild(nameInput);
+                tr.appendChild(tdName);
+            }
+
+            // Unit
+            const tdUnit = document.createElement("td");
+            tdUnit.classList.add("col-jm");
+
+            const selectUnit = document.createElement("select");
+            selectUnit.className = "input";
+            ["m2", "szt", "mb", "kg"].forEach(unit => {
+                const opt = document.createElement("option");
+                opt.value = unit;
+                opt.textContent = unit;
+                if (opt.value === work.unit) opt.selected = true;
+                selectUnit.appendChild(opt);
             });
 
-            useTplPricesCheckbox.addEventListener("change", () => {
-                const cat = project.getCategoryById(work.categoryId);
-                let tpl = null;
-                if (cat && Array.isArray(cat.templates)) {
-                    tpl = cat.templates.find(t => t.id === work.templateId) || null;
-                }
+            selectUnit.addEventListener("change", () => work.unit = selectUnit.value);
 
-                if (tpl && tpl.defaults && useTplPricesCheckbox.checked) {
-                    work.clientPrice = tpl.defaults.clientPrice || 0;
-                    work.materialPrice = tpl.defaults.materialPrice || 0;
-                    work.laborPrice = tpl.defaults.laborPrice || 0;
+            tdUnit.appendChild(selectUnit);
+            tr.appendChild(tdUnit);
 
-                    clientPriceInput.value = work.clientPrice;
-                    if (materialPriceInput) {
-                        materialPriceInput.value = work.materialPrice;
-                    }
-                    if (laborPriceInput) {
-                        laborPriceInput.value = work.laborPrice;
-                    }
+            // Qty
+            const tdQty = document.createElement("td");
+            tdQty.classList.add("col-ilosc");
 
-                    refreshRowTotals();
-                    updateTotals();
-                }
+            const qtyInput = document.createElement("input");
+            qtyInput.type = "number";
+            qtyInput.className = "input";
+            qtyInput.value = work.quantity;
+            qtyInput.addEventListener("input", () => {
+                work.quantity = parseFloat(qtyInput.value) || 0;
+                refresh();
             });
 
-            const tplWrapper = document.createElement("div");
-            tplWrapper.style.display = "flex";
-            tplWrapper.style.flexDirection = "column";
-            tplWrapper.style.gap = "2px";
-            tplWrapper.appendChild(templateSelect);
-            tplWrapper.appendChild(useTplPricesLabel);
+            tdQty.appendChild(qtyInput);
+            tr.appendChild(tdQty);
 
-            tdTpl.appendChild(tplWrapper);
-            tr.appendChild(tdTpl);
+            // Cena klienta
+            const tdClientPrice = document.createElement("td");
+            tdClientPrice.classList.add("col-cenakl");
+
+            const clientPriceInput = document.createElement("input");
+            clientPriceInput.type = "number";
+            clientPriceInput.className = "input";
+            clientPriceInput.value = work.clientPrice;
+            clientPriceInput.addEventListener("input", () => {
+                work.clientPrice = parseFloat(clientPriceInput.value) || 0;
+                refresh();
+            });
+
+            tdClientPrice.appendChild(clientPriceInput);
+            tr.appendChild(tdClientPrice);
+
+            // Extended: Mat / Rob
+            let tdMat, tdLab;
+
+            if (config.mode === "extended") {
+                tdMat = document.createElement("td");
+                tdMat.classList.add("col-mat");
+
+                const matInput = document.createElement("input");
+                matInput.type = "number";
+                matInput.className = "input";
+                matInput.value = work.materialPrice;
+                matInput.addEventListener("input", () => {
+                    work.materialPrice = parseFloat(matInput.value) || 0;
+                    refresh();
+                });
+
+                tdMat.appendChild(matInput);
+                tr.appendChild(tdMat);
+
+                tdLab = document.createElement("td");
+                tdLab.classList.add("col-rob");
+
+                const labInput = document.createElement("input");
+                labInput.type = "number";
+                labInput.className = "input";
+                labInput.value = work.laborPrice;
+                labInput.addEventListener("input", () => {
+                    work.laborPrice = parseFloat(labInput.value) || 0;
+                    refresh();
+                });
+
+                tdLab.appendChild(labInput);
+                tr.appendChild(tdLab);
+            }
+
+            // Total
+            const tdClientTotal = document.createElement("td");
+            tdClientTotal.classList.add("col-sumakl");
+            tr.appendChild(tdClientTotal);
+
+            const tdCost = document.createElement("td");
+            tdCost.classList.add("col-kosztfirmy");
+            tr.appendChild(tdCost);
+
+            const tdProfit = document.createElement("td");
+            tdProfit.classList.add("col-zysk");
+            tr.appendChild(tdProfit);
+
+            // Actions
+            const tdActions = document.createElement("td");
+            tdActions.classList.add("col-akcje");
+
+            const del = document.createElement("button");
+            del.className = "btn secondary";
+            del.textContent = "Usuń";
+            del.addEventListener("click", () => {
+                room.removeWork(work.id);
+                renderProject();
+            });
+
+            tdActions.appendChild(del);
+            tr.appendChild(tdActions);
+
+            function refresh() {
+                tdClientTotal.textContent = formatCurrency(work.clientTotal);
+                tdCost.textContent = formatCurrency(work.companyCost);
+                tdProfit.textContent = formatCurrency(work.profit);
+                updateTotals();
+            }
+
+            refresh();
+
+            return tr;
         }
 
-        // ====================================================================
-        //                             NAZWA (только без категорий)
-        // ====================================================================
-        let tdName = null;
+        // =====================================================================
+        // MOBILE — АККОРДЕОН
+        // =====================================================================
 
+        const acc = document.createElement("div");
+        acc.className = "work-accordion";
+
+        const header = document.createElement("div");
+        header.className = "work-acc-header";
+        header.innerHTML = `
+        <span>${work.name || "Nowa pozycja"}</span>
+        <span class="work-acc-arrow">▶</span>
+    `;
+        acc.appendChild(header);
+
+        const body = document.createElement("div");
+        body.className = "work-acc-body";
+        acc.appendChild(body);
+
+        header.addEventListener("click", () => {
+            body.classList.toggle("open");
+            header.classList.toggle("open");
+        });
+
+        // ===== Поля внутри аккордеона =====
+        function addField(label, element) {
+            const wrap = document.createElement("div");
+            wrap.style.marginBottom = "12px";
+
+            const l = document.createElement("div");
+            l.textContent = label;
+            l.style.fontSize = "13px";
+            l.style.marginBottom = "4px";
+            wrap.appendChild(l);
+
+            wrap.appendChild(element);
+            body.appendChild(wrap);
+        }
+
+        // Nazwa (если simple mode)
         if (!config.useCategories) {
-            tdName = document.createElement("td");
-            tdName.classList.add("col-nazwa");
-
-            nameInput = document.createElement("input");
-            nameInput.type = "text";
+            const nameInput = document.createElement("input");
             nameInput.className = "input";
-            nameInput.placeholder = "Nazwa pracy";
-            nameInput.value = work.name || "";
+            nameInput.value = work.name;
             nameInput.addEventListener("input", () => {
                 work.name = nameInput.value;
+                header.querySelector("span").textContent = work.name || "Nowa pozycja";
             });
 
-            tdName.appendChild(nameInput);
-            tr.appendChild(tdName);
+            addField("Nazwa", nameInput);
         }
 
-        // ====================================================================
-        //                             JEDNOSTKA
-        // ====================================================================
-        const tdUnit = document.createElement("td");
-        tdUnit.classList.add("col-jm");
-
-        const selectUnit = document.createElement("select");
-        selectUnit.className = "input";
+        // Jednostka
+        const unitSel = document.createElement("select");
+        unitSel.className = "input";
         ["m2", "szt", "mb", "kg"].forEach(u => {
             const opt = document.createElement("option");
             opt.value = u;
             opt.textContent = u;
-            if (u === work.unit) {
-                opt.selected = true;
-            }
-            selectUnit.appendChild(opt);
+            if (u === work.unit) opt.selected = true;
+            unitSel.appendChild(opt);
         });
+        unitSel.addEventListener("change", () => work.unit = unitSel.value);
+        addField("Jm", unitSel);
 
-        selectUnit.addEventListener("change", () => {
-            work.unit = selectUnit.value;
+        // Ilość
+        const qty = document.createElement("input");
+        qty.type = "number";
+        qty.className = "input";
+        qty.value = work.quantity;
+        qty.addEventListener("input", () => {
+            work.quantity = parseFloat(qty.value) || 0;
+            refresh();
         });
+        addField("Ilość", qty);
 
-        tdUnit.appendChild(selectUnit);
-        tr.appendChild(tdUnit);
+        // Cena klienta
+        const cPrice = document.createElement("input");
+        cPrice.type = "number";
+        cPrice.className = "input";
+        cPrice.value = work.clientPrice;
+        cPrice.addEventListener("input", () => {
+            work.clientPrice = parseFloat(cPrice.value) || 0;
+            refresh();
+        });
+        addField("Cena kl.", cPrice);
 
-        // ====================================================================
-        //                               ILOŚĆ
-        // ====================================================================
-        const tdQty = document.createElement("td");
-        tdQty.classList.add("col-ilosc");
-
-        const inputQty = document.createElement("input");
-        inputQty.type = "number";
-        inputQty.min = "0";
-        inputQty.step = "0.01";
-        inputQty.className = "input";
-        inputQty.value = work.quantity || "";
-
-        tdQty.appendChild(inputQty);
-        tr.appendChild(tdQty);
-
-        // ====================================================================
-        //                        CENA DLA KLIENTA
-        // ====================================================================
-        const tdClientPrice = document.createElement("td");
-        tdClientPrice.classList.add("col-cenakl");
-
-        clientPriceInput = document.createElement("input");
-        clientPriceInput.type = "number";
-        clientPriceInput.min = "0";
-        clientPriceInput.step = "0.01";
-        clientPriceInput.className = "input";
-        clientPriceInput.value = work.clientPrice || "";
-
-        tdClientPrice.appendChild(clientPriceInput);
-        tr.appendChild(tdClientPrice);
-
-        // ====================================================================
-        //                    MATERIAŁ / ROBOCIZNA (EXTENDED)
-        // ====================================================================
+        // Extended
         if (config.mode === "extended") {
-            const tdMat = document.createElement("td");
-            tdMat.classList.add("col-mat");
+            const mat = document.createElement("input");
+            mat.type = "number";
+            mat.className = "input";
+            mat.value = work.materialPrice;
+            mat.addEventListener("input", () => {
+                work.materialPrice = parseFloat(mat.value) || 0;
+                refresh();
+            });
+            addField("Mat.", mat);
 
-            materialPriceInput = document.createElement("input");
-            materialPriceInput.type = "number";
-            materialPriceInput.min = "0";
-            materialPriceInput.step = "0.01";
-            materialPriceInput.className = "input";
-            materialPriceInput.value = work.materialPrice || "";
-
-            tdMat.appendChild(materialPriceInput);
-            tr.appendChild(tdMat);
-
-            const tdLab = document.createElement("td");
-            tdLab.classList.add("col-rob");
-
-            laborPriceInput = document.createElement("input");
-            laborPriceInput.type = "number";
-            laborPriceInput.min = "0";
-            laborPriceInput.step = "0.01";
-            laborPriceInput.className = "input";
-            laborPriceInput.value = work.laborPrice || "";
-
-            tdLab.appendChild(laborPriceInput);
-            tr.appendChild(tdLab);
+            const lab = document.createElement("input");
+            lab.type = "number";
+            lab.className = "input";
+            lab.value = work.laborPrice;
+            lab.addEventListener("input", () => {
+                work.laborPrice = parseFloat(lab.value) || 0;
+                refresh();
+            });
+            addField("Rob.", lab);
         }
 
-        // ====================================================================
-        //                            SUMA KLIENTA
-        // ====================================================================
-        const tdClientTotal = document.createElement("td");
-        tdClientTotal.classList.add("col-sumakl");
-        tr.appendChild(tdClientTotal);
+        // Suma
+        const totalField = document.createElement("div");
+        addField("Suma kl.", totalField);
 
-        // ====================================================================
-        //                             KOSZT FIRMY
-        // ====================================================================
-        const tdCost = document.createElement("td");
-        tdCost.classList.add("col-kosztfirmy");
-        tr.appendChild(tdCost);
+        const costField = document.createElement("div");
+        addField("Koszt firmy", costField);
 
-        // ====================================================================
-        //                                   ЗЫСК
-        // ====================================================================
-        const tdProfit = document.createElement("td");
-        tdProfit.classList.add("col-zysk");
-        tr.appendChild(tdProfit);
+        const profitField = document.createElement("div");
+        addField("Zysk", profitField);
 
-        // ====================================================================
-        //                                  AKCJE
-        // ====================================================================
-        const tdActions = document.createElement("td");
-        tdActions.classList.add("col-akcje");
-
-        const deleteBtn = document.createElement("button");
-        deleteBtn.className = "btn secondary";
-        deleteBtn.textContent = "Usuń";
-        deleteBtn.addEventListener("click", () => {
+        // Delete
+        const del = document.createElement("button");
+        del.className = "btn secondary";
+        del.textContent = "Usuń";
+        del.addEventListener("click", () => {
             room.removeWork(work.id);
             renderProject();
         });
+        body.appendChild(del);
 
-        tdActions.appendChild(deleteBtn);
-        tr.appendChild(tdActions);
-
-        // ====================================================================
-        //                     PRZELИЧАНИЕ СУМ
-        // ====================================================================
-        function refreshRowTotals() {
-            tdClientTotal.textContent = formatCurrency(work.clientTotal);
-            tdCost.textContent = formatCurrency(work.companyCost);
-
-            const profit = work.profit;
-            tdProfit.textContent = formatCurrency(profit);
-
-            tdProfit.classList.remove("profit-positive", "profit-negative");
-
-            if (profit > 0.01) {
-                tdProfit.classList.add("profit-positive");
-            } else if (profit < -0.01) {
-                tdProfit.classList.add("profit-negative");
-            }
-        }
-
-        refreshRowTotals();
-
-        inputQty.addEventListener("input", () => {
-            work.quantity = parseFloat(inputQty.value) || 0;
-            refreshRowTotals();
+        function refresh() {
+            totalField.textContent = formatCurrency(work.clientTotal);
+            costField.textContent = formatCurrency(work.companyCost);
+            profitField.textContent = formatCurrency(work.profit);
             updateTotals();
-        });
-
-        clientPriceInput.addEventListener("input", () => {
-            work.clientPrice = parseFloat(clientPriceInput.value) || 0;
-            refreshRowTotals();
-            updateTotals();
-        });
-
-        if (config.mode === "extended") {
-            materialPriceInput.addEventListener("input", () => {
-                work.materialPrice = parseFloat(materialPriceInput.value) || 0;
-                refreshRowTotals();
-                updateTotals();
-            });
-
-            laborPriceInput.addEventListener("input", () => {
-                work.laborPrice = parseFloat(laborPriceInput.value) || 0;
-                refreshRowTotals();
-                updateTotals();
-            });
         }
+        refresh();
 
-        // ====================================================================
-        //                 DATA-LABEL ДЛЯ МОБИЛЬНОГО ВИДА
-        // ====================================================================
-        (function applyMobileLabels() {
-            const labels = [];
-
-            labels.push(config.useNumbering ? "Kod" : "Lp");
-
-            if (config.useCategories) {
-                labels.push("Kat");
-                labels.push("Szablon");
-            } else {
-                labels.push("Nazwa");
-            }
-
-            labels.push("Jm");
-            labels.push("Ilość");
-            labels.push("Cena kl.");
-
-            if (config.mode === "extended") {
-                labels.push("Mat.");
-                labels.push("Rob.");
-            }
-
-            labels.push("Suma kl.");
-            labels.push("Koszt firmy");
-            labels.push("Zysk");
-            labels.push("Akcje");
-
-            const tds = tr.querySelectorAll("td");
-            for (let i = 0; i < tds.length; i++) {
-                const label = labels[i] || "";
-                tds[i].setAttribute("data-label", label);
-            }
-        })();
-
-        return tr;
+        return acc;
     }
+
 
 
 
