@@ -602,6 +602,67 @@ document.addEventListener("DOMContentLoaded", () => {
         roomsContainer.appendChild(roomCard);
     }
 
+    function createSearchableSelect(options, selectedValue, onSelect) {
+        const wrapper = document.createElement("div");
+        wrapper.className = "searchable-select";
+
+        const input = document.createElement("input");
+        input.type = "text";
+        input.className = "input";
+        input.placeholder = "Szukaj…";
+
+        const list = document.createElement("div");
+        list.className = "dropdown-list";
+
+        function renderList(filter = "") {
+            list.innerHTML = "";
+            const filtered = options.filter(o =>
+                o.text.toLowerCase().includes(filter.toLowerCase())
+            );
+
+            filtered.forEach(o => {
+                const item = document.createElement("div");
+                item.className = "dropdown-item";
+                item.textContent = o.text;
+
+                if (o.value == selectedValue) {
+                    item.classList.add("selected");
+                }
+
+                item.addEventListener("click", () => {
+                    selectedValue = o.value;
+                    onSelect(o.value);
+                    input.value = o.text;
+                    list.style.display = "none";
+                });
+
+                list.appendChild(item);
+            });
+        }
+
+        renderList();
+
+        input.addEventListener("input", () => {
+            list.style.display = "block";
+            renderList(input.value);
+        });
+
+        input.addEventListener("focus", () => {
+            list.style.display = "block";
+            renderList(input.value);
+        });
+
+        document.addEventListener("click", e => {
+            if (!wrapper.contains(e.target)) {
+                list.style.display = "none";
+            }
+        });
+
+        wrapper.appendChild(input);
+        wrapper.appendChild(list);
+
+        return wrapper;
+    }
 
 
     function createWorkRow(room, work, isDesktop) {
@@ -903,8 +964,39 @@ document.addEventListener("DOMContentLoaded", () => {
             addField("Kategoria", catSelect);
 
             // ------ SZABLON ------
-            const tplSelect = document.createElement("select");
-            tplSelect.className = "input";
+            const templates = project.getTemplatesForCategory(work.categoryId);
+
+            // формируем массив для поиска
+            const templateOptions = templates.map(t => ({
+                value: t.id,
+                text: t.name
+            }));
+
+            const tplSearch = createSearchableSelect(templateOptions, work.templateId, selectedId => {
+                work.templateId = Number(selectedId);
+
+                const tpl = templates.find(t => t.id === work.templateId);
+                if (!tpl) return;
+
+                // подставляем значения
+                work.name = tpl.name;
+                header.querySelector("span").textContent = work.name;
+
+                if (tpl.defaults) {
+                    work.clientPrice = tpl.defaults.clientPrice || 0;
+                    work.materialPrice = tpl.defaults.materialPrice || 0;
+                    work.laborPrice = tpl.defaults.laborPrice || 0;
+                    if (nameInput) nameInput.value = work.name;
+                    if (cPrice) cPrice.value = work.clientPrice;
+                    if (mat) mat.value = work.materialPrice;
+                    if (lab) lab.value = work.laborPrice;
+                }
+
+                refresh();
+            });
+
+            addField("Szablon", tplSearch);
+
 
             addField("Szablon", tplSelect);
 
