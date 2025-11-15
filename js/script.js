@@ -607,7 +607,7 @@ document.addEventListener("DOMContentLoaded", () => {
     function createWorkRow(room, work, isDesktop) {
 
         // =====================================================================
-        // DESKTOP — возвращаем старую строку таблицы
+        // DESKTOP VIEW (ТАБЛИЦА)
         // =====================================================================
         if (isDesktop) {
             const tr = document.createElement("tr");
@@ -620,11 +620,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 return td;
             }
 
-            // Kod
+            // Kod / Lp
             tr.appendChild(makeTd("col-kod", work.id));
 
-            // Kategorie
+            // Kategorie + Szablon
             if (config.useCategories) {
+                // --- CATEGORY ---
                 const tdCat = document.createElement("td");
                 tdCat.classList.add("col-cat");
 
@@ -646,12 +647,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 selectCat.addEventListener("change", () => {
                     work.categoryId = selectCat.value ? Number(selectCat.value) : null;
+                    renderProject(); // обновляем таблицу шаблонов
                 });
 
                 tdCat.appendChild(selectCat);
                 tr.appendChild(tdCat);
 
-                // Szablon
+                // --- TEMPLATE ---
                 const tdTpl = document.createElement("td");
                 tdTpl.classList.add("col-template");
 
@@ -674,14 +676,30 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 selectTpl.addEventListener("change", () => {
                     work.templateId = selectTpl.value ? Number(selectTpl.value) : null;
+
+                    const selectedCat = project.getCategoryById(work.categoryId);
+                    let tpl = null;
+                    if (selectedCat && Array.isArray(selectedCat.templates)) {
+                        tpl = selectedCat.templates.find(t => t.id === work.templateId);
+                    }
+
+                    if (tpl && tpl.defaults) {
+                        work.name = tpl.name;
+                        work.clientPrice = tpl.defaults.clientPrice || 0;
+                        work.materialPrice = tpl.defaults.materialPrice || 0;
+                        work.laborPrice = tpl.defaults.laborPrice || 0;
+                    }
+
+
+
+                    renderProject();
                 });
 
                 tdTpl.appendChild(selectTpl);
                 tr.appendChild(tdTpl);
             }
 
-            // Name (simple mode)
-            // Name (simple mode)
+            // NAZWA если категории выключены
             if (!config.useCategories) {
                 const tdName = document.createElement("td");
                 tdName.classList.add("col-nazwa");
@@ -695,11 +713,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 });
 
                 tdName.appendChild(nameInput);
-                tr.appendChild(tdName); // ✅ Правильно
+                tr.appendChild(tdName);
             }
 
-
-            // Unit
+            // JEDNOSTKA
             const tdUnit = document.createElement("td");
             tdUnit.classList.add("col-jm");
 
@@ -709,16 +726,15 @@ document.addEventListener("DOMContentLoaded", () => {
                 const opt = document.createElement("option");
                 opt.value = unit;
                 opt.textContent = unit;
-                if (opt.value === work.unit) opt.selected = true;
+                if (unit === work.unit) opt.selected = true;
                 selectUnit.appendChild(opt);
             });
 
             selectUnit.addEventListener("change", () => work.unit = selectUnit.value);
-
             tdUnit.appendChild(selectUnit);
             tr.appendChild(tdUnit);
 
-            // Qty
+            // ILOŚĆ
             const tdQty = document.createElement("td");
             tdQty.classList.add("col-ilosc");
 
@@ -734,7 +750,7 @@ document.addEventListener("DOMContentLoaded", () => {
             tdQty.appendChild(qtyInput);
             tr.appendChild(tdQty);
 
-            // Cena klienta
+            // CENA KLIENTA
             const tdClientPrice = document.createElement("td");
             tdClientPrice.classList.add("col-cenakl");
 
@@ -750,13 +766,10 @@ document.addEventListener("DOMContentLoaded", () => {
             tdClientPrice.appendChild(clientPriceInput);
             tr.appendChild(tdClientPrice);
 
-            // Extended: Mat / Rob
+            // MATERIAL + ROBOTY (extended)
             let tdMat, tdLab;
-
             if (config.mode === "extended") {
                 tdMat = document.createElement("td");
-                tdMat.classList.add("col-mat");
-
                 const matInput = document.createElement("input");
                 matInput.type = "number";
                 matInput.className = "input";
@@ -765,13 +778,10 @@ document.addEventListener("DOMContentLoaded", () => {
                     work.materialPrice = parseFloat(matInput.value) || 0;
                     refresh();
                 });
-
                 tdMat.appendChild(matInput);
                 tr.appendChild(tdMat);
 
                 tdLab = document.createElement("td");
-                tdLab.classList.add("col-rob");
-
                 const labInput = document.createElement("input");
                 labInput.type = "number";
                 labInput.className = "input";
@@ -780,28 +790,22 @@ document.addEventListener("DOMContentLoaded", () => {
                     work.laborPrice = parseFloat(labInput.value) || 0;
                     refresh();
                 });
-
                 tdLab.appendChild(labInput);
                 tr.appendChild(tdLab);
             }
 
-            // Total
+            // SUMY
             const tdClientTotal = document.createElement("td");
-            tdClientTotal.classList.add("col-sumakl");
             tr.appendChild(tdClientTotal);
 
             const tdCost = document.createElement("td");
-            tdCost.classList.add("col-kosztfirmy");
             tr.appendChild(tdCost);
 
             const tdProfit = document.createElement("td");
-            tdProfit.classList.add("col-zysk");
             tr.appendChild(tdProfit);
 
-            // Actions
+            // DELETE
             const tdActions = document.createElement("td");
-            tdActions.classList.add("col-akcje");
-
             const del = document.createElement("button");
             del.className = "btn secondary";
             del.textContent = "Usuń";
@@ -809,17 +813,16 @@ document.addEventListener("DOMContentLoaded", () => {
                 room.removeWork(work.id);
                 renderProject();
             });
-
             tdActions.appendChild(del);
             tr.appendChild(tdActions);
 
+            // REFRESH DESKTOP
             function refresh() {
                 tdClientTotal.textContent = formatCurrency(work.clientTotal);
                 tdCost.textContent = formatCurrency(work.companyCost);
                 tdProfit.textContent = formatCurrency(work.profit);
                 updateTotals();
             }
-
             refresh();
 
             return tr;
@@ -828,7 +831,9 @@ document.addEventListener("DOMContentLoaded", () => {
         // =====================================================================
         // MOBILE — АККОРДЕОН
         // =====================================================================
-
+        // =====================================================================
+        // MOBILE — АККОРДЕОН
+        // =====================================================================
         const acc = document.createElement("div");
         acc.className = "work-accordion";
 
@@ -840,51 +845,24 @@ document.addEventListener("DOMContentLoaded", () => {
 `;
         acc.appendChild(header);
 
-        // === body создаётся здесь — ЭТО ВАЖНО ===
         const body = document.createElement("div");
         body.className = "work-acc-body";
         acc.appendChild(body);
 
-        // ===== Аккордеон — открытие / закрытие =====
+        // заранее объявляем переменные для полей
+        let nameInput;
+        let cPrice;
+        let mat;
+        let lab;
+
+        // open/close
         header.addEventListener("click", () => {
-            const isOpen = acc.classList.toggle("open");
+            const isOpen = body.style.display !== "block";
             body.style.display = isOpen ? "block" : "none";
-
-            const arrow = header.querySelector(".work-acc-arrow");
-            arrow.style.transform = isOpen ? "rotate(90deg)" : "rotate(0deg)";
+            header.querySelector(".work-acc-arrow").style.transform = isOpen ? "rotate(90deg)" : "rotate(0deg)";
         });
 
-
-        // === ВСТАВЛЯЕШЬ КОД С НАЗВАНИЕМ СЮДА ===
-
-        // ====== NAZWA – ВСЕГДА в мобильной версии ======
-        const nameFieldWrapper = document.createElement("div");
-        nameFieldWrapper.classList.add("mobile-field");
-
-        const nameLabel = document.createElement("div");
-        nameLabel.textContent = "Nazwa pozycji";
-        nameLabel.className = "mobile-label";
-
-        const nameInput = document.createElement("input");
-        nameInput.type = "text";
-        nameInput.className = "input full-width";
-        nameInput.placeholder = "Nazwa";
-        nameInput.value = work.name || "";
-
-        nameInput.addEventListener("input", () => {
-            work.name = nameInput.value;
-            header.querySelector("span").textContent = work.name || "Nowa pozycja";
-        });
-
-        nameFieldWrapper.appendChild(nameLabel);
-        nameFieldWrapper.appendChild(nameInput);
-        body.appendChild(nameFieldWrapper);
-
-        // === ПОСЛЕ ЭТОГО → дальше идут JM, Ilość, Cena, Mat, Rob ...
-
-
-
-        // ===== Поля внутри аккордеона =====
+        // helper
         function addField(label, element) {
             const wrap = document.createElement("div");
             wrap.style.marginBottom = "12px";
@@ -893,17 +871,128 @@ document.addEventListener("DOMContentLoaded", () => {
             l.textContent = label;
             l.style.fontSize = "13px";
             l.style.marginBottom = "4px";
-            wrap.appendChild(l);
 
+            wrap.appendChild(l);
             wrap.appendChild(element);
+
             body.appendChild(wrap);
         }
 
+        // ===============================
+        // 1. KATEGORIA + SZABLON
+        // ===============================
+        if (config.useCategories) {
 
+            // ------ KATEGORIA ------
+            const catSelect = document.createElement("select");
+            catSelect.className = "input";
 
-        // Jednostka
+            const optEmptyCat = document.createElement("option");
+            optEmptyCat.value = "";
+            optEmptyCat.textContent = "—";
+            catSelect.appendChild(optEmptyCat);
+
+            project.categories.forEach(cat => {
+                const opt = document.createElement("option");
+                opt.value = cat.id;
+                opt.textContent = cat.name;
+                if (work.categoryId === cat.id) opt.selected = true;
+                catSelect.appendChild(opt);
+            });
+
+            addField("Kategoria", catSelect);
+
+            // ------ SZABLON ------
+            const tplSelect = document.createElement("select");
+            tplSelect.className = "input";
+
+            addField("Szablon", tplSelect);
+
+            function loadTemplates() {
+                tplSelect.innerHTML = "";
+
+                const empty = document.createElement("option");
+                empty.value = "";
+                empty.textContent = "—";
+                tplSelect.appendChild(empty);
+
+                if (!work.categoryId) return;
+
+                const templs = project.getTemplatesForCategory(work.categoryId);
+                templs.forEach(tpl => {
+                    const opt = document.createElement("option");
+                    opt.value = tpl.id;
+                    opt.textContent = tpl.name;
+                    if (tpl.id === work.templateId) opt.selected = true;
+                    tplSelect.appendChild(opt);
+                });
+            }
+
+            loadTemplates();
+
+            // CHANGE CATEGORY
+            catSelect.addEventListener("change", () => {
+                work.categoryId = catSelect.value ? Number(catSelect.value) : null;
+                work.templateId = null;
+                loadTemplates();
+            });
+
+            // CHANGE TEMPLATE
+            tplSelect.addEventListener("change", () => {
+                work.templateId = tplSelect.value ? Number(tplSelect.value) : null;
+
+                const cat = project.getCategoryById(work.categoryId);
+                if (!cat) return;
+
+                const tpl = cat.templates.find(t => t.id === work.templateId);
+                if (!tpl) return;
+
+                // ------ подставляем данные из шаблона ------
+                work.name = tpl.name;
+
+                if (tpl.defaults) {
+                    work.clientPrice = tpl.defaults.clientPrice || 0;
+                    work.materialPrice = tpl.defaults.materialPrice || 0;
+                    work.laborPrice = tpl.defaults.laborPrice || 0;
+                }
+
+                // Обновить заголовок
+                header.querySelector("span").textContent = work.name;
+
+                // Обновить поля
+                if (nameInput) nameInput.value = work.name;
+                if (cPrice) cPrice.value = work.clientPrice;
+                if (mat) mat.value = work.materialPrice;
+                if (lab) lab.value = work.laborPrice;
+
+                refresh();
+            });
+        }
+
+        // ===============================
+        // 2. NAZWA — если категории выключены
+        // ===============================
+        if (!config.useCategories) {
+            nameInput = document.createElement("input");
+            nameInput.type = "text";
+            nameInput.className = "input";
+            nameInput.placeholder = "Nazwa";
+            nameInput.value = work.name;
+
+            nameInput.addEventListener("input", () => {
+                work.name = nameInput.value;
+                header.querySelector("span").textContent = work.name || "Nowa pozycja";
+            });
+
+            addField("Nazwa pozycji", nameInput);
+        }
+
+        // ===============================
+        // 3. JEDNOSTKA
+        // ===============================
         const unitSel = document.createElement("select");
         unitSel.className = "input";
+
         ["m2", "szt", "mb", "kg"].forEach(u => {
             const opt = document.createElement("option");
             opt.value = u;
@@ -911,55 +1000,73 @@ document.addEventListener("DOMContentLoaded", () => {
             if (u === work.unit) opt.selected = true;
             unitSel.appendChild(opt);
         });
+
         unitSel.addEventListener("change", () => work.unit = unitSel.value);
         addField("Jm", unitSel);
 
-        // Ilość
+        // ===============================
+        // 4. ILOŚĆ
+        // ===============================
         const qty = document.createElement("input");
         qty.type = "number";
         qty.className = "input";
         qty.value = work.quantity;
+
         qty.addEventListener("input", () => {
             work.quantity = parseFloat(qty.value) || 0;
             refresh();
         });
+
         addField("Ilość", qty);
 
-        // Cena klienta
-        const cPrice = document.createElement("input");
+        // ===============================
+        // 5. CENA KLIENTA
+        // ===============================
+        cPrice = document.createElement("input");
         cPrice.type = "number";
         cPrice.className = "input";
         cPrice.value = work.clientPrice;
+
         cPrice.addEventListener("input", () => {
             work.clientPrice = parseFloat(cPrice.value) || 0;
             refresh();
         });
+
         addField("Cena kl.", cPrice);
 
-        // Extended
+        // ===============================
+        // 6. EXTENDED (Mat + Rob)
+        // ===============================
         if (config.mode === "extended") {
-            const mat = document.createElement("input");
+
+            mat = document.createElement("input");
             mat.type = "number";
             mat.className = "input";
             mat.value = work.materialPrice;
+
             mat.addEventListener("input", () => {
                 work.materialPrice = parseFloat(mat.value) || 0;
                 refresh();
             });
+
             addField("Mat.", mat);
 
-            const lab = document.createElement("input");
+            lab = document.createElement("input");
             lab.type = "number";
             lab.className = "input";
             lab.value = work.laborPrice;
+
             lab.addEventListener("input", () => {
                 work.laborPrice = parseFloat(lab.value) || 0;
                 refresh();
             });
+
             addField("Rob.", lab);
         }
 
-        // Suma
+        // ===============================
+        // 7. SUMY
+        // ===============================
         const totalField = document.createElement("div");
         addField("Suma kl.", totalField);
 
@@ -969,26 +1076,34 @@ document.addEventListener("DOMContentLoaded", () => {
         const profitField = document.createElement("div");
         addField("Zysk", profitField);
 
-        // Delete
-        const del = document.createElement("button");
-        del.className = "btn secondary";
-        del.textContent = "Usuń";
-        del.addEventListener("click", () => {
+        // ===============================
+        // 8. USUŃ
+        // ===============================
+        const delBtn = document.createElement("button");
+        delBtn.className = "btn secondary";
+        delBtn.textContent = "Usuń";
+        delBtn.addEventListener("click", () => {
             room.removeWork(work.id);
             renderProject();
         });
-        body.appendChild(del);
+        body.appendChild(delBtn);
 
+        // ===============================
+        // 9. UPDATE
+        // ===============================
         function refresh() {
             totalField.textContent = formatCurrency(work.clientTotal);
             costField.textContent = formatCurrency(work.companyCost);
             profitField.textContent = formatCurrency(work.profit);
             updateTotals();
         }
+
         refresh();
 
         return acc;
+
     }
+
 
 
 
