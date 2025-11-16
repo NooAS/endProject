@@ -126,28 +126,36 @@
             const email = document.getElementById("loginEmail").value;
             const password = document.getElementById("loginPassword").value;
 
-            const res = await fetch("http://localhost:4000/auth/login", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    email,
-                    password
-                })
-            });
-
-            const data = await res.json();
             const msg = document.getElementById("loginMsg");
+            msg.innerHTML = "";
 
-            if (res.status === 200) {
-                localStorage.setItem("token", data.token);
-                msg.innerHTML = "<div class='success'>Вы успешно вошли!</div>";
-                setTimeout(() => window.location.href = "/index.html", 800);
-            } else {
-                msg.innerHTML = `<div class='error'>${data.error}</div>`;
+            try {
+                const res = await fetch("/auth/login", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        email,
+                        password
+                    })
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    localStorage.setItem("token", data.token);
+                    msg.innerHTML = "<div class='success'>Вы успешно вошли!</div>";
+                    setTimeout(() => window.location.href = "/index.html", 800);
+                } else {
+                    msg.innerHTML = `<div class='error'>${data.error}</div>`;
+                }
+            } catch (err) {
+                msg.innerHTML = "<div class='error'>Ошибка соединения с сервером</div>";
+                console.error(err);
             }
         }
+
 
 
         // Регистрация
@@ -155,27 +163,32 @@
             const email = document.getElementById("regEmail").value;
             const password = document.getElementById("regPassword").value;
 
-            const res = await fetch("http://localhost:4000/auth/register", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    email,
-                    password
-                })
-            });
-
-            const data = await res.json();
             const msg = document.getElementById("registerMsg");
+            msg.innerHTML = "";
 
-            if (res.status === 200) {
-                msg.innerHTML = "<div class='success'>Регистрация успешна!</div>";
-                setTimeout(() => {
-                    document.getElementById("tabLogin").click();
-                }, 1200);
-            } else {
-                msg.innerHTML = `<div class='error'>${data.error}</div>`;
+            try {
+                const res = await fetch("/auth/register", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        email,
+                        password
+                    })
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    msg.innerHTML = "<div class='success'>Регистрация успешна!</div>";
+                    setTimeout(() => document.getElementById("tabLogin").click(), 1200);
+                } else {
+                    msg.innerHTML = `<div class='error'>${data.error}</div>`;
+                }
+            } catch (err) {
+                msg.innerHTML = "<div class='error'>Ошибка соединения с сервером</div>";
+                console.error(err);
             }
         }
     </script>
