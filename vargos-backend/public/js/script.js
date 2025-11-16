@@ -247,13 +247,78 @@ function savePdfSettingsToStorage(settings) {
 const config = new Config();
 let project = new Project(config);
 
-// ----- Load categories from storage -----
-const savedCats = loadCategoriesFromStorage();
-if (savedCats) {
-    project.categories = savedCats.categories || [];
-    project._catAutoId = savedCats.catAutoId || 1;
-    project._tplAutoId = savedCats.tplAutoId || 1;
+
+/* =====================================
+   API categories — backend version
+===================================== */
+
+async function createCategoryOnServer(name) {
+    const token = localStorage.getItem("token");
+    await fetch("/categories", {
+        method: "POST",
+        headers: {
+            "Authorization": "Bearer " + token,
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ name })
+    });
 }
+
+async function updateCategoryOnServer(id, name) {
+    const token = localStorage.getItem("token");
+    await fetch(`/categories/${id}`, {
+        method: "PUT",
+        headers: {
+            "Authorization": "Bearer " + token,
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ name })
+    });
+}
+
+async function deleteCategoryFromServer(id) {
+    const token = localStorage.getItem("token");
+    await fetch(`/categories/${id}`, {
+        method: "DELETE",
+        headers: { "Authorization": "Bearer " + token }
+    });
+}
+
+async function createTemplateOnServer(categoryId, template) {
+    const token = localStorage.getItem("token");
+
+    await fetch(`/categories/${categoryId}/template`, {
+        method: "POST",
+        headers: {
+            "Authorization": "Bearer " + token,
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(template)
+    });
+}
+
+async function updateTemplateOnServer(templateId, template) {
+    const token = localStorage.getItem("token");
+
+    await fetch(`/categories/template/${templateId}`, {
+        method: "PUT",
+        headers: {
+            "Authorization": "Bearer " + token,
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(template)
+    });
+}
+
+async function deleteTemplateFromServer(templateId) {
+    const token = localStorage.getItem("token");
+    await fetch(`/categories/template/${templateId}`, {
+        method: "DELETE",
+        headers: { "Authorization": "Bearer " + token }
+    });
+}
+
+
 
 // режим нетто/брутто для PDF
 let pdfPriceMode = loadPdfSettingsFromStorage().priceMode; // 'netto' | 'brutto'
@@ -330,7 +395,7 @@ function collectPdfData() {
    GŁÓWNA LOGIKA UI
 ========================= */
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async() => {
     const projectNameHeaderInput = document.getElementById("projectName");
     const projectNameLocalInput = document.getElementById("projectNameInputLocal");
 
@@ -391,7 +456,39 @@ document.addEventListener("DOMContentLoaded", () => {
         loadQuotesHistory();
     });
 
+    async function loadCategoriesFromServer() {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+
+        const res = await fetch("/categories", {
+            headers: { "Authorization": "Bearer " + token }
+        });
+
+        const list = await res.json();
+
+        project.categories = list.map(c => ({
+            id: c.id,
+            name: c.name,
+            templates: (c.templates || []).map(t => ({
+                id: t.id,
+                name: t.name,
+                defaults: t.defaults,
+                categoryId: c.id
+            }))
+        }));
+
+
+        project._catAutoId = Math.max(0, ...project.categories.map(c => c.id)) + 1;
+        project._tplAutoId = Math.max(
+            0,
+            ...project.categories.flatMap(c => c.templates.map(t => t.id))
+        ) + 1;
+
+        renderProject();
+    }
+
     const authBtn = document.getElementById("authBtn");
+    if (token) await loadCategoriesFromServer();
 
     if (token) {
         authBtn.style.display = "none";
@@ -678,9 +775,35 @@ document.addEventListener("DOMContentLoaded", () => {
                     selectCat.appendChild(opt);
                 });
 
+                const updateTemplatesList = () => {
+                    selectTpl.innerHTML = "";
+
+                    const emptyTpl = document.createElement("option");
+                    emptyTpl.value = "";
+                    emptyTpl.textContent = "—";
+                    selectTpl.appendChild(emptyTpl);
+
+                    for (let i = 0; i < project.categories.length; i++) {
+                        if (project.categories[i].id === work.categoryId) {
+                            const templates = project.categories[i].templates;
+
+                            templates.forEach(tpl => {
+                                const opt = document.createElement("option");
+                                opt.value = tpl.id;
+                                opt.textContent = tpl.name;
+                                if (work.templateId === tpl.id) opt.selected = true;
+                                selectTpl.appendChild(opt);
+                            });
+                        }
+                    }
+                };
+
+
                 selectCat.addEventListener("change", () => {
                     work.categoryId = selectCat.value ? Number(selectCat.value) : null;
+                    updateTemplatesList();
                 });
+
 
                 tdCat.appendChild(selectCat);
                 tr.appendChild(tdCat);
@@ -696,7 +819,21 @@ document.addEventListener("DOMContentLoaded", () => {
                 emptyTpl.textContent = "—";
                 selectTpl.appendChild(emptyTpl);
 
-                const templates = project.getTemplatesForCategory(work.categoryId);
+                let foundCategory = null;
+
+                // Ищем категорию вручную
+                for (let i = 0; i < project.categories.length; i++) {
+                    if (project.categories[i].id === work.categoryId) {
+                        foundCategory = project.categories[i];
+                        break;
+                    }
+                }
+
+                // Если категория найдена — используем её шаблоны,
+                // если нет — делаем пустой массив
+                const templates = foundCategory && foundCategory.templates ?
+                    foundCategory.templates : [];
+
                 templates.forEach(tpl => {
                     const opt = document.createElement("option");
                     opt.value = tpl.id;
@@ -704,6 +841,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     if (work.templateId === tpl.id) opt.selected = true;
                     selectTpl.appendChild(opt);
                 });
+
+
 
                 selectTpl.addEventListener("change", () => {
                     work.templateId = selectTpl.value ? Number(selectTpl.value) : null;
@@ -1031,15 +1170,14 @@ document.addEventListener("DOMContentLoaded", () => {
         addCatBtn.className = "btn secondary";
         addCatBtn.textContent = "Dodaj kategorię";
 
-        addCatBtn.addEventListener("click", () => {
+        addCatBtn.addEventListener("click", async() => {
             const name = addCatInput.value.trim();
             if (!name) return;
 
-            project.addCategory(name);
-            saveCategoriesToStorage(project);
-            addCatInput.value = "";
+            await createCategoryOnServer(name);
+            await loadCategoriesFromServer();
             renderCategoriesModal();
-            renderProject();
+
         });
 
         addCatRow.appendChild(addCatInput);
@@ -1090,12 +1228,14 @@ document.addEventListener("DOMContentLoaded", () => {
             editCatBtn.style.cursor = "pointer";
             editCatBtn.textContent = "✎";
             editCatBtn.title = "Edytuj kategorię";
-            editCatBtn.addEventListener("click", () => {
+            editCatBtn.addEventListener("click", async() => {
                 const newName = prompt("Nowa nazwa kategorii:", cat.name);
                 if (newName && newName.trim()) {
-                    cat.name = newName.trim();
-                    saveCategoriesToStorage(project);
+                    await updateCategoryOnServer(cat.id, newName);
+                    await loadCategoriesFromServer();
                     renderCategoriesModal();
+
+
                     renderProject();
                 }
             });
@@ -1104,14 +1244,14 @@ document.addEventListener("DOMContentLoaded", () => {
             deleteCatBtn.style.cursor = "pointer";
             deleteCatBtn.textContent = "🗑";
             deleteCatBtn.title = "Usuń kategorię";
-            deleteCatBtn.addEventListener("click", () => {
+            deleteCatBtn.addEventListener("click", async() => {
                 if (confirm(`Usunąć kategorię "${cat.name}"?`)) {
-                    project.categories = project.categories.filter(c => c.id !== cat.id);
-                    saveCategoriesToStorage(project);
+                    await deleteCategoryFromServer(cat.id);
+                    await loadCategoriesFromServer();
                     renderCategoriesModal();
-                    renderProject();
                 }
             });
+
 
             tools.appendChild(editCatBtn);
             tools.appendChild(deleteCatBtn);
@@ -1183,7 +1323,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 tplPricesRow.style.display = tplUseDefaultsCheckbox.checked ? "flex" : "none";
             });
 
-            tplBtn.addEventListener("click", () => {
+            tplBtn.addEventListener("click", async() => {
                 const name = tplNameInput.value.trim();
                 if (!name) return;
                 const defaults = tplUseDefaultsCheckbox.checked ? {
@@ -1191,8 +1331,13 @@ document.addEventListener("DOMContentLoaded", () => {
                     materialPrice: parseFloat(tplMatPriceInput.value) || 0,
                     laborPrice: parseFloat(tplLabPriceInput.value) || 0
                 } : null;
-                project.addTemplateToCategory(cat.id, { name, defaults });
-                saveCategoriesToStorage(project);
+                await createTemplateOnServer(cat.id, {
+                    name,
+                    defaults
+                });
+                await loadCategoriesFromServer();
+                renderCategoriesModal();
+
                 tplNameInput.value = "";
                 tplClientPriceInput.value = "";
                 tplMatPriceInput.value = "";
@@ -1200,7 +1345,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 tplUseDefaultsCheckbox.checked = false;
                 tplPricesRow.style.display = "none";
                 renderCategoriesModal();
-                renderProject();
             });
 
             if (cat.templates.length > 0) {
@@ -1256,12 +1400,12 @@ document.addEventListener("DOMContentLoaded", () => {
                     deleteTpl.style.cursor = "pointer";
                     deleteTpl.textContent = "🗑";
                     deleteTpl.title = "Usuń pracę";
-                    deleteTpl.addEventListener("click", () => {
+                    deleteTpl.addEventListener("click", async() => {
                         if (confirm(`Usunąć "${tpl.name}"?`)) {
-                            cat.templates = cat.templates.filter(t => t.id !== tpl.id);
-                            saveCategoriesToStorage(project);
+                            await deleteTemplateFromServer(tpl.id);
+                            await loadCategoriesFromServer();
                             renderCategoriesModal();
-                            renderProject();
+
                         }
                     });
 
@@ -1399,6 +1543,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
     });
+    await loadCategoriesFromServer();
 
     applyConfig();
     renderProject();
@@ -1478,13 +1623,14 @@ function buildItemsArray() {
             }
 
             items.push({
-                category: category,
+                categoryId: category,
                 room: roomName,
                 job: jobName,
                 quantity: qty,
                 price: price,
                 total: total
             });
+
         }
     }
 
@@ -1681,15 +1827,16 @@ function addWorkFromQuote(i) {
 
     // Категории: если конфиг говорит "используем категории" и в item есть строка категории
     // то создаём или находим категорию с таким именем и привязываем work.categoryId
-    if (config.useCategories && i.category) {
-        let cat = project.categories.find(c => c.name === i.category);
-        if (!cat) {
-            cat = project.addCategory(i.category);
-        }
+    if (config.useCategories && i.categoryId !== undefined && i.categoryId !== null) {
+        let cat = project.categories.find(c => c.id === i.categoryId);
+
+        // Категория может быть удалена на сервере → не создаём новую
         if (cat) {
             w.categoryId = cat.id;
         }
     }
+
+
 
     room.addWork(w);
 }

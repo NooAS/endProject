@@ -2,21 +2,7 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 // Получить категории пользователя
-export const getCategories = async(req, res) => {
-    try {
-        const userId = req.user.userId;
 
-        const categories = await prisma.category.findMany({
-            where: { userId },
-            orderBy: { order: "asc" }
-        });
-
-        res.json(categories);
-    } catch (e) {
-        console.error(e);
-        res.status(500).json({ message: "Server error" });
-    }
-};
 
 // Создать категорию
 export const createCategory = async(req, res) => {
