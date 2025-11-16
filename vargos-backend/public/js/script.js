@@ -458,25 +458,60 @@ document.addEventListener("DOMContentLoaded", async() => {
 
     async function loadCategoriesFromServer() {
         const token = localStorage.getItem("token");
-        if (!token) return;
 
-        const res = await fetch("/categories", {
-            headers: { "Authorization": "Bearer " + token }
-        });
+        // Если токена нет → категории пустые
+        if (!token) {
+            console.warn("No token found — categories not loaded");
+            project.categories = [];
+            return [];
+        }
 
-        const list = await res.json();
+        let res;
+        try {
+            res = await fetch("/categories", {
+                headers: { "Authorization": "Bearer " + token }
+            });
+        } catch (e) {
+            console.error("Network error while loading categories:", e);
+            project.categories = [];
+            return [];
+        }
 
+        if (!res.ok) {
+            console.error("Server returned error:", res.status, await res.text());
+            project.categories = [];
+            return [];
+        }
+
+        let list;
+        try {
+            list = await res.json();
+        } catch (e) {
+            console.error("Invalid JSON returned:", e);
+            project.categories = [];
+            return [];
+        }
+
+        // Проверка, что list — это массив
+        if (!Array.isArray(list)) {
+            console.error("Categories response is NOT array:", list);
+            project.categories = [];
+            return [];
+        }
+
+        // Нормальная обработка
         project.categories = list.map(c => ({
             id: c.id,
             name: c.name,
-            templates: (c.templates || []).map(t => ({
-                id: t.id,
-                name: t.name,
-                defaults: t.defaults,
-                categoryId: c.id
-            }))
+            templates: Array.isArray(c.templates) ?
+                c.templates.map(t => ({
+                    id: t.id,
+                    name: t.name,
+                    defaults: t.defaults,
+                    categoryId: c.id
+                })) :
+                []
         }));
-
 
         project._catAutoId = Math.max(0, ...project.categories.map(c => c.id)) + 1;
         project._tplAutoId = Math.max(
@@ -485,7 +520,10 @@ document.addEventListener("DOMContentLoaded", async() => {
         ) + 1;
 
         renderProject();
+
+        return project.categories;
     }
+
 
     const authBtn = document.getElementById("authBtn");
     if (token) await loadCategoriesFromServer();
