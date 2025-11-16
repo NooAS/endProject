@@ -8,62 +8,59 @@ datasource db {
 }
 
 model User {
-  id        Int        @id @default(autoincrement())
-  email     String     @unique
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
   password  String
-  createdAt DateTime   @default(now())
+  createdAt DateTime @default(now())
 
-  quotes     Quote[]
   categories Category[]
   jobs       Job[]
+  quotes     Quote[]
 }
 
 model Category {
-  id        Int      @id @default(autoincrement())
-  name      String
-  order     Int
-  isDefault Boolean   @default(false)
+  id    Int    @id @default(autoincrement())
+  name  String
+  order Int    @default(0)
 
-userId Int
-user   User @relation(fields: [userId], references: [id])
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
 
-  jobs      Job[]
+  jobs Job[] // все работы в этой категории
 }
 
 model Job {
-  id          Int      @id @default(autoincrement())
-  name        String
-  unit        String
-  price       Float
+  id    Int    @id @default(autoincrement())
+  name  String
+  unit  String
+  price Float
 
-  categoryId  Int
-  category    Category @relation(fields: [categoryId], references: [id])
+  categoryId Int
+  category   Category @relation(fields: [categoryId], references: [id])
 
-userId Int
-user   User @relation(fields: [userId], references: [id])
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
 }
 
 model Quote {
   id        Int         @id @default(autoincrement())
   userId    Int
   user      User        @relation(fields: [userId], references: [id])
-
   name      String
   total     Float
   createdAt DateTime    @default(now())
-
   items     QuoteItem[]
 }
 
 model QuoteItem {
-  id        Int      @id @default(autoincrement())
-  quoteId   Int
-  quote     Quote    @relation(fields: [quoteId], references: [id])
+  id      Int   @id @default(autoincrement())
+  quoteId Int
+  quote   Quote @relation(fields: [quoteId], references: [id])
 
-  category  String?
-  room      String?
-  job       String
-  quantity  Float
-  price     Float
-  total     Float
+  category String?
+  room     String?
+  job      String
+  quantity Float
+  price    Float
+  total    Float
 }

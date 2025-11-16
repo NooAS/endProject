@@ -1,153 +1,107 @@
-const prisma = require("../prisma");
+import { PrismaClient } from "@prisma/client";
+const prisma = new PrismaClient();
 
-// ===== Сохранение новой сметы =====
-exports.saveQuote = async(req, res) => {
+export const saveQuote = async(req, res) => {
     try {
-        const userId = req.user.id;
-        const { name, total, items } = req.body;
+        const userId = req.user.userId;
+        const { id, name, total, items } = req.body;
 
-        // 1. Создаём Quote
-        const quote = await prisma.quote.create({
-            data: {
-                name,
-                total,
-                userId
-            }
-        });
+        if (!name || !items || !Array.isArray(items)) {
+            return res.status(400).json({ message: "Invalid data" });
+        }
 
-        // 2. Создаём элементы
-        const quoteItemsData = items.map(it => ({
-            quoteId: quote.id,
-            category: it.category || null,
-            room: it.room || null,
-            job: it.job,
-            quantity: it.quantity,
-            price: it.price,
-            total: it.total
-        }));
+        let quote;
 
-        await prisma.quoteItem.createMany({
-            data: quoteItemsData
-        });
+        // если id есть → обновляем
+        if (id) {
+            quote = await prisma.quote.update({
+                where: { id },
+                data: {
+                    name,
+                    total,
+                    items: {
+                        deleteMany: {},
+                        create: items
+                    }
+                }
+            });
+        } else {
+            // создаём новую
+            quote = await prisma.quote.create({
+                data: {
+                    userId,
+                    name,
+                    total,
+                    items: {
+                        create: items
+                    }
+                }
+            });
+        }
 
         res.json({ success: true, quoteId: quote.id });
+
     } catch (e) {
-        console.error(e);
-        res.status(500).json({ error: "Ошибка сохранения сметы" });
+        console.log(e);
+        res.status(500).json({ message: "Server error" });
     }
 };
 
-
-// ===== История смет =====
-exports.getQuotes = async(req, res) => {
+export const getMyQuotes = async(req, res) => {
     try {
-        const userId = req.user.id;
-
         const quotes = await prisma.quote.findMany({
-            where: { userId },
+            where: { userId: req.user.userId },
+            include: { items: true },
             orderBy: { createdAt: "desc" }
         });
 
         res.json(quotes);
     } catch (e) {
-        res.status(500).json({ error: "Ошибка загрузки истории" });
+        res.status(500).json({ message: "Server error" });
     }
 };
 
-
-// ===== Загрузка одной сметы (для редактирования) =====
-exports.getQuote = async(req, res) => {
+export const getQuoteById = async(req, res) => {
     try {
-        const userId = req.user.id;
         const id = Number(req.params.id);
+        const userId = req.user.userId;
 
-        const quote = await prisma.quote.findFirst({
+        const q = await prisma.quote.findFirst({
             where: { id, userId },
             include: { items: true }
         });
 
-        if (!quote) return res.status(404).json({ error: "Смета не найдена" });
+        if (!q) return res.status(404).json({ message: "Not found" });
 
-        res.json(quote);
+        res.json(q);
+
     } catch (e) {
-        res.status(500).json({ error: "Ошибка загрузки сметы" });
+        res.status(500).json({ message: "Server error" });
     }
 };
 
-
-// ===== Обновление сметы =====
-exports.updateQuote = async(req, res) => {
+export const deleteQuoteById = async(req, res) => {
     try {
         const id = Number(req.params.id);
-        const userId = req.user.id;
-        const { name, total, items } = req.body;
+        const userId = req.user.userId;
 
-        // 1. Проверяем владельца
-        const existing = await prisma.quote.findFirst({
+        const q = await prisma.quote.findFirst({
             where: { id, userId }
         });
 
-        if (!existing) {
-            return res.status(404).json({ error: "Смета не найдена" });
-        }
+        if (!q) return res.status(404).json({ message: "Not found" });
 
-        // 2. Обновление заголовка
-        await prisma.quote.update({
-            where: { id },
-            data: { name, total }
-        });
-
-        // 3. Удаляем старые позиции
         await prisma.quoteItem.deleteMany({
             where: { quoteId: id }
         });
 
-        // 4. Добавляем новые позиции
-        const newItems = items.map(it => ({
-            quoteId: id,
-            category: it.category || null,
-            room: it.room || null,
-            job: it.job,
-            quantity: it.quantity,
-            price: it.price,
-            total: it.total
-        }));
-
-        await prisma.quoteItem.createMany({
-            data: newItems
+        await prisma.quote.delete({
+            where: { id }
         });
 
         res.json({ success: true });
 
     } catch (e) {
-        console.error(e);
-        res.status(500).json({ error: "Ошибка обновления сметы" });
-    }
-};
-
-
-// ===== Удаление сметы =====
-exports.deleteQuote = async(req, res) => {
-    try {
-        const id = Number(req.params.id);
-        const userId = req.user.id;
-
-        // проверяем принадлежность
-        const existing = await prisma.quote.findFirst({
-            where: { id, userId }
-        });
-
-        if (!existing) {
-            return res.status(404).json({ error: "Смета не найдена" });
-        }
-
-        // удаляем
-        await prisma.quoteItem.deleteMany({ where: { quoteId: id } });
-        await prisma.quote.delete({ where: { id } });
-
-        res.json({ success: true });
-    } catch (e) {
-        console.error(e);
-        res.status(500).json({ error: "Ошибка удаления сметы" });
+        res.status(500).json({ message: "Server error" });
     }
 };
