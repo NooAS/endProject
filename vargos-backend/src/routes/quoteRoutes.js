@@ -192,3 +192,79 @@ router.get("/:id", authMiddleware, async(req, res) => {
 
     res.json(quote);
 });
+
+router.post("/save", authMiddleware, async(req, res) => {
+    try {
+        const userId = req.user.userId;
+        const { name, total, items } = req.body;
+
+        if (!name || !items || !Array.isArray(items)) {
+            return res.status(400).json({ message: "Invalid quote data" });
+        }
+
+        // Пытаемся найти смету с таким же name у этого пользователя
+        const existing = await prisma.quote.findFirst({
+            where: { userId, name },
+            include: { items: true }
+        });
+
+        let quote;
+
+        if (existing) {
+            // Удаляем старые позиции и обновляем
+            await prisma.quoteItem.deleteMany({
+                where: { quoteId: existing.id }
+            });
+
+            quote = await prisma.quote.update({
+                where: { id: existing.id },
+                data: {
+                    total,
+                    items: {
+                        create: items.map(i => ({
+                            category: i.category,
+                            room: i.room,
+                            job: i.job,
+                            quantity: i.quantity,
+                            price: i.price,
+                            total: i.total
+                        }))
+                    }
+                }
+            });
+
+            return res.json({
+                message: "Смета обновлена",
+                quoteId: quote.id
+            });
+        } else {
+            // Создаём новую
+            quote = await prisma.quote.create({
+                data: {
+                    name,
+                    total,
+                    userId,
+                    items: {
+                        create: items.map(i => ({
+                            category: i.category,
+                            room: i.room,
+                            job: i.job,
+                            quantity: i.quantity,
+                            price: i.price,
+                            total: i.total
+                        }))
+                    }
+                }
+            });
+
+            return res.json({
+                message: "Смета сохранена",
+                quoteId: quote.id
+            });
+        }
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Server error" });
+    }
+});

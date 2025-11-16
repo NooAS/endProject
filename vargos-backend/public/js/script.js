@@ -529,6 +529,8 @@ document.addEventListener("DOMContentLoaded", () => {
         updateTotals();
     }
 
+    window.renderProject = renderProject;
+
     function renderRoom(room) {
         const roomCard = document.createElement("div");
         roomCard.className = "room-card";
@@ -1374,6 +1376,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     generateClientPdfBtn.addEventListener("click", async() => {
         collectPdfData();
+        await saveQuoteToServer(); // ← тут один раз
         generateClientPdf();
         closePdfDataModal();
     });
@@ -1383,6 +1386,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     generateOwnerPdfBtn.addEventListener("click", async() => {
         collectPdfData();
+        await saveQuoteToServer(); // ← тут один раз
         generateOwnerPdf();
         closePdfDataModal();
     });
@@ -1592,45 +1596,72 @@ if (editId) {
     loadQuoteFromServer(editId);
 }
 
-
 async function loadQuoteFromServer(id) {
     const token = localStorage.getItem("token");
+    if (!token) {
+        console.warn("Нет токена — не можем загрузить смету");
+        return;
+    }
 
     const res = await fetch("/quotes/" + id, {
         headers: { "Authorization": "Bearer " + token }
     });
 
+    if (!res.ok) {
+        console.error("Ошибка загрузки сметы", await res.text());
+        return;
+    }
+
     const quote = await res.json();
 
-    project = new Project(config); // создаём пустой проект заново
+    // 1. Название проекта
     project.setName(quote.name);
+    const headerNameInput = document.getElementById("projectName");
+    const localNameInput = document.getElementById("projectNameInputLocal");
+    if (headerNameInput) headerNameInput.value = quote.name;
+    if (localNameInput) localNameInput.value = quote.name;
 
-    // Название проекта в UI
-    document.getElementById("projectName").value = quote.name;
-    document.getElementById("projectNameInputLocal").value = quote.name;
+    // 2. Определяем, использовались ли категории в этой смете
+    const hasAnyCategory = quote.items.some(
+        item => item.category !== null && item.category !== ""
+    );
+    config.useCategories = hasAnyCategory;
 
-    // Восстанавливаем комнаты и работы
+    // Обновляем чекбокс "Używać kategorii" в UI
+    const cfgUseCategoriesCheckbox = document.getElementById("cfgUseCategories");
+    if (cfgUseCategoriesCheckbox) {
+        cfgUseCategoriesCheckbox.checked = config.useCategories;
+    }
+
+    // 3. Очищаем текущий проект
+    project.rooms = [];
+    project._roomAutoId = 1;
+
+    // 4. Восстанавливаем работы из items
     quote.items.forEach(item => {
         addWorkFromQuote(item);
     });
 
-    // Перерисовываем интерфейс
-    renderProject();
+    // 5. Перерисовываем интерфейс
+    if (window.renderProject) {
+        window.renderProject();
+    }
 
+    // 6. Больше не в режиме "edit по id из localStorage"
     localStorage.removeItem("editQuoteId");
 }
 
 function addWorkFromQuote(i) {
     let room;
 
-    // если есть название комнаты
-    if (i.room) {
+    // Если в item есть название комнаты — используем его
+    if (i.room && i.room.trim() !== "") {
         room = project.rooms.find(r => r.name === i.room);
         if (!room) {
             room = project.addRoom(i.room);
         }
     } else {
-        // если комнаты нет, используем первую (глобальные работы)
+        // Если комнаты нет → либо создаём "Pozycje ogólne", либо берем первую
         if (project.rooms.length === 0) {
             room = project.addRoom("Pozycje ogólne");
         } else {
@@ -1641,19 +1672,29 @@ function addWorkFromQuote(i) {
     const workId = project.generateWorkId(room);
     const w = new Work(workId);
 
+    // Название работы
     w.name = i.job;
+    // Количество
     w.quantity = i.quantity;
+    // Цена клиента (netto)
     w.clientPrice = i.price;
 
-    // extended mode — материалы/робота (если нужны)
-    w.materialPrice = 0;
-    w.laborPrice = 0;
-
-    // категория сохранена как string → у тебя id категорий из localStorage не совпадают
-    w.categoryId = null;
+    // Категории: если конфиг говорит "используем категории" и в item есть строка категории
+    // то создаём или находим категорию с таким именем и привязываем work.categoryId
+    if (config.useCategories && i.category) {
+        let cat = project.categories.find(c => c.name === i.category);
+        if (!cat) {
+            cat = project.addCategory(i.category);
+        }
+        if (cat) {
+            w.categoryId = cat.id;
+        }
+    }
 
     room.addWork(w);
 }
+
+
 
 
 
@@ -1707,7 +1748,6 @@ function addWorkFromQuote(i) {
 
 
 async function generateClientPdf() {
-    await saveQuoteToServer(); // <-- единственный вызов сохранения
 
     const { jsPDF } = window.jspdf;
 
@@ -1858,7 +1898,6 @@ async function generateClientPdf() {
 
 
 async function generateOwnerPdf() {
-    await saveQuoteToServer(); // <-- единственный вызов
 
     const { jsPDF } = window.jspdf;
 
