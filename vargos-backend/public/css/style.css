@@ -24,6 +24,26 @@ body {
     padding: 0 20px;
 }
 
+.auth-btn {
+    padding: 10px 18px;
+    background-color: #2563eb;
+    color: white;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: 0.2s;
+    white-space: nowrap;
+    /* чтобы текст не переносился */
+}
+
+.logout-btn {
+    background: #dc2626;
+}
+
+.logout-btn:hover {
+    background: #b91c1c;
+}
+
 .app-header {
     background: #ffffff;
     border-bottom: 1px solid #d7dde5;

@@ -1357,8 +1357,34 @@ function relocatePdfPanel() {
     }
 }
 
+document.addEventListener("DOMContentLoaded", () => {
+    const token = localStorage.getItem("token");
+
+    const authBtn = document.getElementById("authBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
+
+    if (token) {
+        // Авторизован → показываем "Выйти"
+        authBtn.style.display = "none";
+        logoutBtn.style.display = "inline-block";
+    } else {
+        // Не авторизован → показываем "Войти / Регистрация"
+        authBtn.style.display = "inline-block";
+        logoutBtn.style.display = "none";
+    }
+
+    logoutBtn.addEventListener("click", () => {
+        localStorage.removeItem("token");
+        window.location.reload();
+    });
+});
+
+
+
 window.addEventListener("resize", relocatePdfPanel);
 window.addEventListener("DOMContentLoaded", relocatePdfPanel);
+
+
 
 
 /* =========================
