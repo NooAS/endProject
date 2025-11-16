@@ -16,16 +16,18 @@ model User {
   categories Category[]
   jobs       Job[]
   quotes     Quote[]
+  templates  Template[]
 }
 
 model Template {
   id         Int      @id @default(autoincrement())
   name       String
-  defaults   String?   // JSON текст
+  defaults   Json?
   categoryId Int
   category   Category @relation(fields: [categoryId], references: [id])
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id])
 }
-
 
 model Category {
   id    Int    @id @default(autoincrement())
@@ -35,10 +37,9 @@ model Category {
   userId Int
   user   User @relation(fields: [userId], references: [id])
 
-  jobs       Job[]       // твои старые работы
-  templates  Template[]  // ---- добавляем сюда ----
+  jobs      Job[]
+  templates Template[]
 }
-
 
 model Job {
   id    Int    @id @default(autoincrement())
@@ -74,4 +75,8 @@ model QuoteItem {
   quantity Float
   price    Float
   total    Float
+
+  materialPrice Float?
+  laborPrice    Float?
+  templateId    Int?
 }

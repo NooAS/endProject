@@ -4,6 +4,14 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 const router = Router();
+import express from "express";
+import auth from "../middlewares/authMiddleware.js"; // <-- ВАЖНО
+import {
+    createCategory,
+    deleteCategory,
+    createTemplate
+} from "../controllers/categoryController.js";
+
 
 /* ===============================
    Получить категории пользователя
@@ -163,6 +171,11 @@ router.post("/:categoryId/template", authMiddleware, async(req, res) => {
         const categoryId = Number(req.params.categoryId);
         const { name, defaults } = req.body;
 
+        if (!name || !name.trim()) {
+            return res.status(400).json({ message: "Некорректное имя шаблона" });
+        }
+
+        // Проверка принадлежности категории
         const category = await prisma.category.findFirst({
             where: { id: categoryId, userId }
         });
@@ -171,27 +184,24 @@ router.post("/:categoryId/template", authMiddleware, async(req, res) => {
             return res.status(404).json({ message: "Категория не найдена" });
         }
 
+        // Создаём шаблон
         const tpl = await prisma.template.create({
             data: {
-                name,
-                defaults: defaults ? JSON.stringify(defaults) : null,
-                categoryId
+                name: name.trim(),
+                defaults: defaults || null, // JSON хранится корректно
+                categoryId,
+                userId
             }
         });
 
-        const updatedCategory = await prisma.category.findUnique({
-            where: { id: categoryId },
-            include: { templates: true }
-        });
-        res.json(await prisma.category.findUnique({
-            where: { id },
-            include: { templates: true }
-        }));
+        res.json(tpl);
+
     } catch (e) {
-        console.error(e);
+        console.error("TEMPLATE ERROR:", e);
         res.status(500).json({ message: "Ошибка создания шаблона" });
     }
 });
+
 
 /* =====================================
    Обновить шаблон

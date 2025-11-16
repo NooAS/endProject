@@ -1615,7 +1615,10 @@ function buildItemsArray() {
 
                 quantity: w.quantity || 0,
                 price: w.clientPrice || 0,
-                total: w.clientTotal || 0
+                total: w.clientTotal || 0,
+                materialPrice: w.materialPrice,
+                laborPrice: w.laborPrice,
+                templateId: w.templateId
             });
         }
     }
@@ -1812,6 +1815,23 @@ function addWorkFromQuote(i) {
     w.quantity = i.quantity;
     // Цена клиента (netto)
     w.clientPrice = i.price;
+
+    w.materialPrice = i.materialPrice || 0;
+    w.laborPrice = i.laborPrice || 0;
+    w.templateId = i.templateId || null;
+
+    if (w.templateId && w.categoryId) {
+        const cat = project.categories.find(c => c.id === w.categoryId);
+        if (cat) {
+            const tpl = cat.templates.find(t => t.id === w.templateId);
+            if (tpl && tpl.defaults) {
+                w.clientPrice = tpl.defaults.clientPrice || w.clientPrice;
+                w.materialPrice = tpl.defaults.materialPrice || w.materialPrice;
+                w.laborPrice = tpl.defaults.laborPrice || w.laborPrice;
+            }
+        }
+    }
+
 
     // Категории: если конфиг говорит "используем категории" и в item есть строка категории
     // то создаём или находим категорию с таким именем и привязываем work.categoryId

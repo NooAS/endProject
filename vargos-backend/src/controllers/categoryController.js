@@ -38,3 +38,41 @@ export const deleteCategory = async(req, res) => {
         res.status(500).json({ message: "Server error" });
     }
 };
+
+// Создать шаблон в категории
+export const createTemplate = async(req, res) => {
+    try {
+        const userId = req.user.userId;
+        const categoryId = Number(req.params.id);
+        const { name, defaults } = req.body;
+
+        if (!name) {
+            return res.status(400).json({ message: "Name is required" });
+        }
+
+        // Проверяем, что категория принадлежит пользователю
+        const cat = await prisma.category.findFirst({
+            where: { id: categoryId, userId }
+        });
+
+        if (!cat) {
+            return res.status(404).json({ message: "Category not found" });
+        }
+
+        // Создаём шаблон
+        const template = await prisma.template.create({
+            data: {
+                name,
+                defaults,
+                categoryId,
+                userId
+            }
+        });
+
+        res.json(template);
+
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ message: "Server error" });
+    }
+};
