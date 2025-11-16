@@ -509,8 +509,7 @@ document.addEventListener("DOMContentLoaded", async() => {
                     name: t.name,
                     defaults: t.defaults,
                     categoryId: c.id
-                })) :
-                []
+                })) : []
         }));
 
         project._catAutoId = Math.max(0, ...project.categories.map(c => c.id)) + 1;
@@ -1684,7 +1683,7 @@ async function saveQuoteToServer() {
 
     try {
         console.log("PAYLOAD:", payload);
-        var res = await fetch("http://localhost:4000/quotes/save", {
+        var res = await fetch("/quotes/save", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
