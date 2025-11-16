@@ -7,40 +7,51 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Category {
-  id        Int    @id @default(autoincrement())
-  name      String
-  order     Int
-  isDefault Boolean @default(false)
-  jobs      Job[]
+model User {
+  id        Int        @id @default(autoincrement())
+  email     String     @unique
+  password  String
+  createdAt DateTime   @default(now())
+
+  quotes     Quote[]
+  categories Category[]
+  jobs       Job[]
 }
 
+model Category {
+  id        Int      @id @default(autoincrement())
+  name      String
+  order     Int
+  isDefault Boolean   @default(false)
+
+userId Int
+user   User @relation(fields: [userId], references: [id])
+
+  jobs      Job[]
+}
 
 model Job {
   id          Int      @id @default(autoincrement())
   name        String
   unit        String
   price       Float
+
   categoryId  Int
   category    Category @relation(fields: [categoryId], references: [id])
-}
 
-model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  password  String
-  createdAt DateTime @default(now())
-
-  quotes   Quote[]
+userId Int
+user   User @relation(fields: [userId], references: [id])
 }
 
 model Quote {
   id        Int         @id @default(autoincrement())
   userId    Int
   user      User        @relation(fields: [userId], references: [id])
+
   name      String
   total     Float
   createdAt DateTime    @default(now())
+
   items     QuoteItem[]
 }
 
@@ -56,4 +67,3 @@ model QuoteItem {
   price     Float
   total     Float
 }
-

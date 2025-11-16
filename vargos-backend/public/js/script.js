@@ -283,47 +283,7 @@ window.openModal = openModal;
    DANE DO PDF
 ========================= */
 
-const editId = localStorage.getItem("editQuoteId");
-if (editId) {
-    loadQuoteFromServer(editId);
-}
 
-async function loadQuoteFromServer(id) {
-    const token = localStorage.getItem("token");
-
-    const res = await fetch("/quotes/" + id, {
-        headers: { "Authorization": "Bearer " + token }
-    });
-
-    const quote = await res.json();
-
-    // Загружаем имя проекта
-    project.name = quote.name;
-    document.getElementById("projectName").value = quote.name;
-    document.getElementById("projectNameInputLocal").value = quote.name;
-
-    // Очищаем текущие комнаты/работы
-    rooms.length = 0;
-    renderAllRooms();
-
-    // Добавляем элементы из базы
-    quote.items.forEach(item => {
-        addWorkFromQuote(item);
-    });
-
-    localStorage.removeItem("editQuoteId");
-}
-
-function addWorkFromQuote(i) {
-    addWork({
-        room: i.room || "",
-        category: i.category || "",
-        name: i.job,
-        quantity: i.quantity,
-        priceKlient: i.price,
-        total: i.total
-    });
-}
 
 
 function collectPdfData() {
@@ -554,6 +514,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function renderProject() {
+        window.renderProject = renderProject;
+
         clearRoomsUI();
 
         if (!config.useRooms && project.rooms.length === 0) {
@@ -1606,10 +1568,9 @@ async function loadQuotesHistory() {
 function editQuote(id) {
     localStorage.setItem("editQuoteId", id);
     closeModal(historyModal);
-
-    // Перезагружаем index.html → данные подтянутся автоматически
     location.reload();
 }
+
 
 async function deleteQuote(id) {
     if (!confirm("Usunąć smetę?")) return;
@@ -1626,6 +1587,75 @@ async function deleteQuote(id) {
     loadQuotesHistory(); // обновляем список
 }
 
+const editId = localStorage.getItem("editQuoteId");
+if (editId) {
+    loadQuoteFromServer(editId);
+}
+
+
+async function loadQuoteFromServer(id) {
+    const token = localStorage.getItem("token");
+
+    const res = await fetch("/quotes/" + id, {
+        headers: { "Authorization": "Bearer " + token }
+    });
+
+    const quote = await res.json();
+
+    project = new Project(config); // создаём пустой проект заново
+    project.setName(quote.name);
+
+    // Название проекта в UI
+    document.getElementById("projectName").value = quote.name;
+    document.getElementById("projectNameInputLocal").value = quote.name;
+
+    // Восстанавливаем комнаты и работы
+    quote.items.forEach(item => {
+        addWorkFromQuote(item);
+    });
+
+    // Перерисовываем интерфейс
+    renderProject();
+
+    localStorage.removeItem("editQuoteId");
+}
+
+function addWorkFromQuote(i) {
+    let room;
+
+    // если есть название комнаты
+    if (i.room) {
+        room = project.rooms.find(r => r.name === i.room);
+        if (!room) {
+            room = project.addRoom(i.room);
+        }
+    } else {
+        // если комнаты нет, используем первую (глобальные работы)
+        if (project.rooms.length === 0) {
+            room = project.addRoom("Pozycje ogólne");
+        } else {
+            room = project.rooms[0];
+        }
+    }
+
+    const workId = project.generateWorkId(room);
+    const w = new Work(workId);
+
+    w.name = i.job;
+    w.quantity = i.quantity;
+    w.clientPrice = i.price;
+
+    // extended mode — материалы/робота (если нужны)
+    w.materialPrice = 0;
+    w.laborPrice = 0;
+
+    // категория сохранена как string → у тебя id категорий из localStorage не совпадают
+    w.categoryId = null;
+
+    room.addWork(w);
+}
+
+
 
 
 
@@ -1633,6 +1663,48 @@ async function deleteQuote(id) {
 /* =========================
    PDF FUNKCJE (НЕ ТРОГАЕМ)
 ========================= */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 async function generateClientPdf() {
     await saveQuoteToServer(); // <-- единственный вызов сохранения

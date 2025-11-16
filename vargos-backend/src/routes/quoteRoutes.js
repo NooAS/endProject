@@ -174,3 +174,21 @@ router.delete("/:id", authMiddleware, async(req, res) => {
 });
 
 export default router;
+
+router.get("/:id", authMiddleware, async(req, res) => {
+    const { id } = req.params;
+
+    const quote = await prisma.quote.findUnique({
+        where: { id: Number(id) },
+        include: { items: true }
+    });
+
+    if (!quote) return res.status(404).json({ message: "Not found" });
+
+    // защита: чужую смету нельзя грузить
+    if (quote.userId !== req.user.userId) {
+        return res.status(403).json({ message: "Forbidden" });
+    }
+
+    res.json(quote);
+});
