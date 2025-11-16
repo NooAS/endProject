@@ -845,8 +845,34 @@ document.addEventListener("DOMContentLoaded", async() => {
 
 
                 selectTpl.addEventListener("change", () => {
-                    work.templateId = selectTpl.value ? Number(selectTpl.value) : null;
+                    const tplId = Number(selectTpl.value);
+                    work.templateId = tplId || null;
+
+                    if (!tplId) return;
+
+                    // ищем выбранную категорию
+                    const cat = project.categories.find(c => c.id === work.categoryId);
+                    if (!cat) return;
+
+                    // ищем выбранный шаблон
+                    const tpl = cat.templates.find(t => t.id === tplId);
+                    if (!tpl || !tpl.defaults) return;
+
+                    // подставляем значения
+                    if (typeof tpl.defaults.clientPrice === "number") {
+                        work.clientPrice = tpl.defaults.clientPrice;
+                    }
+                    if (typeof tpl.defaults.materialPrice === "number") {
+                        work.materialPrice = tpl.defaults.materialPrice;
+                    }
+                    if (typeof tpl.defaults.laborPrice === "number") {
+                        work.laborPrice = tpl.defaults.laborPrice;
+                    }
+
+                    // перерисовать всё
+                    renderProject();
                 });
+
 
                 tdTpl.appendChild(selectTpl);
                 tr.appendChild(tdTpl);
@@ -1578,64 +1604,25 @@ function relocatePdfPanel() {
 window.addEventListener("resize", relocatePdfPanel);
 
 function buildItemsArray() {
-    var items = [];
+    const items = [];
 
-    for (var r = 0; r < project.rooms.length; r++) {
-        var room = project.rooms[r];
-
-        for (var w = 0; w < room.works.length; w++) {
-            var work = room.works[w];
-
-            // --- CATEGORY ---
-            var category = null;
-            if (work.categoryId !== undefined && work.categoryId !== null) {
-                category = work.categoryId;
-            }
-
-            // --- JOB NAME ---
-            var jobName = "";
-            if (work.name !== undefined && work.name !== null) {
-                jobName = work.name;
-            }
-
-            // --- ROOM NAME ---
-            var roomName = "";
-            if (room.name !== undefined && room.name !== null) {
-                roomName = room.name;
-            }
-
-            // --- QUANTITY ---
-            var qty = 0;
-            if (work.quantity !== undefined && work.quantity !== null) {
-                qty = work.quantity;
-            }
-
-            // --- PRICE ---
-            var price = 0;
-            if (work.clientPrice !== undefined && work.clientPrice !== null) {
-                price = work.clientPrice;
-            }
-
-            // --- TOTAL ---
-            var total = 0;
-            if (typeof work.clientTotal === "number") {
-                total = work.clientTotal;
-            }
-
+    for (const room of project.rooms) {
+        for (const w of room.works) {
             items.push({
-                categoryId: category,
-                room: roomName,
-                job: jobName,
-                quantity: qty,
-                price: price,
-                total: total
-            });
+                category: w.categoryId ? String(w.categoryId) : null, // строка или null
+                room: room.name || null,
+                job: w.name || "",
 
+                quantity: w.quantity || 0,
+                price: w.clientPrice || 0,
+                total: w.clientTotal || 0
+            });
         }
     }
 
     return items;
 }
+
 
 
 async function saveQuoteToServer() {
@@ -1718,8 +1705,9 @@ async function loadQuotesHistory() {
 function editQuote(id) {
     localStorage.setItem("editQuoteId", id);
     closeModal(historyModal);
-    location.reload();
+    loadQuoteFromServer(id); // Загружаем ИЗ БЕЗ reload
 }
+
 
 
 async function deleteQuote(id) {
@@ -1827,14 +1815,12 @@ function addWorkFromQuote(i) {
 
     // Категории: если конфиг говорит "используем категории" и в item есть строка категории
     // то создаём или находим категорию с таким именем и привязываем work.categoryId
-    if (config.useCategories && i.categoryId !== undefined && i.categoryId !== null) {
-        let cat = project.categories.find(c => c.id === i.categoryId);
-
-        // Категория может быть удалена на сервере → не создаём новую
-        if (cat) {
-            w.categoryId = cat.id;
-        }
+    if (config.useCategories && i.category !== undefined && i.category !== null) {
+        let catId = parseInt(i.category, 10);
+        let cat = project.categories.find(c => c.id === catId);
+        if (cat) w.categoryId = cat.id;
     }
+
 
 
 
