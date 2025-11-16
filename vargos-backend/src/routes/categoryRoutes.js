@@ -270,6 +270,33 @@ router.delete("/:id", authMiddleware, async(req, res) => {
     }
 });
 
+router.delete("/template/:templateId", authMiddleware, async(req, res) => {
+    try {
+        const userId = req.user.userId;
+        const templateId = Number(req.params.templateId);
+
+        // проверяем что шаблон принадлежит пользователю
+        const tpl = await prisma.template.findFirst({
+            where: { id: templateId, userId }
+        });
+
+        if (!tpl) {
+            return res.status(404).json({ message: "Шаблон не найден" });
+        }
+
+        await prisma.template.delete({
+            where: { id: templateId }
+        });
+
+        res.json({ message: "Шаблон удалён" });
+
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ message: "Ошибка удаления шаблона" });
+    }
+});
+
+
 
 
 export default router;
