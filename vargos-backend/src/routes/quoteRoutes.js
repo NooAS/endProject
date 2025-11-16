@@ -5,17 +5,18 @@ import authMiddleware from "../middlewares/authMiddleware.js";
 const router = express.Router();
 const prisma = new PrismaClient();
 
-// Сохранение сметы
+/* --------------------------------------------------------
+   Сохранение НОВОЙ сметы
+-------------------------------------------------------- */
 router.post("/save", authMiddleware, async(req, res) => {
     try {
-        const userId = req.user.userId; // извлекаем из токена
+        const userId = req.user.userId;
         const { name, total, items } = req.body;
 
-        if (!name || !items || !Array.isArray(items)) {
+        if (!name || !Array.isArray(items)) {
             return res.status(400).json({ message: "Invalid quote data" });
         }
 
-        // Создаём смету
         const quote = await prisma.quote.create({
             data: {
                 name,
@@ -34,10 +35,53 @@ router.post("/save", authMiddleware, async(req, res) => {
             }
         });
 
-        res.json({
-            message: "Смета сохранена",
-            quoteId: quote.id
+        res.json({ message: "Смета сохранена", quoteId: quote.id });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+
+/* --------------------------------------------------------
+   Получить ВСЕ сметы пользователя (история)
+-------------------------------------------------------- */
+router.get("/my", authMiddleware, async(req, res) => {
+    try {
+        const userId = req.user.userId;
+
+        const quotes = await prisma.quote.findMany({
+            where: { userId },
+            orderBy: { createdAt: "desc" },
+            include: { items: true }
         });
+
+        res.json(quotes);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+
+/* --------------------------------------------------------
+   Получить ОДНУ смету по ID (для редактирования)
+-------------------------------------------------------- */
+router.get("/:id", authMiddleware, async(req, res) => {
+    try {
+        const id = Number(req.params.id);
+        const userId = req.user.userId;
+
+        const quote = await prisma.quote.findFirst({
+            where: { id, userId },
+            include: { items: true }
+        });
+
+        if (!quote) {
+            return res.status(404).json({ message: "Смета не найдена" });
+        }
+
+        res.json(quote);
 
     } catch (error) {
         console.error(error);
@@ -45,20 +89,83 @@ router.post("/save", authMiddleware, async(req, res) => {
     }
 });
 
-// Получить мои сметы
-router.get("/my", authMiddleware, async(req, res) => {
+
+/* --------------------------------------------------------
+   Редактировать смету
+-------------------------------------------------------- */
+router.put("/:id", authMiddleware, async(req, res) => {
     try {
+        const id = Number(req.params.id);
+        const userId = req.user.userId;
+        const { name, total, items } = req.body;
+
+        // Проверяем, что смета принадлежит пользователю
+        const existing = await prisma.quote.findFirst({
+            where: { id, userId }
+        });
+
+        if (!existing) {
+            return res.status(404).json({ message: "Смета не найдена" });
+        }
+
+        // Обновляем заголовок
+        await prisma.quote.update({
+            where: { id },
+            data: { name, total }
+        });
+
+        // Удаляем старые позиции
+        await prisma.quoteItem.deleteMany({
+            where: { quoteId: id }
+        });
+
+        // Добавляем новые позиции
+        await prisma.quoteItem.createMany({
+            data: items.map(i => ({
+                quoteId: id,
+                category: i.category,
+                room: i.room,
+                job: i.job,
+                quantity: i.quantity,
+                price: i.price,
+                total: i.total
+            }))
+        });
+
+        res.json({ message: "Смета обновлена" });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+
+/* --------------------------------------------------------
+   Удалить смету
+-------------------------------------------------------- */
+router.delete("/:id", authMiddleware, async(req, res) => {
+    try {
+        const id = Number(req.params.id);
         const userId = req.user.userId;
 
-        const quotes = await prisma.quote.findMany({
-            where: { userId },
-            include: { items: true }
+        const existing = await prisma.quote.findFirst({
+            where: { id, userId }
         });
 
-        res.json({
-            userId,
-            quotes
+        if (!existing) {
+            return res.status(404).json({ message: "Смета не найдена" });
+        }
+
+        await prisma.quoteItem.deleteMany({
+            where: { quoteId: id }
         });
+
+        await prisma.quote.delete({
+            where: { id }
+        });
+
+        res.json({ message: "Смета удалена" });
 
     } catch (error) {
         console.error(error);

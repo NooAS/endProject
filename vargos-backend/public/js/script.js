@@ -4,6 +4,8 @@
    MODELE DANYCH
 ========================= */
 
+
+
 class Config {
     constructor() {
         this.useRooms = true;
@@ -281,6 +283,49 @@ window.openModal = openModal;
    DANE DO PDF
 ========================= */
 
+const editId = localStorage.getItem("editQuoteId");
+if (editId) {
+    loadQuoteFromServer(editId);
+}
+
+async function loadQuoteFromServer(id) {
+    const token = localStorage.getItem("token");
+
+    const res = await fetch("/quotes/" + id, {
+        headers: { "Authorization": "Bearer " + token }
+    });
+
+    const quote = await res.json();
+
+    // Загружаем имя проекта
+    project.name = quote.name;
+    document.getElementById("projectName").value = quote.name;
+    document.getElementById("projectNameInputLocal").value = quote.name;
+
+    // Очищаем текущие комнаты/работы
+    rooms.length = 0;
+    renderAllRooms();
+
+    // Добавляем элементы из базы
+    quote.items.forEach(item => {
+        addWorkFromQuote(item);
+    });
+
+    localStorage.removeItem("editQuoteId");
+}
+
+function addWorkFromQuote(i) {
+    addWork({
+        room: i.room || "",
+        category: i.category || "",
+        name: i.job,
+        quantity: i.quantity,
+        priceKlient: i.price,
+        total: i.total
+    });
+}
+
+
 function collectPdfData() {
     const pdfProjectNameInput = document.getElementById("pdfProjectName");
     const pdfObjectAddressInput = document.getElementById("pdfObjectAddress");
@@ -373,10 +418,18 @@ document.addEventListener("DOMContentLoaded", () => {
     const profileMenu = document.getElementById("profileMenu");
     const logoutBtnInside = document.getElementById("logoutBtnInside");
     const token = localStorage.getItem("token");
+    const openHistoryBtn = document.getElementById("openHistoryBtn");
+    const historyModal = document.getElementById("historyModal");
+    const historyContainer = document.getElementById("historyContainer");
 
 
     window.categoriesModal = categoriesModal;
     window.pdfDataModal = pdfDataModal;
+
+    openHistoryBtn.addEventListener("click", () => {
+        openModal(historyModal);
+        loadQuotesHistory();
+    });
 
     const authBtn = document.getElementById("authBtn");
 
@@ -412,10 +465,6 @@ document.addEventListener("DOMContentLoaded", () => {
         window.location.reload();
     });
 
-    // История смет
-    document.getElementById("openHistoryBtn").addEventListener("click", () => {
-        window.location.href = "/history.html"; // создадим позже
-    });
 
     // Смена логина/пароля (модалки пока не делаем)
     document.getElementById("changePasswordBtn").addEventListener("click", () => {
@@ -1361,7 +1410,6 @@ document.addEventListener("DOMContentLoaded", () => {
     pdfClientBtn.addEventListener("click", () => openPdfDataModal(true));
     pdfOwnerBtn.addEventListener("click", () => openPdfDataModal(false));
 
-    console.log("Назначаю обработчик generateClientPdfBtn");
     generateClientPdfBtn.addEventListener("click", async() => {
         collectPdfData();
         generateClientPdf();
@@ -1517,6 +1565,66 @@ async function saveQuoteToServer() {
     }
 }
 
+async function loadQuotesHistory() {
+    const token = localStorage.getItem("token");
+
+    const res = await fetch("/quotes/my", {
+        headers: {
+            "Authorization": "Bearer " + token
+        }
+    });
+
+    const quotes = await res.json();
+
+    historyContainer.innerHTML = "";
+
+    if (!quotes.length) {
+        historyContainer.innerHTML = "<p>Brak zapisanych smet.</p>";
+        return;
+    }
+
+    quotes.forEach(q => {
+        const div = document.createElement("div");
+        div.className = "panel";
+        div.style.marginBottom = "15px";
+
+        div.innerHTML = `
+            <h3>${q.name}</h3>
+            <p>Suma: <strong>${q.total.toFixed(2)} zł</strong></p>
+            <p>Data: ${new Date(q.createdAt).toLocaleString()}</p>
+
+            <div style="margin-top:12px; display:flex; gap:10px;">
+                <button class="btn" onclick="editQuote(${q.id})">Edytuj</button>
+                <button class="btn secondary" onclick="deleteQuote(${q.id})">Usuń</button>
+            </div>
+        `;
+
+        historyContainer.appendChild(div);
+    });
+}
+
+function editQuote(id) {
+    localStorage.setItem("editQuoteId", id);
+    closeModal(historyModal);
+
+    // Перезагружаем index.html → данные подтянутся автоматически
+    location.reload();
+}
+
+async function deleteQuote(id) {
+    if (!confirm("Usunąć smetę?")) return;
+
+    const token = localStorage.getItem("token");
+
+    await fetch("/quotes/" + id, {
+        method: "DELETE",
+        headers: {
+            "Authorization": "Bearer " + token
+        }
+    });
+
+    loadQuotesHistory(); // обновляем список
+}
 
 
 
