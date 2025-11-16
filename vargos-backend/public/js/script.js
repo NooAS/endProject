@@ -378,9 +378,17 @@ document.addEventListener("DOMContentLoaded", () => {
     window.categoriesModal = categoriesModal;
     window.pdfDataModal = pdfDataModal;
 
+    const authBtn = document.getElementById("authBtn");
+
     if (token) {
+        authBtn.style.display = "none";
         profileBtn.style.display = "inline-block";
+    } else {
+        authBtn.style.display = "inline-block";
+        profileBtn.style.display = "none";
     }
+
+
 
     // Открыть/закрыть меню
     profileBtn.addEventListener("click", () => {
@@ -389,10 +397,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Закрытие меню при клике вне его
     document.addEventListener("click", (e) => {
-        if (!profileBtn.contains(e.target) && !profileMenu.contains(e.target)) {
+        const isProfileButton = profileBtn.contains(e.target);
+        const isMenu = profileMenu.contains(e.target);
+
+        if (!isProfileButton && !isMenu) {
             profileMenu.classList.add("hidden");
         }
     });
+
 
     // Выход внутри меню
     logoutBtnInside.addEventListener("click", () => {
@@ -1349,19 +1361,18 @@ document.addEventListener("DOMContentLoaded", () => {
     pdfClientBtn.addEventListener("click", () => openPdfDataModal(true));
     pdfOwnerBtn.addEventListener("click", () => openPdfDataModal(false));
 
-
+    console.log("Назначаю обработчик generateClientPdfBtn");
     generateClientPdfBtn.addEventListener("click", async() => {
         collectPdfData();
-        await saveQuoteToServer();
         generateClientPdf();
         closePdfDataModal();
     });
 
 
 
+
     generateOwnerPdfBtn.addEventListener("click", async() => {
         collectPdfData();
-        await saveQuoteToServer();
         generateOwnerPdf();
         closePdfDataModal();
     });
@@ -1404,30 +1415,8 @@ function relocatePdfPanel() {
     }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-    const token = localStorage.getItem("token");
-
-    const authBtn = document.getElementById("authBtn");
-    const logoutBtn = document.getElementById("logoutBtn");
-
-    if (token) {
-        // Авторизован → показываем "Выйти"
-        authBtn.style.display = "none";
-        logoutBtn.style.display = "inline-block";
-    } else {
-        // Не авторизован → показываем "Войти / Регистрация"
-        authBtn.style.display = "inline-block";
-        logoutBtn.style.display = "none";
-    }
-
-    logoutBtn.addEventListener("click", () => {
-        localStorage.removeItem("token");
-        window.location.reload();
-    });
-});
 
 window.addEventListener("resize", relocatePdfPanel);
-window.addEventListener("DOMContentLoaded", relocatePdfPanel);
 
 function buildItemsArray() {
     var items = [];
@@ -1538,7 +1527,7 @@ async function saveQuoteToServer() {
 ========================= */
 
 async function generateClientPdf() {
-    await saveQuoteToServer();
+    await saveQuoteToServer(); // <-- единственный вызов сохранения
 
     const { jsPDF } = window.jspdf;
 
@@ -1689,7 +1678,7 @@ async function generateClientPdf() {
 
 
 async function generateOwnerPdf() {
-    await saveQuoteToServer();
+    await saveQuoteToServer(); // <-- единственный вызов
 
     const { jsPDF } = window.jspdf;
 

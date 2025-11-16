@@ -92,14 +92,14 @@ body {
 
 .profile-menu {
     position: absolute;
-    top: 60px;
+    top: 70px;
     right: 20px;
-    width: 240px;
-    background: #fff;
-    border-radius: 10px;
-    padding: 10px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-    z-index: 1000;
+    background: #ffffff;
+    width: 260px;
+    border-radius: 12px;
+    box-shadow: 0px 6px 20px rgba(0, 0, 0, 0.15);
+    padding: 10px 0;
+    z-index: 2000;
 }
 
 .profile-menu.hidden {
@@ -142,19 +142,6 @@ body {
 
 
 /* Выпадающее меню профиля */
-
-.profile-menu {
-    position: absolute;
-    top: 70px;
-    right: 20px;
-    background: #ffffff;
-    width: 260px;
-    border-radius: 12px;
-    box-shadow: 0px 6px 20px rgba(0, 0, 0, 0.15);
-    padding: 10px 0;
-    z-index: 2000;
-    display: none;
-}
 
 .profile-menu .menu-section {
     padding: 8px 0;
