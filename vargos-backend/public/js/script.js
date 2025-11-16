@@ -369,9 +369,50 @@ document.addEventListener("DOMContentLoaded", () => {
     const pdfSaveCompanyDefaults = document.getElementById("pdfSaveCompanyDefaults");
     const generateClientPdfBtn = document.getElementById("generateClientPdfBtn");
     const generateOwnerPdfBtn = document.getElementById("generateOwnerPdfBtn");
+    const profileBtn = document.getElementById("profileBtn");
+    const profileMenu = document.getElementById("profileMenu");
+    const logoutBtnInside = document.getElementById("logoutBtnInside");
+    const token = localStorage.getItem("token");
+
 
     window.categoriesModal = categoriesModal;
     window.pdfDataModal = pdfDataModal;
+
+    if (token) {
+        profileBtn.style.display = "inline-block";
+    }
+
+    // Открыть/закрыть меню
+    profileBtn.addEventListener("click", () => {
+        profileMenu.classList.toggle("hidden");
+    });
+
+    // Закрытие меню при клике вне его
+    document.addEventListener("click", (e) => {
+        if (!profileBtn.contains(e.target) && !profileMenu.contains(e.target)) {
+            profileMenu.classList.add("hidden");
+        }
+    });
+
+    // Выход внутри меню
+    logoutBtnInside.addEventListener("click", () => {
+        localStorage.removeItem("token");
+        window.location.reload();
+    });
+
+    // История смет
+    document.getElementById("openHistoryBtn").addEventListener("click", () => {
+        window.location.href = "/history.html"; // создадим позже
+    });
+
+    // Смена логина/пароля (модалки пока не делаем)
+    document.getElementById("changePasswordBtn").addEventListener("click", () => {
+        alert("Здесь позже будет модальное окно смены пароля");
+    });
+
+    document.getElementById("changeLoginBtn").addEventListener("click", () => {
+        alert("Здесь позже будет модальное окно смены логина");
+    });
 
     // радиокнопки для netto/brutto
     let pdfPriceNettoRadio = null;
@@ -1305,25 +1346,26 @@ document.addEventListener("DOMContentLoaded", () => {
         renderCategoriesModal();
     });
 
-    pdfClientBtn.addEventListener("click", () => {
-        openPdfDataModal(true);
-    });
+    pdfClientBtn.addEventListener("click", () => openPdfDataModal(true));
+    pdfOwnerBtn.addEventListener("click", () => openPdfDataModal(false));
 
-    pdfOwnerBtn.addEventListener("click", () => {
-        openPdfDataModal(false);
-    });
 
-    generateClientPdfBtn.addEventListener("click", () => {
-        console.log("generateClientPdf clicked");
+    generateClientPdfBtn.addEventListener("click", async() => {
+        collectPdfData();
+        await saveQuoteToServer();
         generateClientPdf();
         closePdfDataModal();
     });
 
-    generateOwnerPdfBtn.addEventListener("click", () => {
-        console.log("generateOwnerPdf clicked");
+
+
+    generateOwnerPdfBtn.addEventListener("click", async() => {
+        collectPdfData();
+        await saveQuoteToServer();
         generateOwnerPdf();
         closePdfDataModal();
     });
+
 
     document.querySelectorAll(".modal-backdrop").forEach(backdrop => {
         backdrop.addEventListener("click", e => {
@@ -1336,6 +1378,11 @@ document.addEventListener("DOMContentLoaded", () => {
     applyConfig();
     renderProject();
 });
+
+
+
+
+
 
 /* ===== PRZENOSZENIE PANELU PDF NA MOBILE ===== */
 
@@ -1379,10 +1426,109 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 });
 
-
-
 window.addEventListener("resize", relocatePdfPanel);
 window.addEventListener("DOMContentLoaded", relocatePdfPanel);
+
+function buildItemsArray() {
+    var items = [];
+
+    for (var r = 0; r < project.rooms.length; r++) {
+        var room = project.rooms[r];
+
+        for (var w = 0; w < room.works.length; w++) {
+            var work = room.works[w];
+
+            // --- CATEGORY ---
+            var category = null;
+            if (work.categoryId !== undefined && work.categoryId !== null) {
+                category = work.categoryId;
+            }
+
+            // --- JOB NAME ---
+            var jobName = "";
+            if (work.name !== undefined && work.name !== null) {
+                jobName = work.name;
+            }
+
+            // --- ROOM NAME ---
+            var roomName = "";
+            if (room.name !== undefined && room.name !== null) {
+                roomName = room.name;
+            }
+
+            // --- QUANTITY ---
+            var qty = 0;
+            if (work.quantity !== undefined && work.quantity !== null) {
+                qty = work.quantity;
+            }
+
+            // --- PRICE ---
+            var price = 0;
+            if (work.clientPrice !== undefined && work.clientPrice !== null) {
+                price = work.clientPrice;
+            }
+
+            // --- TOTAL ---
+            var total = 0;
+            if (typeof work.clientTotal === "number") {
+                total = work.clientTotal;
+            }
+
+            items.push({
+                category: category,
+                room: roomName,
+                job: jobName,
+                quantity: qty,
+                price: price,
+                total: total
+            });
+        }
+    }
+
+    return items;
+}
+
+
+async function saveQuoteToServer() {
+    var token = localStorage.getItem("token");
+    if (!token) {
+        console.warn("Пользователь не авторизован — пропускаем сохранение");
+        return;
+    }
+
+    var items = buildItemsArray();
+    var totals = project.getTotals();
+
+    var payload = {
+        name: project.name,
+        total: totals.brutto,
+        items: items
+    };
+
+    try {
+        console.log("PAYLOAD:", payload);
+        var res = await fetch("http://localhost:4000/quotes/save", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + token
+            },
+            body: JSON.stringify(payload)
+        });
+
+        var json = await res.json();
+
+        if (!res.ok) {
+            console.error("Ошибка сохранения:", json);
+        } else {
+            console.log("Смета сохранена успешно:", json);
+        }
+    } catch (e) {
+        console.error("Ошибка сети:", e);
+    }
+}
+
+
 
 
 
@@ -1391,7 +1537,9 @@ window.addEventListener("DOMContentLoaded", relocatePdfPanel);
    PDF FUNKCJE (НЕ ТРОГАЕМ)
 ========================= */
 
-function generateClientPdf() {
+async function generateClientPdf() {
+    await saveQuoteToServer();
+
     const { jsPDF } = window.jspdf;
 
     const pdf = new jsPDF({
@@ -1540,7 +1688,9 @@ function generateClientPdf() {
 }
 
 
-function generateOwnerPdf() {
+async function generateOwnerPdf() {
+    await saveQuoteToServer();
+
     const { jsPDF } = window.jspdf;
 
     const pdf = new jsPDF({

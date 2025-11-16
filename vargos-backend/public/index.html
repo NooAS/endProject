@@ -29,10 +29,33 @@
 
             <div class="auth-buttons">
                 <a href="/auth.html" id="authBtn" class="auth-btn">Войти / Регистрация</a>
-                <button id="logoutBtn" class="auth-btn logout-btn" style="display:none;">Выйти</button>
+                <button id="profileBtn" class="auth-btn profile-btn" style="display:none;">Профиль</button>
             </div>
+
+
         </div>
     </header>
+
+    <!-- Выпадающее меню профиля -->
+    <div id="profileMenu" class="profile-menu hidden">
+
+        <div class="menu-section">
+            <div class="menu-title">Аккаунт</div>
+            <button class="menu-item" id="changeLoginBtn">Сменить логин</button>
+            <button class="menu-item" id="changePasswordBtn">Сменить пароль</button>
+        </div>
+
+        <div class="menu-section">
+            <div class="menu-title">История</div>
+            <button class="menu-item" id="openHistoryBtn">История смет</button>
+        </div>
+
+        <div class="menu-section">
+            <button class="menu-item logout" id="logoutBtnInside">Выйти</button>
+        </div>
+
+    </div>
+
 
 
     <main class="container app-main">

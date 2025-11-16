@@ -30,5 +30,30 @@ model User {
   email     String   @unique
   password  String
   createdAt DateTime @default(now())
+
+  quotes   Quote[]
+}
+
+model Quote {
+  id        Int         @id @default(autoincrement())
+  userId    Int
+  user      User        @relation(fields: [userId], references: [id])
+  name      String
+  total     Float
+  createdAt DateTime    @default(now())
+  items     QuoteItem[]
+}
+
+model QuoteItem {
+  id        Int      @id @default(autoincrement())
+  quoteId   Int
+  quote     Quote    @relation(fields: [quoteId], references: [id])
+
+  category  String?
+  room      String?
+  job       String
+  quantity  Float
+  price     Float
+  total     Float
 }
 
