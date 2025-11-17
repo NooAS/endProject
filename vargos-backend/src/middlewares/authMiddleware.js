@@ -18,6 +18,6 @@ export default function authMiddleware(req, res, next) {
         req.user = decoded; // userId
         next();
     } catch (err) {
-        return res.status(401).json({ error: "Неверный или истёкший токен." });
+        return res.status(401).json({ error: "Неверный или истёкший токен. " });
     }
 }
