@@ -3,197 +3,74 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Вход / Регистрация</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f2f2f2;
-            padding: 30px;
-            display: flex;
-            justify-content: center;
-        }
-        
-        .box {
-            width: 360px;
-            background: #fff;
-            border-radius: 10px;
-            padding: 25px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-        
-        h2 {
-            text-align: center;
-        }
-        
-        input {
-            width: 100%;
-            margin: 8px 0;
-            padding: 10px;
-        }
-        
-        button {
-            width: 100%;
-            padding: 10px;
-            margin-top: 10px;
-            background: #2563eb;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
-        
-        button:hover {
-            background: #1d4ed8;
-        }
-        
-        .tabs {
-            display: flex;
-            justify-content: space-around;
-            margin-bottom: 15px;
-        }
-        
-        .tab {
-            padding: 8px 20px;
-            cursor: pointer;
-            border-bottom: 2px solid transparent;
-        }
-        
-        .tab.active {
-            border-bottom: 2px solid #2563eb;
-            font-weight: bold;
-        }
-        
-        .error {
-            color: red;
-            margin-top: 10px;
-            text-align: center;
-        }
-        
-        .success {
-            color: green;
-            margin-top: 10px;
-            text-align: center;
-        }
-    </style>
+    <title>Авторизация</title>
+    <link rel="stylesheet" href="/css/style.css">
 </head>
 
 <body>
 
-    <div class="box">
-        <div class="tabs">
-            <div id="tabLogin" class="tab active">Войти</div>
-            <div id="tabRegister" class="tab">Регистрация</div>
-        </div>
+    <div class="auth-wrapper">
 
-        <!-- Форма входа -->
-        <div id="loginForm">
-            <h2>Вход</h2>
-            <input type="email" id="loginEmail" placeholder="Email">
-            <input type="password" id="loginPassword" placeholder="Пароль">
-            <button onclick="login()">Войти</button>
-            <div id="loginMsg"></div>
-        </div>
+        <div class="auth-box">
 
-        <!-- Форма регистрации -->
-        <div id="registerForm" style="display:none;">
-            <h2>Регистрация</h2>
-            <input type="email" id="regEmail" placeholder="Email">
-            <input type="password" id="regPassword" placeholder="Пароль">
-            <button onclick="register()">Создать аккаунт</button>
-            <div id="registerMsg"></div>
+            <!-- Логотип -->
+            <img src="/img/logo.png" class="auth-logo" alt="Logo">
+
+            <div class="auth-title">Добро пожаловать</div>
+            <div class="auth-subtitle">Войдите, чтобы продолжить работу</div>
+
+            <!-- TABS -->
+            <div class="auth-tabs">
+                <div id="tabLogin" class="auth-tab active">Войти</div>
+                <div id="tabRegister" class="auth-tab">Регистрация</div>
+            </div>
+
+            <!-- LOGIN -->
+            <div id="loginForm" class="auth-form">
+                <div class="auth-input-wrapper">
+                    <input type="email" id="loginEmail" placeholder="Email">
+                </div>
+
+                <div class="auth-input-wrapper">
+                    <input type="password" id="loginPassword" placeholder="Пароль">
+                    <span class="show-pass" data-target="loginPassword">👁</span>
+                </div>
+
+                <button id="loginBtn" class="auth-btn-main">Войти</button>
+                <div id="loginMsg" class="auth-msg"></div>
+            </div>
+
+            <!-- REGISTER -->
+            <div id="registerForm" class="auth-form" style="display:none;">
+                <div class="auth-input-wrapper">
+                    <input type="email" id="regEmail" placeholder="Email">
+                </div>
+
+                <div class="auth-input-wrapper">
+                    <input type="password" id="regPassword" placeholder="Пароль (мин. 6 символов)">
+                    <span class="show-pass" data-target="regPassword">👁</span>
+                </div>
+
+                <button id="regBtn" class="auth-btn-main">Создать аккаунт</button>
+                <div id="registerMsg" class="auth-msg"></div>
+            </div>
+
         </div>
 
     </div>
 
-    <script>
-        // Переключение вкладок
-        document.getElementById("tabLogin").onclick = () => {
-            document.getElementById("loginForm").style.display = "block";
-            document.getElementById("registerForm").style.display = "none";
-            document.getElementById("tabLogin").classList.add("active");
-            document.getElementById("tabRegister").classList.remove("active");
-        };
-
-        document.getElementById("tabRegister").onclick = () => {
-            document.getElementById("loginForm").style.display = "none";
-            document.getElementById("registerForm").style.display = "block";
-            document.getElementById("tabRegister").classList.add("active");
-            document.getElementById("tabLogin").classList.remove("active");
-        };
-
-
-        // Авторизация
-        async function login() {
-            const email = document.getElementById("loginEmail").value;
-            const password = document.getElementById("loginPassword").value;
-
-            const msg = document.getElementById("loginMsg");
-            msg.innerHTML = "";
-
-            try {
-                const res = await fetch("/auth/login", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        email,
-                        password
-                    })
-                });
-
-                const data = await res.json();
-
-                if (res.ok) {
-                    localStorage.setItem("token", data.token);
-                    msg.innerHTML = "<div class='success'>Вы успешно вошли!</div>";
-                    setTimeout(() => window.location.href = "/index.html", 800);
-                } else {
-                    msg.innerHTML = `<div class='error'>${data.error}</div>`;
-                }
-            } catch (err) {
-                msg.innerHTML = "<div class='error'>Ошибка соединения с сервером</div>";
-                console.error(err);
-            }
-        }
-
-
-
-        // Регистрация
-        async function register() {
-            const email = document.getElementById("regEmail").value;
-            const password = document.getElementById("regPassword").value;
-
-            const msg = document.getElementById("registerMsg");
-            msg.innerHTML = "";
-
-            try {
-                const res = await fetch("/auth/register", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        email,
-                        password
-                    })
-                });
-
-                const data = await res.json();
-
-                if (res.ok) {
-                    msg.innerHTML = "<div class='success'>Регистрация успешна!</div>";
-                    setTimeout(() => document.getElementById("tabLogin").click(), 1200);
-                } else {
-                    msg.innerHTML = `<div class='error'>${data.error}</div>`;
-                }
-            } catch (err) {
-                msg.innerHTML = "<div class='error'>Ошибка соединения с сервером</div>";
-                console.error(err);
-            }
-        }
-    </script>
-
     <script src="/js/auth.js"></script>
+
+    <script>
+        // Показать / скрыть пароль
+        document.querySelectorAll(".show-pass").forEach(icon => {
+            icon.addEventListener("click", () => {
+                const id = icon.dataset.target;
+                const input = document.getElementById(id);
+                input.type = input.type === "password" ? "text" : "password";
+            });
+        });
+    </script>
 
 </body>
 
