@@ -8,10 +8,14 @@ datasource db {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  password  String
-  createdAt DateTime @default(now())
+  id                 Int       @id @default(autoincrement())
+  email              String    @unique
+  password           String
+  createdAt          DateTime  @default(now())
+  isVerified         Boolean   @default(false)
+  verificationToken  String?   @unique
+  resetToken         String?   @unique
+  resetTokenExpiry   DateTime?
 
   categories Category[]
   jobs       Job[]

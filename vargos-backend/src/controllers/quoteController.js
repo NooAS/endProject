@@ -1,4 +1,6 @@
 import { PrismaClient } from "@prisma/client";
+import { generateQuotePDF, generateDetailedQuotePDF } from "../services/pdfService.js";
+
 const prisma = new PrismaClient();
 
 export const saveQuote = async(req, res) => {
@@ -102,6 +104,41 @@ export const deleteQuoteById = async(req, res) => {
         res.json({ success: true });
 
     } catch (e) {
+        res.status(500).json({ message: "Server error" });
+    }
+};
+
+/**
+ * Generate PDF for a quote
+ */
+export const generatePDF = async(req, res) => {
+    try {
+        const id = Number(req.params.id);
+        const userId = req.user.userId;
+        const { detailed } = req.query;
+
+        // Получаем смету
+        const quote = await prisma.quote.findFirst({
+            where: { id, userId },
+            include: { items: true }
+        });
+
+        if (!quote) {
+            return res.status(404).json({ message: "Quote not found" });
+        }
+
+        // Генерируем PDF
+        const pdfBuffer = detailed === 'true' 
+            ? await generateDetailedQuotePDF(quote)
+            : await generateQuotePDF(quote);
+
+        // Отправляем PDF
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="quote_${id}.pdf"`);
+        res.send(pdfBuffer);
+
+    } catch (e) {
+        console.error("Error generating PDF:", e);
         res.status(500).json({ message: "Server error" });
     }
 };

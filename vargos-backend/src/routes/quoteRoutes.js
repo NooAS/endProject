@@ -4,7 +4,8 @@ import {
     saveQuote,
     getMyQuotes,
     getQuoteById,
-    deleteQuoteById
+    deleteQuoteById,
+    generatePDF
 } from "../controllers/quoteController.js";
 
 const router = express.Router();
@@ -20,5 +21,8 @@ router.get("/:id", auth, getQuoteById);
 
 // удалить
 router.delete("/:id", auth, deleteQuoteById);
+
+// генерация PDF
+router.get("/:id/pdf", auth, generatePDF);
 
 export default router;
