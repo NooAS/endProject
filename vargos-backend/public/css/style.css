@@ -247,6 +247,18 @@ body {
     box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.25);
 }
 
+textarea.input {
+    font-family: inherit;
+    resize: vertical;
+    min-height: 80px;
+}
+
+textarea.input:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.25);
+}
+
 
 /* Buttons */
 

@@ -4,7 +4,7 @@ const prisma = new PrismaClient();
 export const saveQuote = async(req, res) => {
     try {
         const userId = req.user.userId;
-        const { id, name, total, items } = req.body;
+        const { id, name, total, items, notes } = req.body;
 
         if (!name || !items || !Array.isArray(items)) {
             return res.status(400).json({ message: "Invalid data" });
@@ -19,6 +19,7 @@ export const saveQuote = async(req, res) => {
                 data: {
                     name,
                     total,
+                    notes: notes || null,
                     items: {
                         deleteMany: {},
                         create: items
@@ -26,17 +27,42 @@ export const saveQuote = async(req, res) => {
                 }
             });
         } else {
-            // создаём новую
-            quote = await prisma.quote.create({
-                data: {
+            // Проверяем, существует ли смета с таким же именем
+            const existingQuote = await prisma.quote.findFirst({
+                where: {
                     userId,
-                    name,
-                    total,
-                    items: {
-                        create: items
-                    }
+                    name
                 }
             });
+
+            if (existingQuote) {
+                // Если существует - обновляем
+                quote = await prisma.quote.update({
+                    where: { id: existingQuote.id },
+                    data: {
+                        name,
+                        total,
+                        notes: notes || null,
+                        items: {
+                            deleteMany: {},
+                            create: items
+                        }
+                    }
+                });
+            } else {
+                // создаём новую
+                quote = await prisma.quote.create({
+                    data: {
+                        userId,
+                        name,
+                        total,
+                        notes: notes || null,
+                        items: {
+                            create: items
+                        }
+                    }
+                });
+            }
         }
 
         res.json({ success: true, quoteId: quote.id });

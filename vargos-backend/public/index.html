@@ -146,6 +146,21 @@
 
                 <!-- 🔥 MOBILE placeholder ONLY -->
             </div>
+
+            <!-- NOTATKI -->
+            <div class="panel">
+                <div class="panel-title" style="display: flex; justify-content: space-between; align-items: center;">
+                    <span>Заметки (только для фирмы)</span>
+                    <button id="toggleNotesBtn" class="btn secondary" style="padding: 6px 12px; font-size: 13px;">
+                        <span id="notesToggleIcon">▼</span> Показать/Скрыть
+                    </button>
+                </div>
+                
+                <div id="notesContainer" style="display: none; margin-top: 10px;">
+                    <textarea id="projectNotes" class="input full-width" rows="5" placeholder="Заметки для внутреннего использования (не видны клиенту)"></textarea>
+                </div>
+            </div>
+
             <div id="pdfPanelMobilePlaceholder"></div>
         </section>
 
@@ -210,6 +225,90 @@
 
             <div class="modal-body" id="historyContainer">
                 <!-- Сюда JS вставит список смет -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================= -->
+    <!--   MODAL: CHANGE EMAIL    -->
+    <!-- ========================= -->
+
+    <div id="changeEmailModal" class="modal-backdrop">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Сменить логин (email)</h2>
+                <div class="modal-close" onclick="closeModal(changeEmailModal)">✕</div>
+            </div>
+
+            <div class="modal-body">
+                <input id="newEmailInput" class="input full-width" type="email" placeholder="Новый email" style="margin-bottom: 10px;" />
+                <input id="emailPasswordInput" class="input full-width" type="password" placeholder="Текущий пароль" style="margin-bottom: 10px;" />
+                <button id="submitChangeEmail" class="btn full-width">Сменить логин</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================= -->
+    <!--  MODAL: CHANGE PASSWORD  -->
+    <!-- ========================= -->
+
+    <div id="changePasswordModal" class="modal-backdrop">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Сменить пароль</h2>
+                <div class="modal-close" onclick="closeModal(changePasswordModal)">✕</div>
+            </div>
+
+            <div class="modal-body">
+                <input id="oldPasswordInput" class="input full-width" type="password" placeholder="Старый пароль" style="margin-bottom: 10px;" />
+                <input id="newPasswordInput" class="input full-width" type="password" placeholder="Новый пароль" style="margin-bottom: 10px;" />
+                <input id="confirmPasswordInput" class="input full-width" type="password" placeholder="Подтвердите новый пароль" style="margin-bottom: 10px;" />
+                <button id="submitChangePassword" class="btn full-width">Сменить пароль</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================= -->
+    <!--   MODAL: INPUT TEXT      -->
+    <!-- ========================= -->
+
+    <div id="inputTextModal" class="modal-backdrop">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 id="inputModalTitle">Введите значение</h2>
+                <div class="modal-close" onclick="closeModal(inputTextModal)">✕</div>
+            </div>
+
+            <div class="modal-body">
+                <input id="inputModalText" class="input full-width" type="text" placeholder="" style="margin-bottom: 10px;" />
+                <div class="modal-footer-buttons" style="display:flex; gap:10px;">
+                    <button id="inputModalSubmit" class="btn full-width">OK</button>
+                    <button id="inputModalCancel" class="btn secondary full-width">Отмена</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================= -->
+    <!--  MODAL: EDIT TEMPLATE    -->
+    <!-- ========================= -->
+
+    <div id="editTemplateModal" class="modal-backdrop">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Редактировать работу</h2>
+                <div class="modal-close" onclick="closeModal(editTemplateModal)">✕</div>
+            </div>
+
+            <div class="modal-body">
+                <input id="editTplNameInput" class="input full-width" type="text" placeholder="Название работы" style="margin-bottom: 10px;" />
+                <input id="editTplClientPriceInput" class="input full-width" type="number" placeholder="Цена клиента" style="margin-bottom: 10px;" />
+                <input id="editTplMaterialPriceInput" class="input full-width" type="number" placeholder="Цена материала" style="margin-bottom: 10px;" />
+                <input id="editTplLaborPriceInput" class="input full-width" type="number" placeholder="Цена работы" style="margin-bottom: 10px;" />
+                <div class="modal-footer-buttons" style="display:flex; gap:10px;">
+                    <button id="editTplSubmit" class="btn full-width">Сохранить</button>
+                    <button id="editTplCancel" class="btn secondary full-width">Отмена</button>
+                </div>
             </div>
         </div>
     </div>
