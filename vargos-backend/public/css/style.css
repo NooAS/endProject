@@ -1144,3 +1144,44 @@ textarea.input:focus {
 .auth-msg.success {
     color: #16a34a;
 }
+
+/* ========================================= */
+/*     AUTH PAGE MOBILE RESPONSIVENESS       */
+/* ========================================= */
+
+@media (max-width: 768px) {
+    .auth-wrapper {
+        padding: 16px;
+    }
+    .auth-box {
+        padding: 30px 24px;
+    }
+    .auth-box input {
+        font-size: 16px;
+        padding: 12px 42px 12px 14px;
+    }
+    .auth-btn-main {
+        font-size: 16px;
+        padding: 14px;
+    }
+    .auth-tab {
+        padding: 10px 16px;
+        font-size: 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    .auth-box {
+        padding: 24px 20px;
+    }
+    .auth-title {
+        font-size: 22px;
+    }
+    .auth-subtitle {
+        font-size: 13px;
+    }
+    .auth-tab {
+        padding: 8px 12px;
+        font-size: 14px;
+    }
+}
