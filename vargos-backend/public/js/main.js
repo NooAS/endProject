@@ -5,7 +5,7 @@ import { Project, Room, Work } from "./project-models.js";
 import { formatCurrency, formatNumberPL, loadCompanyDataFromStorage, saveCompanyDataToStorage } from "./helpers.js";
 import { saveCategoriesToStorage } from "./categories-storage.js";
 import { loadPdfSettingsFromStorage, savePdfSettingsToStorage } from "./pdf-settings-storage.js";
-import { openModal, closeModal, showInputModal, showEditTemplateModal } from "./modals.js";
+import { openModal, closeModal, showInputModal, showEditTemplateModal, showDeleteConfirmModal } from "./modals.js";
 import { collectPdfData } from "./pdf-data.js";
 import { saveQuoteToServer, loadQuotesHistory } from "./quotes-api.js";
 import { generateClientPdf, generateOwnerPdf } from "./pdf-generator.js";
@@ -210,8 +210,13 @@ function editQuote(id) {
 }
 window.editQuote = editQuote;
 
-function deleteQuote(id) {
-    if (!confirm("Удалить смету?")) return;
+async function deleteQuote(id) {
+    const confirmed = await showDeleteConfirmModal(
+        "Удалить смету?",
+        "Вы уверены, что хотите удалить эту смету? Это действие нельзя отменить."
+    );
+    if (!confirmed) return;
+    
     const token = localStorage.getItem("token");
     fetch("/quotes/" + id, {
         method: "DELETE",
@@ -848,7 +853,11 @@ function renderCategoriesModal() {
         deleteCatBtn.textContent = "🗑";
         deleteCatBtn.title = "Удалить";
         deleteCatBtn.onclick = async() => {
-            if (confirm(`Удалить категорию "${cat.name}"?`)) {
+            const confirmed = await showDeleteConfirmModal(
+                "Удалить категорию?",
+                `Вы уверены, что хотите удалить категорию "${cat.name}"? Это действие нельзя отменить.`
+            );
+            if (confirmed) {
                 await deleteCategoryFromServer(cat.id);
                 await loadCategoriesFromServerF();
             }
@@ -970,7 +979,11 @@ function renderCategoriesModal() {
                 deleteTpl.textContent = "🗑";
                 deleteTpl.title = "Удалить работу";
                 deleteTpl.onclick = async() => {
-                    if (confirm(`Удалить работу "${tpl.name}"?`)) {
+                    const confirmed = await showDeleteConfirmModal(
+                        "Удалить работу?",
+                        `Вы уверены, что хотите удалить работу "${tpl.name}"? Это действие нельзя отменить.`
+                    );
+                    if (confirmed) {
                         await deleteTemplateFromServer(tpl.id);
                         await loadCategoriesFromServerF();
                     }

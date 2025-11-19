@@ -103,5 +103,44 @@ export function showEditTemplateModal(template) {
     });
 }
 
+// Модальное окно для подтверждения удаления
+export function showDeleteConfirmModal(title, message) {
+    return new Promise((resolve) => {
+        const modal = document.getElementById("deleteConfirmModal");
+        const titleEl = document.getElementById("deleteConfirmTitle");
+        const messageEl = document.getElementById("deleteConfirmMessage");
+        const yesBtn = document.getElementById("deleteConfirmYes");
+        const noBtn = document.getElementById("deleteConfirmNo");
+
+        if (!modal || !titleEl || !messageEl || !yesBtn || !noBtn) {
+            console.error("Delete confirm modal elements not found");
+            resolve(false);
+            return;
+        }
+
+        if (title) titleEl.textContent = title;
+        if (message) messageEl.textContent = message;
+
+        const cleanup = () => {
+            yesBtn.onclick = null;
+            noBtn.onclick = null;
+            closeModal(modal);
+        };
+
+        yesBtn.onclick = () => {
+            cleanup();
+            resolve(true);
+        };
+
+        noBtn.onclick = () => {
+            cleanup();
+            resolve(false);
+        };
+
+        openModal(modal);
+        noBtn.focus(); // Focus on cancel button for safety
+    });
+}
+
 window.closeModal = closeModal;
 window.openModal = openModal;

@@ -3,7 +3,9 @@
 
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
 
     <title>Kalkulator Wyceny</title>
 
@@ -308,6 +310,27 @@
                 <div class="modal-footer-buttons" style="display:flex; gap:10px;">
                     <button id="editTplSubmit" class="btn full-width">Сохранить</button>
                     <button id="editTplCancel" class="btn secondary full-width">Отмена</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================= -->
+    <!--  MODAL: DELETE CONFIRM   -->
+    <!-- ========================= -->
+
+    <div id="deleteConfirmModal" class="modal-backdrop">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 id="deleteConfirmTitle">Подтверждение удаления</h2>
+                <div class="modal-close" onclick="closeModal(deleteConfirmModal)">✕</div>
+            </div>
+
+            <div class="modal-body">
+                <p id="deleteConfirmMessage" style="margin-bottom: 15px; font-size: 15px;">Вы уверены, что хотите удалить эту смету?</p>
+                <div class="modal-footer-buttons" style="display:flex; gap:10px;">
+                    <button id="deleteConfirmYes" class="btn full-width" style="background: #dc2626;">Удалить</button>
+                    <button id="deleteConfirmNo" class="btn secondary full-width">Отмена</button>
                 </div>
             </div>
         </div>

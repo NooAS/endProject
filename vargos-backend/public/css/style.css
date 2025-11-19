@@ -7,12 +7,34 @@
 html,
 body {
     height: 100%;
+    /* Prevent text size adjustment on orientation change */
+    -webkit-text-size-adjust: 100%;
+    -moz-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+    text-size-adjust: 100%;
 }
 
 body {
     font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     background: #f4f6f9;
     color: #1f2933;
+    /* Better text rendering */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Improve touch interactions */
+button, a, input, select, textarea {
+    -webkit-tap-highlight-color: rgba(37, 99, 235, 0.1);
+}
+
+/* Better touch targets for small elements */
+button, a, .clickable {
+    min-height: 44px;
+    min-width: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 
@@ -640,6 +662,23 @@ textarea.input:focus {
     .works-table {
         font-size: 12px;
     }
+    /* Auth buttons responsive */
+    .auth-buttons {
+        width: 100%;
+        justify-content: center;
+    }
+    .auth-btn {
+        padding: 8px 16px;
+        font-size: 14px;
+    }
+    /* Profile menu adjustments */
+    .profile-menu {
+        right: 10px;
+        left: 10px;
+        width: auto;
+        max-width: 400px;
+        margin: 0 auto;
+    }
 }
 
 
@@ -683,12 +722,14 @@ textarea.input:focus {
     /* Inputs */
     .input {
         width: 100%;
+        font-size: 16px; /* Prevent zoom on iOS */
     }
-    /* Buttons */
+    /* Buttons - larger touch targets */
     .btn {
         width: 100%;
-        padding: 10px 14px;
-        font-size: 15px;
+        padding: 12px 14px;
+        font-size: 16px;
+        min-height: 44px; /* iOS recommended touch target */
     }
     /* Summary */
     .summary-box {
@@ -700,10 +741,54 @@ textarea.input:focus {
         overflow-x: auto;
         display: block;
         width: 100%;
+        -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
     }
     .works-table {
         min-width: 800px;
         font-size: 12px;
+    }
+    /* Row controls responsive */
+    .row {
+        flex-direction: column;
+        width: 100%;
+    }
+    .row .input {
+        width: 100%;
+    }
+    .row .btn {
+        width: 100%;
+    }
+    /* Modal improvements for mobile */
+    .modal {
+        width: 100%;
+        max-width: 100%;
+        margin: 0;
+        border-radius: 12px 12px 0 0;
+        max-height: 95vh;
+    }
+    .modal-backdrop {
+        align-items: flex-end;
+    }
+    /* Category modal improvements */
+    .setting-group {
+        flex-direction: column;
+    }
+    .checkbox, .radio {
+        padding: 8px 0;
+        min-height: 44px;
+        align-items: center;
+    }
+    /* Profile menu full width on mobile */
+    .profile-menu {
+        left: 10px;
+        right: 10px;
+        width: auto;
+        top: 60px;
+    }
+    .menu-item {
+        padding: 12px 18px;
+        font-size: 16px;
+        min-height: 44px;
     }
 }
 
@@ -721,8 +806,8 @@ textarea.input:focus {
         width: 100%;
     }
     .btn {
-        padding: 12px 16px;
-        font-size: 14px;
+        padding: 14px 16px;
+        font-size: 16px;
     }
     /* Уменьшаем табличные колонки */
     .works-table th,
@@ -731,10 +816,28 @@ textarea.input:focus {
     }
     .modal {
         padding: 14px 18px;
-        max-width: 95%;
+        max-width: 100%;
     }
     .modal-header h2 {
         font-size: 16px;
+    }
+    .modal-close {
+        font-size: 24px;
+        padding: 8px;
+        min-width: 40px;
+        min-height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    /* Room actions */
+    .room-actions {
+        flex-direction: column;
+        width: 100%;
+        gap: 8px;
+    }
+    .room-actions .btn {
+        width: 100%;
     }
 }
 
@@ -756,19 +859,29 @@ textarea.input:focus {
         margin-bottom: 16px;
         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
         width: 100%;
+        border: 1px solid #e5e7eb;
     }
     /* Шапка карточки (закрытое состояние) */
     .work-acc-header {
-        padding: 14px 18px;
+        padding: 16px 18px;
         font-size: 16px;
         display: flex;
         justify-content: space-between;
         align-items: center;
         cursor: pointer;
         font-weight: 600;
+        min-height: 50px;
+        user-select: none;
+        -webkit-tap-highlight-color: rgba(0, 0, 0, 0.05);
+    }
+    .work-acc-header:active {
+        background: #f9fafb;
     }
     .work-acc-arrow {
         transition: transform 0.25s ease;
+        font-size: 18px;
+        min-width: 30px;
+        text-align: center;
     }
     /* Поворачиваем стрелку вниз */
     .work-acc-header.open .work-acc-arrow {
@@ -777,7 +890,7 @@ textarea.input:focus {
     /* Содержимое карточки */
     .work-acc-body {
         display: none;
-        padding: 14px 18px 20px;
+        padding: 16px 18px 20px;
         border-top: 1px solid #e5e7eb;
     }
     .work-acc-body.open {
@@ -788,11 +901,15 @@ textarea.input:focus {
     .work-acc-body select {
         width: 100%;
         margin-bottom: 12px;
+        font-size: 16px;
+        min-height: 44px;
+        padding: 10px 12px;
     }
     /* Кнопка удаления */
     .work-acc-body .btn.secondary {
         width: 100%;
         margin-top: 10px;
+        min-height: 44px;
     }
     /* Убираем горизонтальный скролл НАВСЕГДА */
     html,
