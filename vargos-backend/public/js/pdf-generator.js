@@ -335,6 +335,18 @@ export async function generateOwnerPdf(project, config) {
     pdf.text(`VAT ${config.vat}%:             ${formatCurrency(vatAmount)}`, margin, fy + 24);
     pdf.text(`Brutto klienta:          ${formatCurrency(brutto)}`, margin, fy + 30);
 
+    // Add notes if they exist
+    if (project.notes && project.notes.trim()) {
+        const notesY = fy + 40;
+        pdf.setFontSize(11);
+        pdf.setFont("Roboto", "bold");
+        pdf.text("Заметки:", margin, notesY);
+        pdf.setFont("Roboto", "normal");
+        pdf.setFontSize(9);
+        const notesLines = pdf.splitTextToSize(project.notes, pageWidth - margin * 2);
+        pdf.text(notesLines, margin, notesY + 6);
+    }
+
     pdf.save("wycena-firma.pdf");
 
     return pdf;

@@ -60,6 +60,7 @@ model Quote {
   user      User        @relation(fields: [userId], references: [id])
   name      String
   total     Float
+  notes     String?
   createdAt DateTime    @default(now())
   items     QuoteItem[]
 }

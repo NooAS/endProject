@@ -31,8 +31,16 @@ export async function saveQuoteToServer(project) {
     var payload = {
         name: project.name,
         total: totals.brutto,
-        items: items
+        items: items,
+        notes: project.notes || null
     };
+
+    // Если редактируем существующую смету
+    const editQuoteId = localStorage.getItem("editQuoteId");
+    if (editQuoteId) {
+        payload.id = Number(editQuoteId);
+    }
+
     try {
         var res = await fetch("/quotes/save", {
             method: "POST",
@@ -44,7 +52,13 @@ export async function saveQuoteToServer(project) {
         });
         var json = await res.json();
         if (!res.ok) { console.error("Ошибка сохранения:", json); }
-        else { console.log("Смета сохранена успешно:", json); }
+        else { 
+            console.log("Смета сохранена успешно:", json);
+            // Если это была новая смета, сохраним её ID для последующих обновлений
+            if (json.quoteId && !editQuoteId) {
+                localStorage.setItem("editQuoteId", json.quoteId);
+            }
+        }
     } catch (e) {
         console.error("Ошибка сети:", e);
     }

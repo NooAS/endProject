@@ -5,7 +5,7 @@ import { Project, Room, Work } from "./project-models.js";
 import { formatCurrency, formatNumberPL, loadCompanyDataFromStorage, saveCompanyDataToStorage } from "./helpers.js";
 import { saveCategoriesToStorage } from "./categories-storage.js";
 import { loadPdfSettingsFromStorage, savePdfSettingsToStorage } from "./pdf-settings-storage.js";
-import { openModal, closeModal } from "./modals.js";
+import { openModal, closeModal, showInputModal, showEditTemplateModal } from "./modals.js";
 import { collectPdfData } from "./pdf-data.js";
 import { saveQuoteToServer, loadQuotesHistory } from "./quotes-api.js";
 import { generateClientPdf, generateOwnerPdf } from "./pdf-generator.js";
@@ -836,7 +836,7 @@ function renderCategoriesModal() {
         editCatBtn.textContent = "✎";
         editCatBtn.title = "Изменить";
         editCatBtn.onclick = async() => {
-            const newName = prompt("Nowa nazwa kategorii:", cat.name);
+            const newName = await showInputModal("Изменить название категории", "Новое название категории", cat.name);
             if (newName && newName.trim()) {
                 await updateCategoryOnServer(cat.id, newName);
                 await loadCategoriesFromServerF();
@@ -959,35 +959,11 @@ function renderCategoriesModal() {
                 editTpl.textContent = "✎";
                 editTpl.title = "Редактировать";
                 editTpl.onclick = async() => {
-                    const newName = prompt("Имя работы:", tpl.name);
-                    if (!newName || !newName.trim()) return;
-                    let newClient;
-                    if (tpl.defaults && typeof tpl.defaults.clientPrice !== "undefined") {
-                        newClient = prompt("Цена клиента:", tpl.defaults.clientPrice);
-                    } else {
-                        newClient = prompt("Цена клиента:", 0);
+                    const result = await showEditTemplateModal(tpl);
+                    if (result && result.name && result.name.trim()) {
+                        await updateTemplateOnServer(tpl.id, result);
+                        await loadCategoriesFromServerF();
                     }
-                    let newMat;
-                    if (tpl.defaults && typeof tpl.defaults.materialPrice !== "undefined") {
-                        newMat = prompt("Цена материала:", tpl.defaults.materialPrice);
-                    } else {
-                        newMat = prompt("Цена материала:", 0);
-                    }
-                    let newLab;
-                    if (tpl.defaults && typeof tpl.defaults.laborPrice !== "undefined") {
-                        newLab = prompt("Цена работы:", tpl.defaults.laborPrice);
-                    } else {
-                        newLab = prompt("Цена работы:", 0);
-                    }
-                    await updateTemplateOnServer(tpl.id, {
-                        name: newName.trim(),
-                        defaults: {
-                            clientPrice: parseFloat(newClient) || 0,
-                            materialPrice: parseFloat(newMat) || 0,
-                            laborPrice: parseFloat(newLab) || 0
-                        }
-                    });
-                    await loadCategoriesFromServerF();
                 };
                 const deleteTpl = document.createElement("span");
                 deleteTpl.style.cursor = "pointer";
@@ -1027,6 +1003,152 @@ if (DOM.logoutBtnInside) {
         window.location.reload();
     });
 }
+
+// --- CHANGE EMAIL ---
+const changeLoginBtn = $id("changeLoginBtn");
+const changeEmailModal = $id("changeEmailModal");
+const newEmailInput = $id("newEmailInput");
+const emailPasswordInput = $id("emailPasswordInput");
+const submitChangeEmail = $id("submitChangeEmail");
+
+if (changeLoginBtn) {
+    changeLoginBtn.addEventListener("click", () => {
+        openModal(changeEmailModal);
+        if (newEmailInput) newEmailInput.value = "";
+        if (emailPasswordInput) emailPasswordInput.value = "";
+    });
+}
+
+if (submitChangeEmail) {
+    submitChangeEmail.addEventListener("click", async() => {
+        const newEmail = newEmailInput?.value?.trim();
+        const password = emailPasswordInput?.value?.trim();
+
+        if (!newEmail || !password) {
+            alert("Заполните все поля");
+            return;
+        }
+
+        const token = localStorage.getItem("token");
+        if (!token) {
+            alert("Не авторизован");
+            return;
+        }
+
+        try {
+            const res = await fetch("/auth/change-email", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer " + token
+                },
+                body: JSON.stringify({ newEmail, password })
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+                alert("Email успешно изменен!");
+                closeModal(changeEmailModal);
+                if (DOM.profileMenu) DOM.profileMenu.classList.add("hidden");
+            } else {
+                alert(data.error || "Ошибка при изменении email");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Ошибка сети");
+        }
+    });
+}
+
+// --- CHANGE PASSWORD ---
+const changePasswordBtn = $id("changePasswordBtn");
+const changePasswordModal = $id("changePasswordModal");
+const oldPasswordInput = $id("oldPasswordInput");
+const newPasswordInput = $id("newPasswordInput");
+const confirmPasswordInput = $id("confirmPasswordInput");
+const submitChangePassword = $id("submitChangePassword");
+
+if (changePasswordBtn) {
+    changePasswordBtn.addEventListener("click", () => {
+        openModal(changePasswordModal);
+        if (oldPasswordInput) oldPasswordInput.value = "";
+        if (newPasswordInput) newPasswordInput.value = "";
+        if (confirmPasswordInput) confirmPasswordInput.value = "";
+    });
+}
+
+if (submitChangePassword) {
+    submitChangePassword.addEventListener("click", async() => {
+        const oldPassword = oldPasswordInput?.value?.trim();
+        const newPassword = newPasswordInput?.value?.trim();
+        const confirmPassword = confirmPasswordInput?.value?.trim();
+
+        if (!oldPassword || !newPassword || !confirmPassword) {
+            alert("Заполните все поля");
+            return;
+        }
+
+        if (newPassword !== confirmPassword) {
+            alert("Новый пароль и подтверждение не совпадают");
+            return;
+        }
+
+        const token = localStorage.getItem("token");
+        if (!token) {
+            alert("Не авторизован");
+            return;
+        }
+
+        try {
+            const res = await fetch("/auth/change-password", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer " + token
+                },
+                body: JSON.stringify({ oldPassword, newPassword })
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+                alert("Пароль успешно изменен!");
+                closeModal(changePasswordModal);
+                if (DOM.profileMenu) DOM.profileMenu.classList.add("hidden");
+            } else {
+                alert(data.error || "Ошибка при изменении пароля");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Ошибка сети");
+        }
+    });
+}
+
+// --- NOTES TOGGLE ---
+const toggleNotesBtn = $id("toggleNotesBtn");
+const notesContainer = $id("notesContainer");
+const notesToggleIcon = $id("notesToggleIcon");
+const projectNotesTextarea = $id("projectNotes");
+
+if (toggleNotesBtn && notesContainer) {
+    toggleNotesBtn.addEventListener("click", () => {
+        const isVisible = notesContainer.style.display !== "none";
+        notesContainer.style.display = isVisible ? "none" : "block";
+        if (notesToggleIcon) {
+            notesToggleIcon.textContent = isVisible ? "▼" : "▲";
+        }
+    });
+}
+
+// Sync notes with project
+if (projectNotesTextarea) {
+    projectNotesTextarea.addEventListener("input", () => {
+        project.notes = projectNotesTextarea.value;
+    });
+}
+
 
 // --- Загрузка отдельной сметы с сервера и загрузка в UI ---
 async function loadQuoteFromServer(id) {
@@ -1169,6 +1291,15 @@ async function loadQuoteFromServer(id) {
             if (pdfCompanyNipInput) pdfCompanyNipInput.value = project.pdfCompanyData.nip || "";
             if (pdfCompanyAddressInput) pdfCompanyAddressInput.value = project.pdfCompanyData.address || "";
             if (pdfObjectAddressInput) pdfObjectAddressInput.value = project.pdfObjectAddress || "";
+        }
+
+        // Load notes
+        if (q.notes) {
+            project.notes = q.notes;
+            const projectNotesTextarea = document.getElementById("projectNotes");
+            if (projectNotesTextarea) {
+                projectNotesTextarea.value = q.notes;
+            }
         }
 
         // Apply UI flags: numbering, categories, rooms

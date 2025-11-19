@@ -44,6 +44,7 @@ export class Project {
         this._tplAutoId = 1;
         this.pdfCompanyData = null;
         this.pdfObjectAddress = "";
+        this.notes = "";
     }
     setName(name) { this.name = name; }
     addRoom(name) {
