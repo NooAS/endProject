@@ -179,6 +179,29 @@ Run migrations to apply database changes:
 npx prisma migrate deploy
 ```
 
+## Rate Limiting
+
+To prevent abuse and brute force attacks, the API implements rate limiting on all endpoints:
+
+### Rate Limits:
+- **General API**: 100 requests per 15 minutes per IP
+- **Authentication (login/register)**: 5 requests per 15 minutes per IP
+- **Password Reset Request**: 3 requests per hour per IP
+- **PDF Generation**: 20 requests per 15 minutes per IP
+
+### Error Responses:
+When rate limit is exceeded, the API returns HTTP 429 (Too Many Requests):
+```json
+{
+  "message": "Слишком много запросов с этого IP, попробуйте позже"
+}
+```
+
+The response includes standard rate limiting headers:
+- `RateLimit-Limit`: Maximum number of requests allowed
+- `RateLimit-Remaining`: Number of requests remaining
+- `RateLimit-Reset`: Time when the rate limit window resets (Unix timestamp)
+
 ## Security Considerations
 
 1. **Email Verification**: Users must verify their email before they can login
@@ -187,6 +210,8 @@ npx prisma migrate deploy
 4. **Password Hashing**: Passwords are hashed with bcrypt (10 rounds)
 5. **JWT Authentication**: All protected endpoints require valid JWT token
 6. **Non-disclosure**: Password reset endpoint doesn't reveal if email exists
+7. **Rate Limiting**: Protection against brute force and abuse attacks
+8. **Secure Dependencies**: All packages updated to latest secure versions (nodemailer@7.0.7)
 
 ## Testing
 
