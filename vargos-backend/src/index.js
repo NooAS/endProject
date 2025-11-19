@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import { PrismaClient } from "@prisma/client";
+import { generalLimiter } from "./middlewares/rateLimiter.js";
 import categoryRoutes from "./routes/categoryRoutes.js";
 import jobRoutes from "./routes/jobRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
@@ -18,6 +19,8 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static("public"));
 
+// Apply general rate limiting to all routes
+app.use(generalLimiter);
 
 
 app.use("/categories", categoryRoutes);

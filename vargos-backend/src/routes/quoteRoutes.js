@@ -1,5 +1,6 @@
 import express from "express";
 import auth from "../middlewares/authMiddleware.js";
+import { pdfLimiter } from "../middlewares/rateLimiter.js";
 import {
     saveQuote,
     getMyQuotes,
@@ -23,6 +24,6 @@ router.get("/:id", auth, getQuoteById);
 router.delete("/:id", auth, deleteQuoteById);
 
 // генерация PDF
-router.get("/:id/pdf", auth, generatePDF);
+router.get("/:id/pdf", auth, pdfLimiter, generatePDF);
 
 export default router;
