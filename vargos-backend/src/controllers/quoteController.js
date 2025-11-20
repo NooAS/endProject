@@ -14,6 +14,12 @@ export const saveQuote = async(req, res) => {
 
         // если id есть → обновляем
         if (id) {
+            // Сначала удаляем старые items
+            await prisma.quoteItem.deleteMany({
+                where: { quoteId: id }
+            });
+            
+            // Затем обновляем quote и создаем новые items
             quote = await prisma.quote.update({
                 where: { id },
                 data: {
@@ -21,7 +27,6 @@ export const saveQuote = async(req, res) => {
                     total,
                     notes: notes || null,
                     items: {
-                        deleteMany: {},
                         create: items
                     }
                 }
@@ -37,6 +42,12 @@ export const saveQuote = async(req, res) => {
 
             if (existingQuote) {
                 // Если существует - обновляем
+                // Сначала удаляем старые items
+                await prisma.quoteItem.deleteMany({
+                    where: { quoteId: existingQuote.id }
+                });
+                
+                // Затем обновляем quote и создаем новые items
                 quote = await prisma.quote.update({
                     where: { id: existingQuote.id },
                     data: {
@@ -44,7 +55,6 @@ export const saveQuote = async(req, res) => {
                         total,
                         notes: notes || null,
                         items: {
-                            deleteMany: {},
                             create: items
                         }
                     }
