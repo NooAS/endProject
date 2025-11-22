@@ -3,6 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import compression from "compression";
 import helmet from "helmet";
+import rateLimit from "express-rate-limit";
 import { PrismaClient } from "@prisma/client";
 import categoryRoutes from "./routes/categoryRoutes.js";
 import jobRoutes from "./routes/jobRoutes.js";
@@ -30,6 +31,18 @@ app.use(helmet({
     },
     crossOriginEmbedderPolicy: false
 }));
+
+// Rate limiting для защиты от DDoS и brute-force атак
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 минут
+    max: 100, // максимум 100 запросов с одного IP за 15 минут
+    message: "Слишком много запросов с этого IP, попробуйте позже",
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+// Применяем rate limiter ко всем маршрутам
+app.use(limiter);
 
 // Middleware для сжатия ответов
 app.use(compression());
