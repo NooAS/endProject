@@ -40,7 +40,12 @@ export const saveQuote = async(req, res) => {
                 }
             });
 
-            // Обновляем quote и создаем новые items (старые удалятся CASCADE)
+            // Удаляем старые items и создаем новые
+            // (можно использовать deleteMany + create вместо CASCADE для явной замены)
+            await prisma.quoteItem.deleteMany({
+                where: { quoteId: id }
+            });
+            
             quote = await prisma.quote.update({
                 where: { id },
                 data: {
@@ -50,7 +55,6 @@ export const saveQuote = async(req, res) => {
                     config: config || null,
                     version: { increment: 1 },
                     items: {
-                        deleteMany: {},
                         create: items
                     }
                 }
@@ -83,7 +87,11 @@ export const saveQuote = async(req, res) => {
                     }
                 });
                 
-                // Обновляем quote и создаем новые items (старые удалятся CASCADE)
+                // Удаляем старые items и создаем новые
+                await prisma.quoteItem.deleteMany({
+                    where: { quoteId: existingQuote.id }
+                });
+                
                 quote = await prisma.quote.update({
                     where: { id: existingQuote.id },
                     data: {
@@ -93,7 +101,6 @@ export const saveQuote = async(req, res) => {
                         config: config || null,
                         version: { increment: 1 },
                         items: {
-                            deleteMany: {},
                             create: items
                         }
                     }

@@ -20,6 +20,7 @@ import {
 } from "./categories-api.js";
 import { enableAutoSave, getSavedDraft, clearSavedDraft } from "./auto-save.js";
 import { registerServiceWorker, initConnectionMonitoring } from "./offline-manager.js";
+import { escapeHtml } from "./security.js";
 
 // --- INIT ---
 const config = new Config();
@@ -251,16 +252,49 @@ function renderVersionsModal(quoteId, versions) {
         const div = document.createElement('div');
         div.className = 'panel';
         div.style.marginBottom = '10px';
-        div.innerHTML = `
-            <h4>Версия ${v.version}</h4>
-            <p><strong>Название:</strong> ${v.name}</p>
-            <p><strong>Сумма:</strong> ${(v.total || 0).toFixed(2)} zł</p>
-            <p><strong>Дата:</strong> ${v.createdAt ? new Date(v.createdAt).toLocaleString() : ""}</p>
-            ${v.notes ? `<p><strong>Заметки:</strong> ${v.notes}</p>` : ''}
-            <div style="margin-top: 10px; display: flex; gap: 8px;">
-                ${index < versions.length - 1 ? `<button class="btn secondary" onclick="compareVersions(${quoteId}, ${v.version}, ${versions[index + 1].version})">Сравнить со след.</button>` : ''}
-            </div>
-        `;
+        
+        // Создаем элементы безопасно через DOM API вместо innerHTML
+        const h4 = document.createElement('h4');
+        h4.textContent = `Версия ${v.version}`;
+        div.appendChild(h4);
+        
+        const pName = document.createElement('p');
+        pName.innerHTML = '<strong>Название:</strong> ';
+        pName.appendChild(document.createTextNode(v.name));
+        div.appendChild(pName);
+        
+        const pSum = document.createElement('p');
+        pSum.innerHTML = `<strong>Сумма:</strong> ${(v.total || 0).toFixed(2)} zł`;
+        div.appendChild(pSum);
+        
+        const pDate = document.createElement('p');
+        pDate.innerHTML = '<strong>Дата:</strong> ';
+        pDate.appendChild(document.createTextNode(v.createdAt ? new Date(v.createdAt).toLocaleString() : ""));
+        div.appendChild(pDate);
+        
+        if (v.notes) {
+            const pNotes = document.createElement('p');
+            pNotes.innerHTML = '<strong>Заметки:</strong> ';
+            pNotes.appendChild(document.createTextNode(v.notes));
+            div.appendChild(pNotes);
+        }
+        
+        const btnDiv = document.createElement('div');
+        btnDiv.style.marginTop = '10px';
+        btnDiv.style.display = 'flex';
+        btnDiv.style.gap = '8px';
+        
+        if (index < versions.length - 1) {
+            const compareBtn = document.createElement('button');
+            compareBtn.className = 'btn secondary';
+            compareBtn.textContent = 'Сравнить со след.';
+            compareBtn.addEventListener('click', () => {
+                compareVersions(quoteId, v.version, versions[index + 1].version);
+            });
+            btnDiv.appendChild(compareBtn);
+        }
+        
+        div.appendChild(btnDiv);
         container.appendChild(div);
     });
     
@@ -297,40 +331,117 @@ function renderComparisonModal(comparison) {
         return (value != null && typeof value === 'number') ? value.toFixed(2) : '0.00';
     };
     
-    modal.innerHTML = `
-        <div class="modal" style="max-width: 900px;">
-            <div class="modal-header">
-                <h2>Сравнение версий ${v1.version} и ${v2.version}</h2>
-                <div class="modal-close" onclick="document.getElementById('comparisonModal').remove()">✕</div>
-            </div>
-            <div class="modal-body" style="max-height: 600px; overflow-y: auto;">
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                    <div>
-                        <h3>Версия ${v1.version}</h3>
-                        <p><strong>Название:</strong> ${v1.name}</p>
-                        <p><strong>Сумма:</strong> ${formatTotal(v1.total)} zł</p>
-                        <p><strong>Дата:</strong> ${v1.createdAt ? new Date(v1.createdAt).toLocaleString() : ""}</p>
-                        ${v1.notes ? `<p><strong>Заметки:</strong> ${v1.notes}</p>` : ''}
-                    </div>
-                    <div>
-                        <h3>Версия ${v2.version}</h3>
-                        <p><strong>Название:</strong> ${v2.name}</p>
-                        <p><strong>Сумма:</strong> ${formatTotal(v2.total)} zł</p>
-                        <p><strong>Дата:</strong> ${v2.createdAt ? new Date(v2.createdAt).toLocaleString() : ""}</p>
-                        ${v2.notes ? `<p><strong>Заметки:</strong> ${v2.notes}</p>` : ''}
-                    </div>
-                </div>
-                <div style="margin-top: 20px;">
-                    <h4>Изменения:</h4>
-                    <ul style="list-style: none; padding: 0;">
-                        ${v1.total !== v2.total ? `<li>✓ Сумма изменилась: ${formatTotal(v1.total)} → ${formatTotal(v2.total)} zł</li>` : ''}
-                        ${v1.name !== v2.name ? `<li>✓ Название изменилось: "${v1.name}" → "${v2.name}"</li>` : ''}
-                        ${v1.notes !== v2.notes ? `<li>✓ Заметки изменились</li>` : ''}
-                    </ul>
-                </div>
-            </div>
-        </div>
-    `;
+    const modalContent = document.createElement('div');
+    modalContent.className = 'modal';
+    modalContent.style.maxWidth = '900px';
+    
+    const header = document.createElement('div');
+    header.className = 'modal-header';
+    header.innerHTML = '<h2>Сравнение версий ' + v1.version + ' и ' + v2.version + '</h2>';
+    
+    const closeBtn = document.createElement('div');
+    closeBtn.className = 'modal-close';
+    closeBtn.textContent = '✕';
+    closeBtn.addEventListener('click', () => modal.remove());
+    header.appendChild(closeBtn);
+    
+    const body = document.createElement('div');
+    body.className = 'modal-body';
+    body.style.maxHeight = '600px';
+    body.style.overflowY = 'auto';
+    
+    const gridDiv = document.createElement('div');
+    gridDiv.style.display = 'grid';
+    gridDiv.style.gridTemplateColumns = '1fr 1fr';
+    gridDiv.style.gap = '20px';
+    
+    // Версия 1
+    const v1Div = document.createElement('div');
+    v1Div.innerHTML = `<h3>Версия ${v1.version}</h3>`;
+    
+    const v1Name = document.createElement('p');
+    v1Name.innerHTML = '<strong>Название:</strong> ';
+    v1Name.appendChild(document.createTextNode(v1.name));
+    v1Div.appendChild(v1Name);
+    
+    const v1Sum = document.createElement('p');
+    v1Sum.innerHTML = `<strong>Сумма:</strong> ${formatTotal(v1.total)} zł`;
+    v1Div.appendChild(v1Sum);
+    
+    const v1Date = document.createElement('p');
+    v1Date.innerHTML = '<strong>Дата:</strong> ';
+    v1Date.appendChild(document.createTextNode(v1.createdAt ? new Date(v1.createdAt).toLocaleString() : ""));
+    v1Div.appendChild(v1Date);
+    
+    if (v1.notes) {
+        const v1Notes = document.createElement('p');
+        v1Notes.innerHTML = '<strong>Заметки:</strong> ';
+        v1Notes.appendChild(document.createTextNode(v1.notes));
+        v1Div.appendChild(v1Notes);
+    }
+    
+    // Версия 2
+    const v2Div = document.createElement('div');
+    v2Div.innerHTML = `<h3>Версия ${v2.version}</h3>`;
+    
+    const v2Name = document.createElement('p');
+    v2Name.innerHTML = '<strong>Название:</strong> ';
+    v2Name.appendChild(document.createTextNode(v2.name));
+    v2Div.appendChild(v2Name);
+    
+    const v2Sum = document.createElement('p');
+    v2Sum.innerHTML = `<strong>Сумма:</strong> ${formatTotal(v2.total)} zł`;
+    v2Div.appendChild(v2Sum);
+    
+    const v2Date = document.createElement('p');
+    v2Date.innerHTML = '<strong>Дата:</strong> ';
+    v2Date.appendChild(document.createTextNode(v2.createdAt ? new Date(v2.createdAt).toLocaleString() : ""));
+    v2Div.appendChild(v2Date);
+    
+    if (v2.notes) {
+        const v2Notes = document.createElement('p');
+        v2Notes.innerHTML = '<strong>Заметки:</strong> ';
+        v2Notes.appendChild(document.createTextNode(v2.notes));
+        v2Div.appendChild(v2Notes);
+    }
+    
+    gridDiv.appendChild(v1Div);
+    gridDiv.appendChild(v2Div);
+    body.appendChild(gridDiv);
+    
+    // Изменения
+    const changesDiv = document.createElement('div');
+    changesDiv.style.marginTop = '20px';
+    changesDiv.innerHTML = '<h4>Изменения:</h4>';
+    
+    const changesList = document.createElement('ul');
+    changesList.style.listStyle = 'none';
+    changesList.style.padding = '0';
+    
+    if (v1.total !== v2.total) {
+        const li = document.createElement('li');
+        li.textContent = `✓ Сумма изменилась: ${formatTotal(v1.total)} → ${formatTotal(v2.total)} zł`;
+        changesList.appendChild(li);
+    }
+    
+    if (v1.name !== v2.name) {
+        const li = document.createElement('li');
+        li.textContent = `✓ Название изменилось: "${v1.name}" → "${v2.name}"`;
+        changesList.appendChild(li);
+    }
+    
+    if (v1.notes !== v2.notes) {
+        const li = document.createElement('li');
+        li.textContent = '✓ Заметки изменились';
+        changesList.appendChild(li);
+    }
+    
+    changesDiv.appendChild(changesList);
+    body.appendChild(changesDiv);
+    
+    modalContent.appendChild(header);
+    modalContent.appendChild(body);
+    modal.appendChild(modalContent);
     
     document.body.appendChild(modal);
     
