@@ -7,7 +7,7 @@ import { saveCategoriesToStorage } from "./categories-storage.js";
 import { loadPdfSettingsFromStorage, savePdfSettingsToStorage } from "./pdf-settings-storage.js";
 import { openModal, closeModal, showInputModal, showEditTemplateModal, showDeleteConfirmModal } from "./modals.js";
 import { collectPdfData } from "./pdf-data.js";
-import { saveQuoteToServer, loadQuotesHistory } from "./quotes-api.js";
+import { saveQuoteToServer, loadQuotesHistory, getQuoteVersions, compareQuoteVersions } from "./quotes-api.js";
 import { generateClientPdf, generateOwnerPdf } from "./pdf-generator.js";
 import {
     loadCategoriesFromServer,
@@ -18,6 +18,8 @@ import {
     updateTemplateOnServer,
     deleteTemplateFromServer
 } from "./categories-api.js";
+import { enableAutoSave, getSavedDraft, clearSavedDraft } from "./auto-save.js";
+import { registerServiceWorker, initConnectionMonitoring } from "./offline-manager.js";
 
 // --- INIT ---
 const config = new Config();
@@ -194,8 +196,10 @@ function renderQuotesHistoryUI(quotes) {
             <h3>${q.name}</h3>
             <p>Сумма: <strong>${(q.total || 0).toFixed(2)} zł</strong></p>
             <p>Дата: ${q.createdAt ? new Date(q.createdAt).toLocaleString() : ""}</p>
-            <div style="margin-top:12px; display:flex; gap:10px;">
+            <p>Версия: <strong>${q.version || 1}</strong></p>
+            <div style="margin-top:12px; display:flex; gap:10px; flex-wrap: wrap;">
                 <button class="btn" onclick="editQuote(${q.id})">Редактировать</button>
+                <button class="btn secondary" onclick="viewQuoteVersions(${q.id})">Версии</button>
                 <button class="btn secondary" onclick="deleteQuote(${q.id})">Удалить</button>
             </div>
         `;
@@ -209,6 +213,148 @@ function editQuote(id) {
     loadQuoteFromServer(id);
 }
 window.editQuote = editQuote;
+
+async function viewQuoteVersions(quoteId) {
+    try {
+        const versions = await getQuoteVersions(quoteId);
+        renderVersionsModal(quoteId, versions);
+    } catch (e) {
+        console.error("Ошибка загрузки версий:", e);
+        alert("Не удалось загрузить версии сметы");
+    }
+}
+window.viewQuoteVersions = viewQuoteVersions;
+
+function renderVersionsModal(quoteId, versions) {
+    const modal = document.createElement('div');
+    modal.id = 'versionsModal';
+    modal.className = 'modal-backdrop';
+    modal.style.display = 'flex';
+    
+    modal.innerHTML = `
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Версии сметы</h2>
+                <div class="modal-close" onclick="document.getElementById('versionsModal').remove()">✕</div>
+            </div>
+            <div class="modal-body" id="versionsContainer">
+                ${versions.length === 0 ? '<p>Нет сохраненных версий</p>' : ''}
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    const container = document.getElementById('versionsContainer');
+    
+    versions.forEach((v, index) => {
+        const div = document.createElement('div');
+        div.className = 'panel';
+        div.style.marginBottom = '10px';
+        div.innerHTML = `
+            <h4>Версия ${v.version}</h4>
+            <p><strong>Название:</strong> ${v.name}</p>
+            <p><strong>Сумма:</strong> ${(v.total || 0).toFixed(2)} zł</p>
+            <p><strong>Дата:</strong> ${v.createdAt ? new Date(v.createdAt).toLocaleString() : ""}</p>
+            ${v.notes ? `<p><strong>Заметки:</strong> ${v.notes}</p>` : ''}
+            <div style="margin-top: 10px; display: flex; gap: 8px;">
+                <button class="btn secondary" onclick="restoreVersion(${quoteId}, ${v.version})">Восстановить</button>
+                ${index < versions.length - 1 ? `<button class="btn secondary" onclick="compareVersions(${quoteId}, ${v.version}, ${versions[index + 1].version})">Сравнить со след.</button>` : ''}
+            </div>
+        `;
+        container.appendChild(div);
+    });
+    
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.remove();
+        }
+    });
+}
+
+async function restoreVersion(quoteId, version) {
+    const confirmed = confirm(`Восстановить версию ${version}? Это создаст новую версию на основе выбранной.`);
+    if (!confirmed) return;
+    
+    try {
+        const versions = await getQuoteVersions(quoteId);
+        const versionData = versions.find(v => v.version === version);
+        
+        if (versionData && versionData.data) {
+            // Здесь нужно восстановить данные из версии
+            // Это требует сохранения на сервер
+            alert("Функция восстановления версии в разработке");
+        }
+    } catch (e) {
+        console.error("Ошибка восстановления версии:", e);
+        alert("Не удалось восстановить версию");
+    }
+}
+window.restoreVersion = restoreVersion;
+
+async function compareVersions(quoteId, v1, v2) {
+    try {
+        const comparison = await compareQuoteVersions(quoteId, v1, v2);
+        renderComparisonModal(comparison);
+    } catch (e) {
+        console.error("Ошибка сравнения версий:", e);
+        alert("Не удалось сравнить версии");
+    }
+}
+window.compareVersions = compareVersions;
+
+function renderComparisonModal(comparison) {
+    const modal = document.createElement('div');
+    modal.id = 'comparisonModal';
+    modal.className = 'modal-backdrop';
+    modal.style.display = 'flex';
+    
+    const v1 = comparison.version1;
+    const v2 = comparison.version2;
+    
+    modal.innerHTML = `
+        <div class="modal" style="max-width: 900px;">
+            <div class="modal-header">
+                <h2>Сравнение версий ${v1.version} и ${v2.version}</h2>
+                <div class="modal-close" onclick="document.getElementById('comparisonModal').remove()">✕</div>
+            </div>
+            <div class="modal-body" style="max-height: 600px; overflow-y: auto;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div>
+                        <h3>Версия ${v1.version}</h3>
+                        <p><strong>Название:</strong> ${v1.name}</p>
+                        <p><strong>Сумма:</strong> ${(v1.total || 0).toFixed(2)} zł</p>
+                        <p><strong>Дата:</strong> ${v1.createdAt ? new Date(v1.createdAt).toLocaleString() : ""}</p>
+                        ${v1.notes ? `<p><strong>Заметки:</strong> ${v1.notes}</p>` : ''}
+                    </div>
+                    <div>
+                        <h3>Версия ${v2.version}</h3>
+                        <p><strong>Название:</strong> ${v2.name}</p>
+                        <p><strong>Сумма:</strong> ${(v2.total || 0).toFixed(2)} zł</p>
+                        <p><strong>Дата:</strong> ${v2.createdAt ? new Date(v2.createdAt).toLocaleString() : ""}</p>
+                        ${v2.notes ? `<p><strong>Заметки:</strong> ${v2.notes}</p>` : ''}
+                    </div>
+                </div>
+                <div style="margin-top: 20px;">
+                    <h4>Изменения:</h4>
+                    <ul style="list-style: none; padding: 0;">
+                        ${v1.total !== v2.total ? `<li>✓ Сумма изменилась: ${v1.total.toFixed(2)} → ${v2.total.toFixed(2)} zł</li>` : ''}
+                        ${v1.name !== v2.name ? `<li>✓ Название изменилось: "${v1.name}" → "${v2.name}"</li>` : ''}
+                        ${v1.notes !== v2.notes ? `<li>✓ Заметки изменились</li>` : ''}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.remove();
+        }
+    });
+}
 
 async function deleteQuote(id) {
     const confirmed = await showDeleteConfirmModal(
@@ -236,6 +382,11 @@ function renderProject() {
     const totals = project.getTotals();
     if (DOM.sumNettoEl) DOM.sumNettoEl.textContent = formatCurrency(totals.netto);
     if (DOM.sumBruttoEl) DOM.sumBruttoEl.textContent = formatCurrency(totals.brutto);
+    
+    // Триггерим автосохранение при любых изменениях
+    if (typeof triggerAutoSave === 'function') {
+        triggerAutoSave();
+    }
 }
 
 function renderRoom(room) {
@@ -1330,9 +1481,148 @@ async function loadQuoteFromServer(id) {
 }
 window.loadQuoteFromServer = loadQuoteFromServer;
 
+// --- Функция для получения данных проекта для автосохранения ---
+function getProjectDataForAutoSave() {
+    return {
+        name: project.name,
+        config: {
+            useRooms: config.useRooms,
+            useCategories: config.useCategories,
+            useNumbering: config.useNumbering,
+            mode: config.mode,
+            vat: config.vat
+        },
+        rooms: project.rooms.map(room => ({
+            id: room.id,
+            number: room.number,
+            name: room.name,
+            works: room.works.map(work => ({
+                id: work.id,
+                name: work.name,
+                unit: work.unit,
+                quantity: work.quantity,
+                clientPrice: work.clientPrice,
+                materialPrice: work.materialPrice,
+                laborPrice: work.laborPrice,
+                categoryId: work.categoryId,
+                templateId: work.templateId
+            }))
+        })),
+        notes: project.notes,
+        categories: project.categories
+    };
+}
+
+// --- Инициализация автосохранения ---
+const autoSaveHandler = enableAutoSave(getProjectDataForAutoSave);
+
+// Вызываем автосохранение при любых изменениях в проекте
+function triggerAutoSave() {
+    autoSaveHandler();
+}
+
+// --- Восстановление из автосохранения ---
+function restoreFromDraft() {
+    const draft = getSavedDraft();
+    if (!draft) return false;
+    
+    const savedAt = draft._savedAt;
+    if (!savedAt) return false;
+    
+    const timeDiff = Date.now() - new Date(savedAt).getTime();
+    const hoursDiff = timeDiff / (1000 * 60 * 60);
+    
+    // Показываем уведомление только если данные не старше 24 часов
+    if (hoursDiff > 24) {
+        clearSavedDraft();
+        return false;
+    }
+    
+    const message = `Найдены несохраненные данные от ${new Date(savedAt).toLocaleString()}. Восстановить?`;
+    if (confirm(message)) {
+        try {
+            // Восстанавливаем конфигурацию
+            if (draft.config) {
+                config.useRooms = draft.config.useRooms;
+                config.useCategories = draft.config.useCategories;
+                config.useNumbering = draft.config.useNumbering;
+                config.mode = draft.config.mode;
+                config.vat = draft.config.vat;
+            }
+            
+            // Восстанавливаем данные проекта
+            project = new Project(config);
+            project.name = draft.name || "";
+            project.notes = draft.notes || "";
+            
+            if (draft.categories) {
+                project.categories = draft.categories;
+            }
+            
+            // Восстанавливаем комнаты и работы
+            if (draft.rooms && Array.isArray(draft.rooms)) {
+                project.rooms = [];
+                project._roomAutoId = 1;
+                
+                draft.rooms.forEach(roomData => {
+                    const room = project.addRoom(roomData.name);
+                    
+                    if (roomData.works && Array.isArray(roomData.works)) {
+                        roomData.works.forEach(workData => {
+                            const work = new Work(workData.id);
+                            work.name = workData.name || "";
+                            work.unit = workData.unit || "m2";
+                            work.quantity = workData.quantity || 0;
+                            work.clientPrice = workData.clientPrice || 0;
+                            work.materialPrice = workData.materialPrice || 0;
+                            work.laborPrice = workData.laborPrice || 0;
+                            work.categoryId = workData.categoryId || null;
+                            work.templateId = workData.templateId || null;
+                            room.addWork(work);
+                        });
+                    }
+                });
+            }
+            
+            // Обновляем UI
+            if (DOM.projectNameHeaderInput) DOM.projectNameHeaderInput.value = project.name;
+            if (DOM.projectNameLocalInput) DOM.projectNameLocalInput.value = project.name;
+            if (DOM.cfgUseRooms) DOM.cfgUseRooms.checked = config.useRooms;
+            if (DOM.cfgUseCategories) DOM.cfgUseCategories.checked = config.useCategories;
+            if (DOM.cfgNumbering) DOM.cfgNumbering.checked = config.useNumbering;
+            if (DOM.cfgVat) DOM.cfgVat.value = String(config.vat);
+            
+            const modeRadio = document.querySelector(`input[name="mode"][value="${config.mode}"]`);
+            if (modeRadio) modeRadio.checked = true;
+            
+            if (project.notes && DOM.projectNotesTextarea) {
+                DOM.projectNotesTextarea.value = project.notes;
+            }
+            
+            console.log('Проект восстановлен из автосохранения');
+            return true;
+        } catch (e) {
+            console.error('Ошибка восстановления из автосохранения:', e);
+            return false;
+        }
+    }
+    
+    return false;
+}
+
 // --- INIT ---
 (async function init() {
     updateDOMRefs();
+    
+    // Регистрируем Service Worker для оффлайн-режима
+    try {
+        await registerServiceWorker();
+        initConnectionMonitoring();
+        console.log('Оффлайн-режим активирован');
+    } catch (e) {
+        console.warn('Не удалось активировать оффлайн-режим:', e);
+    }
+    
     if (DOM.token) {
         if (DOM.authBtn) DOM.authBtn.style.display = "none";
         if (DOM.profileBtn) DOM.profileBtn.style.display = "inline-block";
@@ -1341,12 +1631,24 @@ window.loadQuoteFromServer = loadQuoteFromServer;
         if (DOM.authBtn) DOM.authBtn.style.display = "inline-block";
         if (DOM.profileBtn) DOM.profileBtn.style.display = "none";
     }
+    
     // restore edit id if present
     const editId = localStorage.getItem("editQuoteId");
     if (editId) {
         await loadQuoteFromServer(editId);
+    } else {
+        // Пытаемся восстановить из автосохранения
+        const restored = restoreFromDraft();
+        if (restored) {
+            // Если восстановили, очищаем автосохранение
+            setTimeout(() => clearSavedDraft(), 1000);
+        }
     }
+    
     renderProject();
+    
+    // Запускаем автосохранение при изменениях
+    triggerAutoSave();
 })();
 
 // Обработчик внешней кнопки (если в HTML есть кнопка id="btn-owner-pdf")

@@ -28,11 +28,22 @@ export async function saveQuoteToServer(project) {
     }
     var items = buildItemsArray(project);
     var totals = project.getTotals();
+    
+    // Собираем конфигурацию
+    const config = {
+        useRooms: project.config.useRooms,
+        useCategories: project.config.useCategories,
+        useNumbering: project.config.useNumbering,
+        mode: project.config.mode,
+        vat: project.config.vat
+    };
+    
     var payload = {
         name: project.name,
         total: totals.brutto,
         items: items,
-        notes: project.notes || null
+        notes: project.notes || null,
+        config: config
     };
 
     // Если редактируем существующую смету
@@ -71,4 +82,36 @@ export async function loadQuotesHistory(renderCallback) {
     });
     const quotes = await res.json();
     if (typeof renderCallback === "function") renderCallback(quotes);
+}
+
+export async function getQuoteVersions(quoteId) {
+    const token = localStorage.getItem("token");
+    try {
+        const res = await fetch(`/quotes/${quoteId}/versions`, {
+            headers: { "Authorization": "Bearer " + token }
+        });
+        if (!res.ok) {
+            throw new Error("Failed to fetch versions");
+        }
+        return await res.json();
+    } catch (e) {
+        console.error("Ошибка загрузки версий:", e);
+        return [];
+    }
+}
+
+export async function compareQuoteVersions(quoteId, version1, version2) {
+    const token = localStorage.getItem("token");
+    try {
+        const res = await fetch(`/quotes/${quoteId}/compare?v1=${version1}&v2=${version2}`, {
+            headers: { "Authorization": "Bearer " + token }
+        });
+        if (!res.ok) {
+            throw new Error("Failed to compare versions");
+        }
+        return await res.json();
+    } catch (e) {
+        console.error("Ошибка сравнения версий:", e);
+        return null;
+    }
 }
