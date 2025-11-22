@@ -29,14 +29,14 @@ export async function saveQuoteToServer(project) {
     var items = buildItemsArray(project);
     var totals = project.getTotals();
     
-    // Собираем конфигурацию
-    const config = {
+    // Собираем конфигурацию (с проверкой на существование)
+    const config = project.config ? {
         useRooms: project.config.useRooms,
         useCategories: project.config.useCategories,
         useNumbering: project.config.useNumbering,
         mode: project.config.mode,
         vat: project.config.vat
-    };
+    } : null;
     
     var payload = {
         name: project.name,

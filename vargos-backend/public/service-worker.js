@@ -152,6 +152,8 @@ self.addEventListener('sync', (event) => {
 
 async function syncQuotes() {
     console.log('[Service Worker] Background sync: syncing quotes');
-    // Логика синхронизации данных с сервером
-    // Можно проверить localStorage и отправить несохраненные данные
+    // TODO: Реализовать логику синхронизации данных с сервером
+    // Это можно будет расширить в будущем для отправки несохраненных смет
+    // Текущая реализация использует localStorage и автоматическую синхронизацию
+    // при восстановлении соединения через offline-manager.js
 }

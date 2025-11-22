@@ -258,7 +258,6 @@ function renderVersionsModal(quoteId, versions) {
             <p><strong>Дата:</strong> ${v.createdAt ? new Date(v.createdAt).toLocaleString() : ""}</p>
             ${v.notes ? `<p><strong>Заметки:</strong> ${v.notes}</p>` : ''}
             <div style="margin-top: 10px; display: flex; gap: 8px;">
-                <button class="btn secondary" onclick="restoreVersion(${quoteId}, ${v.version})">Восстановить</button>
                 ${index < versions.length - 1 ? `<button class="btn secondary" onclick="compareVersions(${quoteId}, ${v.version}, ${versions[index + 1].version})">Сравнить со след.</button>` : ''}
             </div>
         `;
@@ -272,25 +271,6 @@ function renderVersionsModal(quoteId, versions) {
     });
 }
 
-async function restoreVersion(quoteId, version) {
-    const confirmed = confirm(`Восстановить версию ${version}? Это создаст новую версию на основе выбранной.`);
-    if (!confirmed) return;
-    
-    try {
-        const versions = await getQuoteVersions(quoteId);
-        const versionData = versions.find(v => v.version === version);
-        
-        if (versionData && versionData.data) {
-            // Здесь нужно восстановить данные из версии
-            // Это требует сохранения на сервер
-            alert("Функция восстановления версии в разработке");
-        }
-    } catch (e) {
-        console.error("Ошибка восстановления версии:", e);
-        alert("Не удалось восстановить версию");
-    }
-}
-window.restoreVersion = restoreVersion;
 
 async function compareVersions(quoteId, v1, v2) {
     try {
@@ -312,6 +292,11 @@ function renderComparisonModal(comparison) {
     const v1 = comparison.version1;
     const v2 = comparison.version2;
     
+    // Безопасное форматирование чисел
+    const formatTotal = (value) => {
+        return (value != null && typeof value === 'number') ? value.toFixed(2) : '0.00';
+    };
+    
     modal.innerHTML = `
         <div class="modal" style="max-width: 900px;">
             <div class="modal-header">
@@ -323,14 +308,14 @@ function renderComparisonModal(comparison) {
                     <div>
                         <h3>Версия ${v1.version}</h3>
                         <p><strong>Название:</strong> ${v1.name}</p>
-                        <p><strong>Сумма:</strong> ${(v1.total || 0).toFixed(2)} zł</p>
+                        <p><strong>Сумма:</strong> ${formatTotal(v1.total)} zł</p>
                         <p><strong>Дата:</strong> ${v1.createdAt ? new Date(v1.createdAt).toLocaleString() : ""}</p>
                         ${v1.notes ? `<p><strong>Заметки:</strong> ${v1.notes}</p>` : ''}
                     </div>
                     <div>
                         <h3>Версия ${v2.version}</h3>
                         <p><strong>Название:</strong> ${v2.name}</p>
-                        <p><strong>Сумма:</strong> ${(v2.total || 0).toFixed(2)} zł</p>
+                        <p><strong>Сумма:</strong> ${formatTotal(v2.total)} zł</p>
                         <p><strong>Дата:</strong> ${v2.createdAt ? new Date(v2.createdAt).toLocaleString() : ""}</p>
                         ${v2.notes ? `<p><strong>Заметки:</strong> ${v2.notes}</p>` : ''}
                     </div>
@@ -338,7 +323,7 @@ function renderComparisonModal(comparison) {
                 <div style="margin-top: 20px;">
                     <h4>Изменения:</h4>
                     <ul style="list-style: none; padding: 0;">
-                        ${v1.total !== v2.total ? `<li>✓ Сумма изменилась: ${v1.total.toFixed(2)} → ${v2.total.toFixed(2)} zł</li>` : ''}
+                        ${v1.total !== v2.total ? `<li>✓ Сумма изменилась: ${formatTotal(v1.total)} → ${formatTotal(v2.total)} zł</li>` : ''}
                         ${v1.name !== v2.name ? `<li>✓ Название изменилось: "${v1.name}" → "${v2.name}"</li>` : ''}
                         ${v1.notes !== v2.notes ? `<li>✓ Заметки изменились</li>` : ''}
                     </ul>

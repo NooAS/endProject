@@ -15,35 +15,32 @@ export const saveQuote = async(req, res) => {
         // если id есть → обновляем и создаем версию
         if (id) {
             // Получаем текущую смету для создания версии
-            const currentQuote = await prisma.quote.findUnique({
-                where: { id },
+            const currentQuote = await prisma.quote.findFirst({
+                where: { id, userId }, // Проверяем принадлежность пользователю
                 include: { items: true }
             });
 
-            if (currentQuote) {
-                // Создаем версию перед обновлением
-                await prisma.quoteVersion.create({
-                    data: {
-                        quoteId: id,
-                        version: currentQuote.version,
-                        name: currentQuote.name,
-                        total: currentQuote.total,
-                        notes: currentQuote.notes,
-                        config: currentQuote.config || null,
-                        data: {
-                            items: currentQuote.items,
-                            config: currentQuote.config
-                        }
-                    }
-                });
+            if (!currentQuote) {
+                return res.status(404).json({ message: "Quote not found or access denied" });
             }
 
-            // Сначала удаляем старые items
-            await prisma.quoteItem.deleteMany({
-                where: { quoteId: id }
+            // Создаем версию перед обновлением
+            await prisma.quoteVersion.create({
+                data: {
+                    quoteId: id,
+                    version: currentQuote.version,
+                    name: currentQuote.name,
+                    total: currentQuote.total,
+                    notes: currentQuote.notes,
+                    config: currentQuote.config || null,
+                    data: {
+                        items: currentQuote.items,
+                        config: currentQuote.config
+                    }
+                }
             });
-            
-            // Затем обновляем quote и создаем новые items
+
+            // Обновляем quote и создаем новые items (старые удалятся CASCADE)
             quote = await prisma.quote.update({
                 where: { id },
                 data: {
@@ -53,6 +50,7 @@ export const saveQuote = async(req, res) => {
                     config: config || null,
                     version: { increment: 1 },
                     items: {
+                        deleteMany: {},
                         create: items
                     }
                 }
@@ -63,41 +61,29 @@ export const saveQuote = async(req, res) => {
                 where: {
                     userId,
                     name
-                }
+                },
+                include: { items: true }
             });
 
             if (existingQuote) {
                 // Если существует - обновляем и создаем версию
-                // Получаем текущую смету для создания версии
-                const currentQuote = await prisma.quote.findUnique({
-                    where: { id: existingQuote.id },
-                    include: { items: true }
-                });
-
-                if (currentQuote) {
-                    // Создаем версию перед обновлением
-                    await prisma.quoteVersion.create({
+                // Создаем версию перед обновлением
+                await prisma.quoteVersion.create({
+                    data: {
+                        quoteId: existingQuote.id,
+                        version: existingQuote.version,
+                        name: existingQuote.name,
+                        total: existingQuote.total,
+                        notes: existingQuote.notes,
+                        config: existingQuote.config || null,
                         data: {
-                            quoteId: existingQuote.id,
-                            version: currentQuote.version,
-                            name: currentQuote.name,
-                            total: currentQuote.total,
-                            notes: currentQuote.notes,
-                            config: currentQuote.config || null,
-                            data: {
-                                items: currentQuote.items,
-                                config: currentQuote.config
-                            }
+                            items: existingQuote.items,
+                            config: existingQuote.config
                         }
-                    });
-                }
-
-                // Сначала удаляем старые items
-                await prisma.quoteItem.deleteMany({
-                    where: { quoteId: existingQuote.id }
+                    }
                 });
                 
-                // Затем обновляем quote и создаем новые items
+                // Обновляем quote и создаем новые items (старые удалятся CASCADE)
                 quote = await prisma.quote.update({
                     where: { id: existingQuote.id },
                     data: {
@@ -107,6 +93,7 @@ export const saveQuote = async(req, res) => {
                         config: config || null,
                         version: { increment: 1 },
                         items: {
+                            deleteMany: {},
                             create: items
                         }
                     }
@@ -181,10 +168,7 @@ export const deleteQuoteById = async(req, res) => {
 
         if (!q) return res.status(404).json({ message: "Not found" });
 
-        await prisma.quoteItem.deleteMany({
-            where: { quoteId: id }
-        });
-
+        // Удаление quote автоматически удалит связанные items и versions благодаря CASCADE
         await prisma.quote.delete({
             where: { id }
         });
