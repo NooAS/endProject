@@ -1688,8 +1688,12 @@ function restoreFromDraft() {
             if (DOM.cfgNumbering) DOM.cfgNumbering.checked = config.useNumbering;
             if (DOM.cfgVat) DOM.cfgVat.value = String(config.vat);
             
-            const modeRadio = document.querySelector(`input[name="mode"][value="${config.mode}"]`);
-            if (modeRadio) modeRadio.checked = true;
+            // Безопасная установка radio button с валидацией
+            const validModes = ['simple', 'extended'];
+            if (validModes.includes(config.mode)) {
+                const modeRadio = document.querySelector(`input[name="mode"][value="${config.mode}"]`);
+                if (modeRadio) modeRadio.checked = true;
+            }
             
             if (project.notes && DOM.projectNotesTextarea) {
                 DOM.projectNotesTextarea.value = project.notes;

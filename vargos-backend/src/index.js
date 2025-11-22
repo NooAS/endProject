@@ -18,7 +18,16 @@ const prisma = new PrismaClient();
 
 // Middleware для безопасности
 app.use(helmet({
-    contentSecurityPolicy: false, // Отключаем CSP чтобы не мешал работе jsPDF
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com"],
+            styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+            fontSrc: ["'self'", "https://fonts.gstatic.com"],
+            imgSrc: ["'self'", "data:", "blob:"],
+            connectSrc: ["'self'"]
+        }
+    },
     crossOriginEmbedderPolicy: false
 }));
 

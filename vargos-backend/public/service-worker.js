@@ -30,11 +30,17 @@ self.addEventListener('install', (event) => {
         caches.open(CACHE_NAME)
             .then((cache) => {
                 console.log('[Service Worker] Caching critical assets');
-                return cache.addAll(CRITICAL_ASSETS.map(url => {
-                    return new Request(url, { cache: 'reload' });
-                })).catch(err => {
-                    console.warn('[Service Worker] Some assets failed to cache:', err);
-                });
+                // Пытаемся закэшировать все критичные ресурсы
+                // При ошибке кэширования некоторых ресурсов установка все равно продолжится
+                // но будет залогировано предупреждение
+                return Promise.allSettled(
+                    CRITICAL_ASSETS.map(url => {
+                        return cache.add(new Request(url, { cache: 'reload' }))
+                            .catch(err => {
+                                console.warn(`[Service Worker] Failed to cache ${url}:`, err);
+                            });
+                    })
+                );
             })
             .then(() => self.skipWaiting())
     );

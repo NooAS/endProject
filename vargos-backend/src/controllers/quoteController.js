@@ -236,6 +236,11 @@ export const compareQuoteVersions = async(req, res) => {
             return res.status(404).json({ message: "Version not found" });
         }
 
+        // Double check: versions belong to the authorized quote
+        if (ver1.quoteId !== id || ver2.quoteId !== id) {
+            return res.status(403).json({ message: "Access denied" });
+        }
+
         res.json({ version1: ver1, version2: ver2 });
 
     } catch (e) {
