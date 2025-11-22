@@ -16,7 +16,11 @@
     RewriteRule ^ - [L]
     
     # Proxy all API requests to Node.js application
-    # Change localhost:4000 to your actual Node.js server address
+    # IMPORTANT: Update localhost:4000 to match your Node.js server configuration
+    # - For local development: http://localhost:4000
+    # - For production with different port: http://localhost:YOUR_PORT
+    # - For separate server: http://your-server-ip:PORT
+    # Check your hosting documentation for the correct Node.js application URL
     RewriteCond %{REQUEST_URI} ^/api/ [OR]
     RewriteCond %{REQUEST_URI} ^/(categories|jobs|auth|quotes|health)
     RewriteRule ^(.*)$ http://localhost:4000/$1 [P,L]
