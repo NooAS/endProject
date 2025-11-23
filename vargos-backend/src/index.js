@@ -17,7 +17,16 @@ const prisma = new PrismaClient();
 
 // Security middleware
 app.use(helmet({
-    contentSecurityPolicy: false, // Disable for now as we use CDN scripts
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com"],
+            styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+            fontSrc: ["'self'", "https://fonts.gstatic.com"],
+            imgSrc: ["'self'", "data:", "https:"],
+            connectSrc: ["'self'"]
+        }
+    },
     crossOriginEmbedderPolicy: false
 }));
 
