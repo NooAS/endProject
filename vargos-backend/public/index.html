@@ -232,6 +232,40 @@
     </div>
 
     <!-- ========================= -->
+    <!--   MODAL: VERSION HISTORY -->
+    <!-- ========================= -->
+
+    <div id="versionsModal" class="modal-backdrop">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>История версий</h2>
+                <div class="modal-close" onclick="closeModal(versionsModal)">✕</div>
+            </div>
+
+            <div class="modal-body" id="versionsContainer">
+                <!-- Сюда JS вставит список версий -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================= -->
+    <!--   MODAL: VERSION COMPARE -->
+    <!-- ========================= -->
+
+    <div id="compareModal" class="modal-backdrop">
+        <div class="modal" style="max-width: 900px;">
+            <div class="modal-header">
+                <h2>Сравнение версий</h2>
+                <div class="modal-close" onclick="closeModal(compareModal)">✕</div>
+            </div>
+
+            <div class="modal-body" id="compareContainer">
+                <!-- Сюда JS вставит сравнение -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================= -->
     <!--   MODAL: CHANGE EMAIL    -->
     <!-- ========================= -->
 

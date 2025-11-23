@@ -24,9 +24,12 @@ model Template {
   name       String
   defaults   Json?
   categoryId Int
-  category   Category @relation(fields: [categoryId], references: [id])
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   userId     Int
   user       User     @relation(fields: [userId], references: [id])
+
+  @@index([categoryId])
+  @@index([userId])
 }
 
 model Category {
@@ -39,6 +42,9 @@ model Category {
 
   jobs      Job[]
   templates Template[]
+
+  @@index([userId])
+  @@index([order])
 }
 
 model Job {
@@ -48,27 +54,35 @@ model Job {
   price Float
 
   categoryId Int
-  category   Category @relation(fields: [categoryId], references: [id])
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 
   userId Int
   user   User @relation(fields: [userId], references: [id])
+
+  @@index([categoryId])
+  @@index([userId])
 }
 
 model Quote {
-  id        Int         @id @default(autoincrement())
+  id        Int            @id @default(autoincrement())
   userId    Int
-  user      User        @relation(fields: [userId], references: [id])
+  user      User           @relation(fields: [userId], references: [id])
   name      String
   total     Float
   notes     String?
-  createdAt DateTime    @default(now())
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
   items     QuoteItem[]
+  versions  QuoteVersion[]
+
+  @@index([userId])
+  @@index([createdAt])
 }
 
 model QuoteItem {
   id      Int   @id @default(autoincrement())
   quoteId Int
-  quote   Quote @relation(fields: [quoteId], references: [id])
+  quote   Quote @relation(fields: [quoteId], references: [id], onDelete: Cascade)
 
   category String?
   room     String?
@@ -80,4 +94,23 @@ model QuoteItem {
   materialPrice Float?
   laborPrice    Float?
   templateId    Int?
+
+  @@index([quoteId])
+}
+
+model QuoteVersion {
+  id          Int      @id @default(autoincrement())
+  quoteId     Int
+  quote       Quote    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  versionNum  Int
+  name        String
+  total       Float
+  notes       String?
+  snapshotData Json
+  createdAt   DateTime @default(now())
+  changeSummary String?
+
+  @@index([quoteId])
+  @@index([createdAt])
+  @@unique([quoteId, versionNum])
 }

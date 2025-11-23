@@ -18,6 +18,7 @@ import {
     updateTemplateOnServer,
     deleteTemplateFromServer
 } from "./categories-api.js";
+import { getQuoteVersions, compareQuoteVersions, restoreQuoteVersion } from "./versions-api.js";
 
 // --- INIT ---
 const config = new Config();
@@ -190,12 +191,20 @@ function renderQuotesHistoryUI(quotes) {
         const div = document.createElement("div");
         div.className = "panel";
         div.style.marginBottom = "15px";
+        
+        const versionCount = q._count?.versions || 0;
+        const versionBadge = versionCount > 0 
+            ? `<span style="background: #3b82f6; color: white; padding: 2px 8px; border-radius: 12px; font-size: 12px; margin-left: 8px;">${versionCount} версий</span>`
+            : '';
+        
         div.innerHTML = `
-            <h3>${q.name}</h3>
+            <h3>${q.name} ${versionBadge}</h3>
             <p>Сумма: <strong>${(q.total || 0).toFixed(2)} zł</strong></p>
-            <p>Дата: ${q.createdAt ? new Date(q.createdAt).toLocaleString() : ""}</p>
-            <div style="margin-top:12px; display:flex; gap:10px;">
+            <p>Дата создания: ${q.createdAt ? new Date(q.createdAt).toLocaleString() : ""}</p>
+            <p>Последнее изменение: ${q.updatedAt ? new Date(q.updatedAt).toLocaleString() : ""}</p>
+            <div style="margin-top:12px; display:flex; gap:10px; flex-wrap: wrap;">
                 <button class="btn" onclick="editQuote(${q.id})">Редактировать</button>
+                ${versionCount > 0 ? `<button class="btn secondary" onclick="viewVersions(${q.id})">История версий (${versionCount})</button>` : ''}
                 <button class="btn secondary" onclick="deleteQuote(${q.id})">Удалить</button>
             </div>
         `;
@@ -1348,6 +1357,284 @@ window.loadQuoteFromServer = loadQuoteFromServer;
     }
     renderProject();
 })();
+
+// ===== VERSION MANAGEMENT =====
+
+// View versions for a quote
+async function viewVersions(quoteId) {
+    try {
+        const versions = await getQuoteVersions(quoteId);
+        const versionsModal = document.getElementById("versionsModal");
+        const versionsContainer = document.getElementById("versionsContainer");
+        
+        if (!versionsModal || !versionsContainer) {
+            console.error("Version modal elements not found");
+            return;
+        }
+
+        versionsContainer.innerHTML = "";
+        
+        if (!versions || versions.length === 0) {
+            versionsContainer.innerHTML = "<p>Нет сохраненных версий.</p>";
+            openModal(versionsModal);
+            return;
+        }
+
+        const title = document.createElement("h3");
+        title.textContent = `Версии сметы #${quoteId}`;
+        title.style.marginBottom = "15px";
+        versionsContainer.appendChild(title);
+
+        // Add comparison selector if more than 1 version
+        if (versions.length > 1) {
+            const compareBox = document.createElement("div");
+            compareBox.className = "panel";
+            compareBox.style.marginBottom = "15px";
+            compareBox.innerHTML = `
+                <h4 style="margin-bottom: 10px;">Сравнить версии:</h4>
+                <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                    <select id="compareV1" class="input input-small">
+                        ${versions.map(v => `<option value="${v.versionNum}">Версия ${v.versionNum}</option>`).join('')}
+                    </select>
+                    <span>с</span>
+                    <select id="compareV2" class="input input-small">
+                        ${versions.map(v => `<option value="${v.versionNum}">Версия ${v.versionNum}</option>`).join('')}
+                    </select>
+                    <button class="btn secondary" onclick="compareVersions(${quoteId})">Сравнить</button>
+                </div>
+            `;
+            versionsContainer.appendChild(compareBox);
+        }
+
+        // List versions
+        versions.forEach(v => {
+            const div = document.createElement("div");
+            div.className = "panel";
+            div.style.marginBottom = "12px";
+            
+            const createdDate = new Date(v.createdAt).toLocaleString();
+            
+            div.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+                    <div>
+                        <h4 style="margin: 0;">Версия ${v.versionNum}</h4>
+                        <p style="margin: 4px 0; font-size: 13px; color: #6b7280;">${createdDate}</p>
+                    </div>
+                    <span style="background: #3b82f6; color: white; padding: 4px 10px; border-radius: 12px; font-size: 12px;">
+                        v${v.versionNum}
+                    </span>
+                </div>
+                <p style="margin: 8px 0;"><strong>Название:</strong> ${v.name}</p>
+                <p style="margin: 8px 0;"><strong>Сумма:</strong> ${v.total.toFixed(2)} zł</p>
+                ${v.changeSummary ? `<p style="margin: 8px 0; font-size: 13px; color: #6b7280;"><strong>Изменения:</strong> ${v.changeSummary}</p>` : ''}
+                <div style="margin-top: 12px; display: flex; gap: 8px;">
+                    <button class="btn secondary" onclick="restoreVersion(${quoteId}, ${v.versionNum})">Восстановить</button>
+                    <button class="btn secondary" onclick="viewVersionDetails(${quoteId}, ${v.versionNum})">Детали</button>
+                </div>
+            `;
+            versionsContainer.appendChild(div);
+        });
+
+        openModal(versionsModal);
+    } catch (error) {
+        console.error("Error viewing versions:", error);
+        alert("Ошибка при загрузке версий");
+    }
+}
+window.viewVersions = viewVersions;
+
+// Compare versions
+async function compareVersions(quoteId) {
+    const v1Select = document.getElementById("compareV1");
+    const v2Select = document.getElementById("compareV2");
+    
+    if (!v1Select || !v2Select) return;
+    
+    const v1 = parseInt(v1Select.value);
+    const v2 = parseInt(v2Select.value);
+    
+    if (v1 === v2) {
+        alert("Выберите разные версии для сравнения");
+        return;
+    }
+
+    try {
+        const comparison = await compareQuoteVersions(quoteId, v1, v2);
+        const compareModal = document.getElementById("compareModal");
+        const compareContainer = document.getElementById("compareContainer");
+        
+        if (!compareModal || !compareContainer) return;
+
+        compareContainer.innerHTML = "";
+        
+        // Header
+        const header = document.createElement("div");
+        header.style.marginBottom = "20px";
+        header.innerHTML = `
+            <h3>Сравнение версий ${v1} и ${v2}</h3>
+        `;
+        compareContainer.appendChild(header);
+
+        // Summary comparison
+        const summaryBox = document.createElement("div");
+        summaryBox.className = "panel";
+        summaryBox.style.marginBottom = "15px";
+        
+        const totalDiff = comparison.differences.totalDiff;
+        const totalDiffStr = totalDiff > 0 ? `+${totalDiff.toFixed(2)}` : totalDiff.toFixed(2);
+        const totalDiffColor = totalDiff > 0 ? '#10b981' : (totalDiff < 0 ? '#ef4444' : '#6b7280');
+        
+        summaryBox.innerHTML = `
+            <h4>Общие изменения:</h4>
+            <table style="width: 100%; font-size: 14px; margin-top: 10px;">
+                <tr>
+                    <td style="padding: 4px;"><strong>Версия:</strong></td>
+                    <td style="padding: 4px;">${comparison.version1.versionNum}</td>
+                    <td style="padding: 4px;">${comparison.version2.versionNum}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 4px;"><strong>Дата:</strong></td>
+                    <td style="padding: 4px;">${new Date(comparison.version1.createdAt).toLocaleString()}</td>
+                    <td style="padding: 4px;">${new Date(comparison.version2.createdAt).toLocaleString()}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 4px;"><strong>Название:</strong></td>
+                    <td style="padding: 4px;">${comparison.version1.name}</td>
+                    <td style="padding: 4px;">${comparison.version2.name}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 4px;"><strong>Сумма:</strong></td>
+                    <td style="padding: 4px;">${comparison.version1.total.toFixed(2)} zł</td>
+                    <td style="padding: 4px; font-weight: bold; color: ${totalDiffColor};">
+                        ${comparison.version2.total.toFixed(2)} zł (${totalDiffStr} zł)
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 4px;"><strong>Позиций:</strong></td>
+                    <td style="padding: 4px;">${comparison.version1.itemCount}</td>
+                    <td style="padding: 4px;">${comparison.version2.itemCount} (${comparison.differences.itemCountDiff > 0 ? '+' : ''}${comparison.differences.itemCountDiff})</td>
+                </tr>
+            </table>
+        `;
+        compareContainer.appendChild(summaryBox);
+
+        // Items changes
+        const items = comparison.items;
+        
+        if (items.added.length > 0) {
+            const addedBox = document.createElement("div");
+            addedBox.className = "panel";
+            addedBox.style.marginBottom = "15px";
+            addedBox.style.borderLeft = "4px solid #10b981";
+            addedBox.innerHTML = `
+                <h4 style="color: #10b981;">✓ Добавленные позиции (${items.added.length}):</h4>
+                <ul style="margin: 10px 0; padding-left: 20px;">
+                    ${items.added.map(item => `
+                        <li style="margin: 5px 0;">
+                            ${item.room ? `<strong>${item.room}:</strong> ` : ''}
+                            ${item.job} - ${item.quantity} ${item.category || ''} × ${item.price.toFixed(2)} zł = ${item.total.toFixed(2)} zł
+                        </li>
+                    `).join('')}
+                </ul>
+            `;
+            compareContainer.appendChild(addedBox);
+        }
+
+        if (items.removed.length > 0) {
+            const removedBox = document.createElement("div");
+            removedBox.className = "panel";
+            removedBox.style.marginBottom = "15px";
+            removedBox.style.borderLeft = "4px solid #ef4444";
+            removedBox.innerHTML = `
+                <h4 style="color: #ef4444;">✗ Удаленные позиции (${items.removed.length}):</h4>
+                <ul style="margin: 10px 0; padding-left: 20px;">
+                    ${items.removed.map(item => `
+                        <li style="margin: 5px 0;">
+                            ${item.room ? `<strong>${item.room}:</strong> ` : ''}
+                            ${item.job} - ${item.quantity} ${item.category || ''} × ${item.price.toFixed(2)} zł = ${item.total.toFixed(2)} zł
+                        </li>
+                    `).join('')}
+                </ul>
+            `;
+            compareContainer.appendChild(removedBox);
+        }
+
+        if (items.modified.length > 0) {
+            const modifiedBox = document.createElement("div");
+            modifiedBox.className = "panel";
+            modifiedBox.style.borderLeft = "4px solid #f59e0b";
+            modifiedBox.innerHTML = `
+                <h4 style="color: #f59e0b;">⚡ Измененные позиции (${items.modified.length}):</h4>
+                <div style="margin: 10px 0;">
+                    ${items.modified.map(change => {
+                        const old = change.old;
+                        const newItem = change.new;
+                        const qtyChanged = old.quantity !== newItem.quantity;
+                        const priceChanged = old.price !== newItem.price;
+                        const totalChanged = old.total !== newItem.total;
+                        
+                        return `
+                            <div style="margin: 10px 0; padding: 10px; background: #fef3c7; border-radius: 4px;">
+                                <strong>${newItem.room ? `${newItem.room}: ` : ''}${newItem.job}</strong>
+                                ${qtyChanged ? `<br/>Количество: ${old.quantity} → <strong>${newItem.quantity}</strong>` : ''}
+                                ${priceChanged ? `<br/>Цена: ${old.price.toFixed(2)} → <strong>${newItem.price.toFixed(2)} zł</strong>` : ''}
+                                ${totalChanged ? `<br/>Сумма: ${old.total.toFixed(2)} → <strong>${newItem.total.toFixed(2)} zł</strong>` : ''}
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+            compareContainer.appendChild(modifiedBox);
+        }
+
+        if (items.added.length === 0 && items.removed.length === 0 && items.modified.length === 0) {
+            const noChanges = document.createElement("p");
+            noChanges.textContent = "Изменений в позициях не обнаружено.";
+            noChanges.style.color = "#6b7280";
+            compareContainer.appendChild(noChanges);
+        }
+
+        openModal(compareModal);
+    } catch (error) {
+        console.error("Error comparing versions:", error);
+        alert("Ошибка при сравнении версий");
+    }
+}
+window.compareVersions = compareVersions;
+
+// Restore version
+async function restoreVersion(quoteId, versionNum) {
+    const confirmed = await showDeleteConfirmModal(
+        "Восстановить версию?",
+        `Вы уверены, что хотите восстановить версию ${versionNum}? Текущее состояние будет сохранено как новая версия.`
+    );
+    
+    if (!confirmed) return;
+
+    try {
+        await restoreQuoteVersion(quoteId, versionNum);
+        alert(`Версия ${versionNum} успешно восстановлена!`);
+        
+        // Close version modal and reload quote
+        const versionsModal = document.getElementById("versionsModal");
+        if (versionsModal) closeModal(versionsModal);
+        
+        // Reload the quote
+        await loadQuoteFromServer(quoteId);
+    } catch (error) {
+        console.error("Error restoring version:", error);
+        alert("Ошибка при восстановлении версии");
+    }
+}
+window.restoreVersion = restoreVersion;
+
+// View version details
+async function viewVersionDetails(quoteId, versionNum) {
+    // For now, just show an alert with basic info
+    // Could be expanded to show full item list
+    alert(`Просмотр деталей версии ${versionNum} (функция в разработке)`);
+}
+window.viewVersionDetails = viewVersionDetails;
 
 // Обработчик внешней кнопки (если в HTML есть кнопка id="btn-owner-pdf")
 // Используем DOM.ownerPdfButton (поддерживается в updateDOMRefs)
