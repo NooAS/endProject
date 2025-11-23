@@ -13,8 +13,8 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
     <!-- jsPDF -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+    <script src="js/jspdf.umd.min.js"></script>
+    <script src="js/jspdf.plugin.autotable.min.js"></script>
 </head>
 
 <body>
@@ -176,7 +176,7 @@
         <div class="modal">
             <div class="modal-header">
                 <h2>Kategorie i Szablony</h2>
-                <div class="modal-close" onclick="closeModal(categoriesModal)">✕</div>
+                <div class="modal-close" id="closeCategoriesModal">✕</div>
             </div>
             <div class="modal-body" id="categoriesList"></div>
         </div>
@@ -186,7 +186,7 @@
         <div class="modal">
             <div class="modal-header">
                 <h2>Dane do PDF</h2>
-                <div class="modal-close" onclick="closeModal(pdfDataModal)">✕</div>
+                <div class="modal-close" id="closePdfDataModal">✕</div>
             </div>
 
             <div class="modal-body">
@@ -222,7 +222,7 @@
         <div class="modal">
             <div class="modal-header">
                 <h2>Historia smet</h2>
-                <div class="modal-close" onclick="closeModal(historyModal)">✕</div>
+                <div class="modal-close" id="closeHistoryModal">✕</div>
             </div>
 
             <div class="modal-body" id="historyContainer">
@@ -239,7 +239,7 @@
         <div class="modal">
             <div class="modal-header">
                 <h2>Сменить логин (email)</h2>
-                <div class="modal-close" onclick="closeModal(changeEmailModal)">✕</div>
+                <div class="modal-close" id="closeChangeEmailModal">✕</div>
             </div>
 
             <div class="modal-body">
@@ -258,7 +258,7 @@
         <div class="modal">
             <div class="modal-header">
                 <h2>Сменить пароль</h2>
-                <div class="modal-close" onclick="closeModal(changePasswordModal)">✕</div>
+                <div class="modal-close" id="closeChangePasswordModal">✕</div>
             </div>
 
             <div class="modal-body">
@@ -278,7 +278,7 @@
         <div class="modal">
             <div class="modal-header">
                 <h2 id="inputModalTitle">Введите значение</h2>
-                <div class="modal-close" onclick="closeModal(inputTextModal)">✕</div>
+                <div class="modal-close" id="closeInputTextModal">✕</div>
             </div>
 
             <div class="modal-body">
@@ -299,7 +299,7 @@
         <div class="modal">
             <div class="modal-header">
                 <h2>Редактировать работу</h2>
-                <div class="modal-close" onclick="closeModal(editTemplateModal)">✕</div>
+                <div class="modal-close" id="closeEditTemplateModal">✕</div>
             </div>
 
             <div class="modal-body">
@@ -323,7 +323,7 @@
         <div class="modal">
             <div class="modal-header">
                 <h2 id="deleteConfirmTitle">Подтверждение удаления</h2>
-                <div class="modal-close" onclick="closeModal(deleteConfirmModal)">✕</div>
+                <div class="modal-close" id="closeDeleteConfirmModal">✕</div>
             </div>
 
             <div class="modal-body">

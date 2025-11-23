@@ -5,7 +5,7 @@ import { Project, Room, Work } from "./project-models.js";
 import { formatCurrency, formatNumberPL, loadCompanyDataFromStorage, saveCompanyDataToStorage } from "./helpers.js";
 import { saveCategoriesToStorage } from "./categories-storage.js";
 import { loadPdfSettingsFromStorage, savePdfSettingsToStorage } from "./pdf-settings-storage.js";
-import { openModal, closeModal, showInputModal, showEditTemplateModal, showDeleteConfirmModal } from "./modals.js";
+import { openModal, closeModal, showInputModal, showEditTemplateModal, showDeleteConfirmModal, initModalCloseButtons } from "./modals.js";
 import { collectPdfData } from "./pdf-data.js";
 import { saveQuoteToServer, loadQuotesHistory } from "./quotes-api.js";
 import { generateClientPdf, generateOwnerPdf } from "./pdf-generator.js";
@@ -1333,6 +1333,7 @@ window.loadQuoteFromServer = loadQuoteFromServer;
 // --- INIT ---
 (async function init() {
     updateDOMRefs();
+    initModalCloseButtons(); // Initialize modal close button event listeners
     if (DOM.token) {
         if (DOM.authBtn) DOM.authBtn.style.display = "none";
         if (DOM.profileBtn) DOM.profileBtn.style.display = "inline-block";

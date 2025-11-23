@@ -13,6 +13,29 @@ export function closeModal(backdrop) {
     }
 }
 
+// Initialize event listeners for modal close buttons
+export function initModalCloseButtons() {
+    const modalCloseButtons = [
+        { id: 'closeCategoriesModal', modalId: 'categoriesModal' },
+        { id: 'closePdfDataModal', modalId: 'pdfDataModal' },
+        { id: 'closeHistoryModal', modalId: 'historyModal' },
+        { id: 'closeChangeEmailModal', modalId: 'changeEmailModal' },
+        { id: 'closeChangePasswordModal', modalId: 'changePasswordModal' },
+        { id: 'closeInputTextModal', modalId: 'inputTextModal' },
+        { id: 'closeEditTemplateModal', modalId: 'editTemplateModal' },
+        { id: 'closeDeleteConfirmModal', modalId: 'deleteConfirmModal' }
+    ];
+
+    modalCloseButtons.forEach(({ id, modalId }) => {
+        const closeBtn = document.getElementById(id);
+        const modal = document.getElementById(modalId);
+        if (closeBtn && modal) {
+            closeBtn.addEventListener('click', () => closeModal(modal));
+        }
+    });
+}
+
+
 // Универсальное модальное окно для ввода текста
 export function showInputModal(title, placeholder, defaultValue = "") {
     return new Promise((resolve, reject) => {
