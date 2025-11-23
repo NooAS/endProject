@@ -30,14 +30,21 @@ export function initModalCloseButtons() {
         const closeBtn = document.getElementById(id);
         const modal = document.getElementById(modalId);
         if (closeBtn && modal) {
-            closeBtn.addEventListener('click', () => closeModal(modal));
+            // Check if event listener was already added
+            if (!closeBtn.dataset.listenerAdded) {
+                closeBtn.addEventListener('click', () => closeModal(modal));
+                closeBtn.dataset.listenerAdded = 'true';
+            }
             
             // Close modal when clicking on backdrop (outside modal content)
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) {
-                    closeModal(modal);
-                }
-            });
+            if (!modal.dataset.backdropListenerAdded) {
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        closeModal(modal);
+                    }
+                });
+                modal.dataset.backdropListenerAdded = 'true';
+            }
         }
     });
 }
