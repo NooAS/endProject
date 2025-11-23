@@ -58,6 +58,7 @@ function updateDOMRefs() {
         pdfDataModal: $id("pdfDataModal"),
         generateClientPdfBtn: $id("generateClientPdfBtn"),
         generateOwnerPdfBtn: $id("generateOwnerPdfBtn"),
+        saveToHistoryBtn: $id("saveToHistoryBtn"),
         profileBtn: $id("profileBtn"),
         profileMenu: $id("profileMenu"),
         logoutBtnInside: $id("logoutBtnInside"),
@@ -153,8 +154,8 @@ if (DOM.generateClientPdfBtn) {
             await generateClientPdf(project, config);
             closeModal(DOM.pdfDataModal);
         } catch (err) {
-            console.error("Ошибка при генерации PDF для клиента:", err);
-            alert("Не удалось сгенерировать PDF для клиента. Проверьте консоль.");
+            console.error("Błąd przy generowaniu PDF dla klienta:", err);
+            alert("Nie udało się wygenerować PDF dla klienta. Sprawdź konsolę.");
         }
     });
 }
@@ -166,8 +167,23 @@ if (DOM.generateOwnerPdfBtn) {
             await generateOwnerPdf(project, config); // <-- вызов генерации для владельца
             closeModal(DOM.pdfDataModal);
         } catch (err) {
-            console.error("Ошибка при генерации PDF для владельца:", err);
-            alert("Не удалось сгенерировать PDF для владельца. Проверьте консоль.");
+            console.error("Błąd przy generowaniu PDF dla właściciela:", err);
+            alert("Nie udało się wygenerować PDF dla właściciela. Sprawdź konsolę.");
+        }
+    });
+}
+
+// --- SAVE TO HISTORY ---
+if (DOM.saveToHistoryBtn) {
+    DOM.saveToHistoryBtn.addEventListener("click", async() => {
+        try {
+            await collectPdfData(project);
+            await saveQuoteToServer(project);
+            alert("Kosztorys zapisany w historii!");
+            closeModal(DOM.pdfDataModal);
+        } catch (err) {
+            console.error("Błąd przy zapisywaniu do historii:", err);
+            alert("Nie udało się zapisać do historii. Sprawdź konsolę.");
         }
     });
 }
@@ -192,11 +208,11 @@ function renderQuotesHistoryUI(quotes) {
         div.style.marginBottom = "15px";
         div.innerHTML = `
             <h3>${q.name}</h3>
-            <p>Сумма: <strong>${(q.total || 0).toFixed(2)} zł</strong></p>
-            <p>Дата: ${q.createdAt ? new Date(q.createdAt).toLocaleString() : ""}</p>
+            <p>Suma: <strong>${(q.total || 0).toFixed(2)} zł</strong></p>
+            <p>Data: ${q.createdAt ? new Date(q.createdAt).toLocaleString() : ""}</p>
             <div style="margin-top:12px; display:flex; gap:10px;">
-                <button class="btn" onclick="editQuote(${q.id})">Редактировать</button>
-                <button class="btn secondary" onclick="deleteQuote(${q.id})">Удалить</button>
+                <button class="btn" onclick="editQuote(${q.id})">Edytuj</button>
+                <button class="btn secondary" onclick="deleteQuote(${q.id})">Usuń</button>
             </div>
         `;
         DOM.historyContainer.appendChild(div);
@@ -212,8 +228,8 @@ window.editQuote = editQuote;
 
 async function deleteQuote(id) {
     const confirmed = await showDeleteConfirmModal(
-        "Удалить смету?",
-        "Вы уверены, что хотите удалить эту смету? Это действие нельзя отменить."
+        "Usuń kosztorys?",
+        "Czy na pewno chcesz usunąć ten kosztorys? Tej operacji nie można cofnąć."
     );
     if (!confirmed) return;
     
@@ -252,7 +268,7 @@ function renderRoom(room) {
     const titleBox = document.createElement("div");
     const title = document.createElement("div");
     title.className = "room-title";
-    title.textContent = config.useRooms ? `${room.number}. ${room.name}` : "Позиции";
+    title.textContent = config.useRooms ? `${room.number}. ${room.name}` : "Pozycje";
 
     const meta = document.createElement("div");
     meta.className = "room-meta";
@@ -267,14 +283,14 @@ function renderRoom(room) {
 
     const addWorkBtn = document.createElement("button");
     addWorkBtn.className = "btn secondary";
-    addWorkBtn.textContent = "Добавить работу";
+    addWorkBtn.textContent = "Dodaj pracę";
     addWorkBtn.addEventListener("click", () => addWorkToRoom(room));
     actions.appendChild(addWorkBtn);
 
     if (config.useRooms) {
         const deleteRoomBtn = document.createElement("button");
         deleteRoomBtn.className = "btn secondary";
-        deleteRoomBtn.textContent = "Удалить комнату";
+        deleteRoomBtn.textContent = "Usuń pokój";
         deleteRoomBtn.addEventListener("click", () => {
             project.removeRoom(room.id);
             renderProject();
@@ -299,28 +315,28 @@ function renderRoom(room) {
             headRow.appendChild(th);
         }
 
-        if (config.useNumbering) addTh("col-kod", "Номер");
+        if (config.useNumbering) addTh("col-kod", "Numer");
 
         if (config.useCategories) {
-            addTh("col-cat", "Категория");
-            addTh("col-template", "Шаблон");
+            addTh("col-cat", "Kategoria");
+            addTh("col-template", "Szablon");
         } else {
-            addTh("col-nazwa", "Название");
+            addTh("col-nazwa", "Nazwa");
         }
 
         addTh("col-jm", "Jm");
-        addTh("col-ilosc", "Количество");
-        addTh("col-cenakl", "Цена кл.");
+        addTh("col-ilosc", "Ilość");
+        addTh("col-cenakl", "Cena kl.");
 
         if (config.mode === "extended") {
-            addTh("col-mat", "Мат.");
-            addTh("col-rob", "Раб.");
+            addTh("col-mat", "Mat.");
+            addTh("col-rob", "Rob.");
         }
 
-        addTh("col-sumakl", "Сумма");
-        addTh("col-kosztfirmy", "Кост");
-        addTh("col-zysk", "Зysk");
-        addTh("col-akcje", "Действие");
+        addTh("col-sumakl", "Suma");
+        addTh("col-kosztfirmy", "Koszt");
+        addTh("col-zysk", "Zysk");
+        addTh("col-akcje", "Akcje");
 
         thead.appendChild(headRow);
         table.appendChild(thead);
@@ -632,7 +648,7 @@ function createWorkRow(room, work, isDesktop) {
         tdActions.classList.add("col-akcje");
         const del = document.createElement("button");
         del.className = "btn secondary";
-        del.textContent = "Удалить";
+        del.textContent = "Usuń";
         del.addEventListener("click", () => {
             room.removeWork(work.id);
             renderProject();
@@ -644,6 +660,14 @@ function createWorkRow(room, work, isDesktop) {
             tdClientTotal.textContent = formatCurrency(work.clientTotal);
             tdCost.textContent = formatCurrency(work.companyCost);
             tdProfit.textContent = formatCurrency(work.profit);
+            // Color code profit: green for positive, red for negative
+            if (work.profit > 0) {
+                tdProfit.style.color = "#16a34a"; // green
+            } else if (work.profit < 0) {
+                tdProfit.style.color = "#dc2626"; // red
+            } else {
+                tdProfit.style.color = ""; // default
+            }
             const totals = project.getTotals();
             if (DOM.sumNettoEl) DOM.sumNettoEl.textContent = formatCurrency(totals.netto);
             if (DOM.sumBruttoEl) DOM.sumBruttoEl.textContent = formatCurrency(totals.brutto);
@@ -715,7 +739,7 @@ function createWorkRow(room, work, isDesktop) {
         work.quantity = parseFloat(qty.value) || 0;
         renderProject();
     });
-    addField("Количество", qty);
+    addField("Ilość", qty);
 
     const cPrice = document.createElement("input");
     cPrice.type = "number";
@@ -725,7 +749,7 @@ function createWorkRow(room, work, isDesktop) {
         work.clientPrice = parseFloat(cPrice.value) || 0;
         renderProject();
     });
-    addField("Цена кл.", cPrice);
+    addField("Cena kl.", cPrice);
 
     if (config.mode === "extended") {
         const mat = document.createElement("input");
@@ -736,7 +760,7 @@ function createWorkRow(room, work, isDesktop) {
             work.materialPrice = parseFloat(mat.value) || 0;
             renderProject();
         });
-        addField("Мат.", mat);
+        addField("Mat.", mat);
 
         const lab = document.createElement("input");
         lab.type = "number";
@@ -746,12 +770,12 @@ function createWorkRow(room, work, isDesktop) {
             work.laborPrice = parseFloat(lab.value) || 0;
             renderProject();
         });
-        addField("Раб.", lab);
+        addField("Rob.", lab);
     }
 
     const delBtn = document.createElement("button");
     delBtn.className = "btn secondary";
-    delBtn.textContent = "Удалить";
+    delBtn.textContent = "Usuń";
     delBtn.addEventListener("click", () => {
         room.removeWork(work.id);
         renderProject();
@@ -839,9 +863,9 @@ function renderCategoriesModal() {
         const editCatBtn = document.createElement("span");
         editCatBtn.style.cursor = "pointer";
         editCatBtn.textContent = "✎";
-        editCatBtn.title = "Изменить";
+        editCatBtn.title = "Edytuj";
         editCatBtn.onclick = async() => {
-            const newName = await showInputModal("Изменить название категории", "Новое название категории", cat.name);
+            const newName = await showInputModal("Zmień nazwę kategorii", "Nowa nazwa kategorii", cat.name);
             if (newName && newName.trim()) {
                 await updateCategoryOnServer(cat.id, newName);
                 await loadCategoriesFromServerF();
@@ -851,11 +875,11 @@ function renderCategoriesModal() {
         const deleteCatBtn = document.createElement("span");
         deleteCatBtn.style.cursor = "pointer";
         deleteCatBtn.textContent = "🗑";
-        deleteCatBtn.title = "Удалить";
+        deleteCatBtn.title = "Usuń";
         deleteCatBtn.onclick = async() => {
             const confirmed = await showDeleteConfirmModal(
-                "Удалить категорию?",
-                `Вы уверены, что хотите удалить категорию "${cat.name}"? Это действие нельзя отменить.`
+                "Usuń kategorię?",
+                `Czy na pewno chcesz usunąć kategorię "${cat.name}"? Tej operacji nie można cofnąć.`
             );
             if (confirmed) {
                 await deleteCategoryFromServer(cat.id);
@@ -893,7 +917,7 @@ function renderCategoriesModal() {
         const tplDefaultsCheck = document.createElement("input");
         tplDefaultsCheck.type = "checkbox";
         const tplDefaultsSpan = document.createElement("span");
-        tplDefaultsSpan.textContent = "Użyć domyślnых цен";
+        tplDefaultsSpan.textContent = "Użyć domyślnych cen";
         tplDefaultsLabel.appendChild(tplDefaultsCheck);
         tplDefaultsLabel.appendChild(tplDefaultsSpan);
         card.appendChild(tplDefaultsLabel);
@@ -906,15 +930,15 @@ function renderCategoriesModal() {
         const tplClientPriceInput = document.createElement("input");
         tplClientPriceInput.type = "number";
         tplClientPriceInput.className = "input input-small";
-        tplClientPriceInput.placeholder = "Цена кл.";
+        tplClientPriceInput.placeholder = "Cena kl.";
         const tplMatPriceInput = document.createElement("input");
         tplMatPriceInput.type = "number";
         tplMatPriceInput.className = "input input-small";
-        tplMatPriceInput.placeholder = "Мат.";
+        tplMatPriceInput.placeholder = "Mat.";
         const tplLabPriceInput = document.createElement("input");
         tplLabPriceInput.type = "number";
         tplLabPriceInput.className = "input input-small";
-        tplLabPriceInput.placeholder = "Раб.";
+        tplLabPriceInput.placeholder = "Rob.";
         tplPricesRow.appendChild(tplClientPriceInput);
         tplPricesRow.appendChild(tplMatPriceInput);
         tplPricesRow.appendChild(tplLabPriceInput);
@@ -957,7 +981,7 @@ function renderCategoriesModal() {
                 const left = document.createElement("div");
                 let text = tpl.name;
                 if (tpl.defaults) {
-                    text += ` (кл: ${tpl.defaults.clientPrice || 0} / мат: ${tpl.defaults.materialPrice || 0} / раб: ${tpl.defaults.laborPrice || 0})`;
+                    text += ` (kl: ${tpl.defaults.clientPrice || 0} / mat: ${tpl.defaults.materialPrice || 0} / rob: ${tpl.defaults.laborPrice || 0})`;
                 }
                 left.textContent = text;
                 const right = document.createElement("div");
@@ -966,7 +990,7 @@ function renderCategoriesModal() {
                 const editTpl = document.createElement("span");
                 editTpl.style.cursor = "pointer";
                 editTpl.textContent = "✎";
-                editTpl.title = "Редактировать";
+                editTpl.title = "Edytuj";
                 editTpl.onclick = async() => {
                     const result = await showEditTemplateModal(tpl);
                     if (result && result.name && result.name.trim()) {
@@ -977,11 +1001,11 @@ function renderCategoriesModal() {
                 const deleteTpl = document.createElement("span");
                 deleteTpl.style.cursor = "pointer";
                 deleteTpl.textContent = "🗑";
-                deleteTpl.title = "Удалить работу";
+                deleteTpl.title = "Usuń pracę";
                 deleteTpl.onclick = async() => {
                     const confirmed = await showDeleteConfirmModal(
-                        "Удалить работу?",
-                        `Вы уверены, что хотите удалить работу "${tpl.name}"? Это действие нельзя отменить.`
+                        "Usuń pracę?",
+                        `Czy na pewno chcesz usunąć pracę "${tpl.name}"? Tej operacji nie można cofnąć.`
                     );
                     if (confirmed) {
                         await deleteTemplateFromServer(tpl.id);
@@ -1038,13 +1062,13 @@ if (submitChangeEmail) {
         const password = emailPasswordInput?.value?.trim();
 
         if (!newEmail || !password) {
-            alert("Заполните все поля");
+            alert("Wypełnij wszystkie pola");
             return;
         }
 
         const token = localStorage.getItem("token");
         if (!token) {
-            alert("Не авторизован");
+            alert("Nie zalogowano");
             return;
         }
 
@@ -1061,15 +1085,15 @@ if (submitChangeEmail) {
             const data = await res.json();
 
             if (res.ok) {
-                alert("Email успешно изменен!");
+                alert("Email zmieniony pomyślnie!");
                 closeModal(changeEmailModal);
                 if (DOM.profileMenu) DOM.profileMenu.classList.add("hidden");
             } else {
-                alert(data.error || "Ошибка при изменении email");
+                alert(data.error || "Błąd przy zmianie emaila");
             }
         } catch (err) {
             console.error(err);
-            alert("Ошибка сети");
+            alert("Błąd sieci");
         }
     });
 }
@@ -1098,18 +1122,18 @@ if (submitChangePassword) {
         const confirmPassword = confirmPasswordInput?.value?.trim();
 
         if (!oldPassword || !newPassword || !confirmPassword) {
-            alert("Заполните все поля");
+            alert("Wypełnij wszystkie pola");
             return;
         }
 
         if (newPassword !== confirmPassword) {
-            alert("Новый пароль и подтверждение не совпадают");
+            alert("Nowe hasło i potwierdzenie nie zgadzają się");
             return;
         }
 
         const token = localStorage.getItem("token");
         if (!token) {
-            alert("Не авторизован");
+            alert("Nie zalogowano");
             return;
         }
 
@@ -1126,15 +1150,15 @@ if (submitChangePassword) {
             const data = await res.json();
 
             if (res.ok) {
-                alert("Пароль успешно изменен!");
+                alert("Hasło zmienione pomyślnie!");
                 closeModal(changePasswordModal);
                 if (DOM.profileMenu) DOM.profileMenu.classList.add("hidden");
             } else {
-                alert(data.error || "Ошибка при изменении пароля");
+                alert(data.error || "Błąd przy zmianie hasła");
             }
         } catch (err) {
             console.error(err);
-            alert("Ошибка сети");
+            alert("Błąd sieci");
         }
     });
 }
@@ -1167,7 +1191,7 @@ if (projectNotesTextarea) {
 async function loadQuoteFromServer(id) {
     const token = localStorage.getItem("token");
     if (!token) {
-        alert("Не авторизован");
+        alert("Nie zalogowano");
         return;
     }
     try {
@@ -1176,8 +1200,8 @@ async function loadQuoteFromServer(id) {
         });
         if (!res.ok) {
             const text = await res.text();
-            console.error("Ошибка при загрузке сметы:", res.status, text);
-            alert("Ошибка загрузки сметы");
+            console.error("Błąd przy ładowaniu kosztorysu:", res.status, text);
+            alert("Błąd ładowania kosztorysu");
             return;
         }
         const q = await res.json();
@@ -1324,8 +1348,8 @@ async function loadQuoteFromServer(id) {
 
         localStorage.removeItem("editQuoteId");
     } catch (e) {
-        console.error("Ошибка сети при загрузке сметы:", e);
-        alert("Ошибка сети при загрузке сметы");
+        console.error("Błąd sieci przy ładowaniu kosztorysu:", e);
+        alert("Błąd sieci przy ładowaniu kosztorysu");
     }
 }
 window.loadQuoteFromServer = loadQuoteFromServer;
@@ -1345,6 +1369,10 @@ window.loadQuoteFromServer = loadQuoteFromServer;
     const editId = localStorage.getItem("editQuoteId");
     if (editId) {
         await loadQuoteFromServer(editId);
+    } else {
+        // Clear notes if not loading from history
+        project.notes = "";
+        if (projectNotesTextarea) projectNotesTextarea.value = "";
     }
     renderProject();
 })();

@@ -30,30 +30,30 @@
             </div>
 
             <div class="auth-buttons">
-                <a href="/auth.html" id="authBtn" class="auth-btn">Войти / Регистрация</a>
-                <button id="profileBtn" class="auth-btn profile-btn" style="display:none;">Профиль</button>
+                <a href="/auth.html" id="authBtn" class="auth-btn">Zaloguj / Rejestracja</a>
+                <button id="profileBtn" class="auth-btn profile-btn" style="display:none;">Profil</button>
             </div>
 
 
         </div>
     </header>
 
-    <!-- Выпадающее меню профиля -->
+    <!-- Menu profilu -->
     <div id="profileMenu" class="profile-menu hidden">
 
         <div class="menu-section">
-            <div class="menu-title">Аккаунт</div>
-            <button class="menu-item" id="changeLoginBtn">Сменить логин</button>
-            <button class="menu-item" id="changePasswordBtn">Сменить пароль</button>
+            <div class="menu-title">Konto</div>
+            <button class="menu-item" id="changeLoginBtn">Zmień login</button>
+            <button class="menu-item" id="changePasswordBtn">Zmień hasło</button>
         </div>
 
         <div class="menu-section">
-            <div class="menu-title">История</div>
-            <button class="menu-item" id="openHistoryBtn">История смет</button>
+            <div class="menu-title">Historia</div>
+            <button class="menu-item" id="openHistoryBtn">Historia kosztorysów</button>
         </div>
 
         <div class="menu-section">
-            <button class="menu-item logout" id="logoutBtnInside">Выйти</button>
+            <button class="menu-item logout" id="logoutBtnInside">Wyloguj</button>
         </div>
 
     </div>
@@ -152,14 +152,14 @@
             <!-- NOTATKI -->
             <div class="panel">
                 <div class="panel-title" style="display: flex; justify-content: space-between; align-items: center;">
-                    <span>Заметки (только для фирмы)</span>
+                    <span>Notatki (tylko dla firmy)</span>
                     <button id="toggleNotesBtn" class="btn secondary" style="padding: 6px 12px; font-size: 13px;">
-                        <span id="notesToggleIcon">▼</span> Показать/Скрыть
+                        <span id="notesToggleIcon">▼</span> Pokaż/Ukryj
                     </button>
                 </div>
 
                 <div id="notesContainer" style="display: none; margin-top: 10px;">
-                    <textarea id="projectNotes" class="input full-width" rows="5" placeholder="Заметки для внутреннего использования (не видны клиенту)"></textarea>
+                    <textarea id="projectNotes" class="input full-width" rows="5" placeholder="Notatki do użytku wewnętrznego (niewidoczne dla klienta)"></textarea>
                 </div>
             </div>
 
@@ -207,6 +207,7 @@
             </div>
 
             <div class="modal-footer-buttons" style="margin-top:15px; display:flex; gap:10px;">
+                <button id="saveToHistoryBtn" class="btn full-width">Zapisz do historii</button>
                 <button id="generateClientPdfBtn" class="btn full-width">Generuj PDF (klient)</button>
                 <button id="generateOwnerPdfBtn" class="btn secondary full-width">PDF dla firmy</button>
             </div>
@@ -221,12 +222,12 @@
     <div id="historyModal" class="modal-backdrop">
         <div class="modal">
             <div class="modal-header">
-                <h2>Historia smet</h2>
+                <h2>Historia kosztorysów</h2>
                 <div class="modal-close" onclick="closeModal(historyModal)">✕</div>
             </div>
 
             <div class="modal-body" id="historyContainer">
-                <!-- Сюда JS вставит список смет -->
+                <!-- Tutaj JS wstawi listę kosztorysów -->
             </div>
         </div>
     </div>
@@ -238,14 +239,14 @@
     <div id="changeEmailModal" class="modal-backdrop">
         <div class="modal">
             <div class="modal-header">
-                <h2>Сменить логин (email)</h2>
+                <h2>Zmień login (email)</h2>
                 <div class="modal-close" onclick="closeModal(changeEmailModal)">✕</div>
             </div>
 
             <div class="modal-body">
-                <input id="newEmailInput" class="input full-width" type="email" placeholder="Новый email" style="margin-bottom: 10px;" />
-                <input id="emailPasswordInput" class="input full-width" type="password" placeholder="Текущий пароль" style="margin-bottom: 10px;" />
-                <button id="submitChangeEmail" class="btn full-width">Сменить логин</button>
+                <input id="newEmailInput" class="input full-width" type="email" placeholder="Nowy email" style="margin-bottom: 10px;" />
+                <input id="emailPasswordInput" class="input full-width" type="password" placeholder="Aktualne hasło" style="margin-bottom: 10px;" />
+                <button id="submitChangeEmail" class="btn full-width">Zmień login</button>
             </div>
         </div>
     </div>
@@ -257,15 +258,15 @@
     <div id="changePasswordModal" class="modal-backdrop">
         <div class="modal">
             <div class="modal-header">
-                <h2>Сменить пароль</h2>
+                <h2>Zmień hasło</h2>
                 <div class="modal-close" onclick="closeModal(changePasswordModal)">✕</div>
             </div>
 
             <div class="modal-body">
-                <input id="oldPasswordInput" class="input full-width" type="password" placeholder="Старый пароль" style="margin-bottom: 10px;" />
-                <input id="newPasswordInput" class="input full-width" type="password" placeholder="Новый пароль" style="margin-bottom: 10px;" />
-                <input id="confirmPasswordInput" class="input full-width" type="password" placeholder="Подтвердите новый пароль" style="margin-bottom: 10px;" />
-                <button id="submitChangePassword" class="btn full-width">Сменить пароль</button>
+                <input id="oldPasswordInput" class="input full-width" type="password" placeholder="Stare hasło" style="margin-bottom: 10px;" />
+                <input id="newPasswordInput" class="input full-width" type="password" placeholder="Nowe hasło" style="margin-bottom: 10px;" />
+                <input id="confirmPasswordInput" class="input full-width" type="password" placeholder="Potwierdź nowe hasło" style="margin-bottom: 10px;" />
+                <button id="submitChangePassword" class="btn full-width">Zmień hasło</button>
             </div>
         </div>
     </div>
@@ -277,7 +278,7 @@
     <div id="inputTextModal" class="modal-backdrop">
         <div class="modal">
             <div class="modal-header">
-                <h2 id="inputModalTitle">Введите значение</h2>
+                <h2 id="inputModalTitle">Wprowadź wartość</h2>
                 <div class="modal-close" onclick="closeModal(inputTextModal)">✕</div>
             </div>
 
@@ -285,7 +286,7 @@
                 <input id="inputModalText" class="input full-width" type="text" placeholder="" style="margin-bottom: 10px;" />
                 <div class="modal-footer-buttons" style="display:flex; gap:10px;">
                     <button id="inputModalSubmit" class="btn full-width">OK</button>
-                    <button id="inputModalCancel" class="btn secondary full-width">Отмена</button>
+                    <button id="inputModalCancel" class="btn secondary full-width">Anuluj</button>
                 </div>
             </div>
         </div>
@@ -298,18 +299,18 @@
     <div id="editTemplateModal" class="modal-backdrop">
         <div class="modal">
             <div class="modal-header">
-                <h2>Редактировать работу</h2>
+                <h2>Edytuj pracę</h2>
                 <div class="modal-close" onclick="closeModal(editTemplateModal)">✕</div>
             </div>
 
             <div class="modal-body">
-                <input id="editTplNameInput" class="input full-width" type="text" placeholder="Название работы" style="margin-bottom: 10px;" />
-                <input id="editTplClientPriceInput" class="input full-width" type="number" placeholder="Цена клиента" style="margin-bottom: 10px;" />
-                <input id="editTplMaterialPriceInput" class="input full-width" type="number" placeholder="Цена материала" style="margin-bottom: 10px;" />
-                <input id="editTplLaborPriceInput" class="input full-width" type="number" placeholder="Цена работы" style="margin-bottom: 10px;" />
+                <input id="editTplNameInput" class="input full-width" type="text" placeholder="Nazwa pracy" style="margin-bottom: 10px;" />
+                <input id="editTplClientPriceInput" class="input full-width" type="number" placeholder="Cena klienta" style="margin-bottom: 10px;" />
+                <input id="editTplMaterialPriceInput" class="input full-width" type="number" placeholder="Cena materiału" style="margin-bottom: 10px;" />
+                <input id="editTplLaborPriceInput" class="input full-width" type="number" placeholder="Cena robocizny" style="margin-bottom: 10px;" />
                 <div class="modal-footer-buttons" style="display:flex; gap:10px;">
-                    <button id="editTplSubmit" class="btn full-width">Сохранить</button>
-                    <button id="editTplCancel" class="btn secondary full-width">Отмена</button>
+                    <button id="editTplSubmit" class="btn full-width">Zapisz</button>
+                    <button id="editTplCancel" class="btn secondary full-width">Anuluj</button>
                 </div>
             </div>
         </div>
@@ -322,15 +323,15 @@
     <div id="deleteConfirmModal" class="modal-backdrop">
         <div class="modal">
             <div class="modal-header">
-                <h2 id="deleteConfirmTitle">Подтверждение удаления</h2>
+                <h2 id="deleteConfirmTitle">Potwierdzenie usunięcia</h2>
                 <div class="modal-close" onclick="closeModal(deleteConfirmModal)">✕</div>
             </div>
 
             <div class="modal-body">
-                <p id="deleteConfirmMessage" style="margin-bottom: 15px; font-size: 15px;">Вы уверены, что хотите удалить эту смету?</p>
+                <p id="deleteConfirmMessage" style="margin-bottom: 15px; font-size: 15px;">Czy na pewno chcesz usunąć ten kosztorys?</p>
                 <div class="modal-footer-buttons" style="display:flex; gap:10px;">
-                    <button id="deleteConfirmYes" class="btn full-width" style="background: #dc2626;">Удалить</button>
-                    <button id="deleteConfirmNo" class="btn secondary full-width">Отмена</button>
+                    <button id="deleteConfirmYes" class="btn full-width" style="background: #dc2626;">Usuń</button>
+                    <button id="deleteConfirmNo" class="btn secondary full-width">Anuluj</button>
                 </div>
             </div>
         </div>
