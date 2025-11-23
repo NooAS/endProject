@@ -361,44 +361,36 @@ function compareItems(items1, items2) {
         modified: []
     };
 
-    // Create maps for easier comparison
-    const map1 = new Map(items1.map((item, idx) => [
-        `${item.room || ''}_${item.job}_${idx}`, 
-        { ...item, index: idx }
-    ]));
+    // Create a stable identifier for items
+    const makeKey = (item) => `${item.room || ''}_${item.job}_${item.quantity}_${item.price}`;
     
-    const map2 = new Map(items2.map((item, idx) => [
-        `${item.room || ''}_${item.job}_${idx}`, 
-        { ...item, index: idx }
-    ]));
+    // Create maps with stable keys
+    const map1 = new Map(items1.map(item => [makeKey(item), item]));
+    const map2 = new Map(items2.map(item => [makeKey(item), item]));
 
     // Find added and modified items
-    items2.forEach((item2, idx) => {
-        const key = `${item2.room || ''}_${item2.job}_${idx}`;
+    items2.forEach(item2 => {
+        const key = makeKey(item2);
         const item1 = map1.get(key);
         
         if (!item1) {
-            // Check if similar item exists (same job name)
-            const similar = items1.find(i => i.job === item2.job);
-            if (!similar) {
-                result.added.push(item2);
-            } else {
-                result.modified.push({ old: similar, new: item2 });
+            result.added.push(item2);
+        } else {
+            // Items with same key but check for other differences
+            const fieldsToCompare = ['category', 'total', 'materialPrice', 'laborPrice', 'templateId'];
+            const hasChanges = fieldsToCompare.some(field => item1[field] !== item2[field]);
+            
+            if (hasChanges) {
+                result.modified.push({ old: item1, new: item2 });
             }
-        } else if (JSON.stringify(item1) !== JSON.stringify({ ...item2, index: item1.index })) {
-            result.modified.push({ old: item1, new: item2 });
         }
+        // Mark as processed
+        map1.delete(key);
     });
 
-    // Find removed items
-    items1.forEach((item1, idx) => {
-        const key = `${item1.room || ''}_${item1.job}_${idx}`;
-        if (!map2.has(key)) {
-            const similar = items2.find(i => i.job === item1.job);
-            if (!similar) {
-                result.removed.push(item1);
-            }
-        }
+    // Remaining items in map1 are removed
+    map1.forEach(item => {
+        result.removed.push(item);
     });
 
     return result;

@@ -34,10 +34,14 @@ const limiter = rateLimit({
 // Apply rate limiting to API routes only
 app.use("/api/", limiter);
 app.use("/auth/", limiter);
-app.use("/quotes/", rateLimit({
-    windowMs: 60000,
-    max: 50 // Lower limit for quote operations
-}));
+
+// Quote-specific rate limiting
+const quoteLimiter = rateLimit({
+    windowMs: parseInt(process.env.QUOTE_RATE_LIMIT_WINDOW_MS) || 60000,
+    max: parseInt(process.env.QUOTE_RATE_LIMIT_MAX) || 50,
+    message: "Too many quote operations, please try again later."
+});
+app.use("/quotes/", quoteLimiter);
 
 // CORS configuration
 const corsOptions = {

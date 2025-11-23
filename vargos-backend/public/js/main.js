@@ -1628,11 +1628,38 @@ async function restoreVersion(quoteId, versionNum) {
 }
 window.restoreVersion = restoreVersion;
 
-// View version details
+// View version details - loads and displays full version snapshot
 async function viewVersionDetails(quoteId, versionNum) {
-    // For now, just show an alert with basic info
-    // Could be expanded to show full item list
-    alert(`Просмотр деталей версии ${versionNum} (функция в разработке)`);
+    try {
+        const token = localStorage.getItem("token");
+        const res = await fetch(`/quotes/${quoteId}/versions/${versionNum}`, {
+            headers: { "Authorization": "Bearer " + token }
+        });
+        
+        if (!res.ok) {
+            throw new Error("Failed to load version");
+        }
+        
+        const version = await res.json();
+        const snapshot = version.snapshotData;
+        
+        // Create a detailed view modal or use alert for now
+        let details = `Версия ${versionNum}\n\n`;
+        details += `Название: ${snapshot.name}\n`;
+        details += `Сумма: ${snapshot.total.toFixed(2)} zł\n`;
+        details += `Заметки: ${snapshot.notes || 'нет'}\n\n`;
+        details += `Позиции (${snapshot.items.length}):\n`;
+        
+        snapshot.items.forEach((item, idx) => {
+            details += `${idx + 1}. ${item.room ? item.room + ': ' : ''}${item.job} - `;
+            details += `${item.quantity} × ${item.price.toFixed(2)} zł = ${item.total.toFixed(2)} zł\n`;
+        });
+        
+        alert(details);
+    } catch (error) {
+        console.error("Error loading version details:", error);
+        alert("Ошибка при загрузке деталей версии");
+    }
 }
 window.viewVersionDetails = viewVersionDetails;
 
