@@ -7,6 +7,7 @@ export function loadPdfSettingsFromStorage() {
         return { priceMode: parsed.priceMode === "brutto" ? "brutto" : "netto" };
     } catch { return { priceMode: "netto" }; }
 }
+
 export function savePdfSettingsToStorage(settings) {
-    try { localStorage.setItem("wycenaPdfSettings", JSON.stringify(settings)); } catch { }
+    try { localStorage.setItem("wycenaPdfSettings", JSON.stringify(settings)); } catch {}
 }
