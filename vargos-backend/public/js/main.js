@@ -195,11 +195,22 @@ function renderQuotesHistoryUI(quotes) {
             <p>Сумма: <strong>${(q.total || 0).toFixed(2)} zł</strong></p>
             <p>Дата: ${q.createdAt ? new Date(q.createdAt).toLocaleString() : ""}</p>
             <div style="margin-top:12px; display:flex; gap:10px;">
-                <button class="btn" onclick="editQuote(${q.id})">Редактировать</button>
-                <button class="btn secondary" onclick="deleteQuote(${q.id})">Удалить</button>
+                <button class="btn edit-quote-btn" data-quote-id="${q.id}">Редактировать</button>
+                <button class="btn secondary delete-quote-btn" data-quote-id="${q.id}">Удалить</button>
             </div>
         `;
         DOM.historyContainer.appendChild(div);
+        
+        // Add event listeners for the buttons
+        const editBtn = div.querySelector('.edit-quote-btn');
+        const deleteBtn = div.querySelector('.delete-quote-btn');
+        
+        if (editBtn) {
+            editBtn.addEventListener('click', () => editQuote(q.id));
+        }
+        if (deleteBtn) {
+            deleteBtn.addEventListener('click', () => deleteQuote(q.id));
+        }
     });
 }
 

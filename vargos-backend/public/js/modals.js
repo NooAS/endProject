@@ -31,6 +31,13 @@ export function initModalCloseButtons() {
         const modal = document.getElementById(modalId);
         if (closeBtn && modal) {
             closeBtn.addEventListener('click', () => closeModal(modal));
+            
+            // Close modal when clicking on backdrop (outside modal content)
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    closeModal(modal);
+                }
+            });
         }
     });
 }

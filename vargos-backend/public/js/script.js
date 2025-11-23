@@ -1733,12 +1733,23 @@ async function loadQuotesHistory() {
             <p>Data: ${new Date(q.createdAt).toLocaleString()}</p>
 
             <div style="margin-top:12px; display:flex; gap:10px;">
-                <button class="btn" onclick="editQuote(${q.id})">Edytuj</button>
-                <button class="btn secondary" onclick="deleteQuote(${q.id})">Usuń</button>
+                <button class="btn edit-quote-btn" data-quote-id="${q.id}">Edytuj</button>
+                <button class="btn secondary delete-quote-btn" data-quote-id="${q.id}">Usuń</button>
             </div>
         `;
 
         historyContainer.appendChild(div);
+        
+        // Add event listeners for the buttons
+        const editBtn = div.querySelector('.edit-quote-btn');
+        const deleteBtn = div.querySelector('.delete-quote-btn');
+        
+        if (editBtn) {
+            editBtn.addEventListener('click', () => editQuote(q.id));
+        }
+        if (deleteBtn) {
+            deleteBtn.addEventListener('click', () => deleteQuote(q.id));
+        }
     });
 }
 
