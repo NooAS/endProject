@@ -63,11 +63,11 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             localStorage.setItem("token", data.token);
-            msg.innerHTML = "<div class='success'>Вы успешно вошли!</div>";
+            msg.innerHTML = "<div class='success'>Zalogowano pomyślnie!</div>";
             setTimeout(() => window.location.href = "/index.html", 800);
 
         } catch (err) {
-            msg.innerHTML = "<div class='error'>Ошибка соединения</div>";
+            msg.innerHTML = "<div class='error'>Błąd połączenia</div>";
         }
     });
 
@@ -102,11 +102,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
-            msg.innerHTML = "<div class='success'>Аккаунт создан!</div>";
+            msg.innerHTML = "<div class='success'>Konto utworzone!</div>";
             setTimeout(() => tabLogin.click(), 1200);
 
         } catch (err) {
-            msg.innerHTML = "<div class='error'>Ошибка соединения</div>";
+            msg.innerHTML = "<div class='error'>Błąd połączenia</div>";
         }
     });
 });

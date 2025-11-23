@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="pl">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
-    <title>Авторизация</title>
+    <title>Autoryzacja</title>
     <link rel="stylesheet" href="/css/style.css">
 </head>
 
@@ -16,16 +16,16 @@
 
         <div class="auth-box">
 
-            <!-- Логотип -->
+            <!-- Logo -->
             <img src="/img/logo.png" class="auth-logo" alt="Logo">
 
-            <div class="auth-title">Добро пожаловать</div>
-            <div class="auth-subtitle">Войдите, чтобы продолжить работу</div>
+            <div class="auth-title">Witamy</div>
+            <div class="auth-subtitle">Zaloguj się, aby kontynuować</div>
 
             <!-- TABS -->
             <div class="auth-tabs">
-                <div id="tabLogin" class="auth-tab active">Войти</div>
-                <div id="tabRegister" class="auth-tab">Регистрация</div>
+                <div id="tabLogin" class="auth-tab active">Zaloguj się</div>
+                <div id="tabRegister" class="auth-tab">Rejestracja</div>
             </div>
 
             <!-- LOGIN -->
@@ -35,11 +35,11 @@
                 </div>
 
                 <div class="auth-input-wrapper">
-                    <input type="password" id="loginPassword" placeholder="Пароль">
+                    <input type="password" id="loginPassword" placeholder="Hasło">
                     <span class="show-pass" data-target="loginPassword">👁</span>
                 </div>
 
-                <button id="loginBtn" class="auth-btn-main">Войти</button>
+                <button id="loginBtn" class="auth-btn-main">Zaloguj się</button>
                 <div id="loginMsg" class="auth-msg"></div>
             </div>
 
@@ -50,11 +50,11 @@
                 </div>
 
                 <div class="auth-input-wrapper">
-                    <input type="password" id="regPassword" placeholder="Пароль (мин. 6 символов)">
+                    <input type="password" id="regPassword" placeholder="Hasło (min. 6 znaków)">
                     <span class="show-pass" data-target="regPassword">👁</span>
                 </div>
 
-                <button id="regBtn" class="auth-btn-main">Создать аккаунт</button>
+                <button id="regBtn" class="auth-btn-main">Utwórz konto</button>
                 <div id="registerMsg" class="auth-msg"></div>
             </div>
 
@@ -65,7 +65,7 @@
     <script src="/js/auth.js"></script>
 
     <script>
-        // Показать / скрыть пароль
+        // Pokaż / Ukryj hasło
         document.querySelectorAll(".show-pass").forEach(icon => {
             icon.addEventListener("click", () => {
                 const id = icon.dataset.target;

@@ -683,7 +683,7 @@ function createWorkRow(room, work, isDesktop) {
 
     const accHeader = document.createElement("div");
     accHeader.className = "work-acc-header";
-    accHeader.innerHTML = `<span>${work.name || "Новая позиция"}</span><span class="work-acc-arrow">▶</span>`;
+    accHeader.innerHTML = `<span>${work.name || "Nowa pozycja"}</span><span class="work-acc-arrow">▶</span>`;
     acc.appendChild(accHeader);
 
     const body = document.createElement("div");
@@ -715,7 +715,7 @@ function createWorkRow(room, work, isDesktop) {
     nameInput.value = work.name || "";
     nameInput.addEventListener("input", () => {
         work.name = nameInput.value;
-        accHeader.querySelector("span").textContent = work.name || "Новая позиция";
+        accHeader.querySelector("span").textContent = work.name || "Nowa pozycja";
     });
     addField("Название", nameInput);
 
@@ -1377,7 +1377,7 @@ window.loadQuoteFromServer = loadQuoteFromServer;
     renderProject();
 })();
 
-// Обработчик внешней кнопки (если в HTML есть кнопка id="btn-owner-pdf")
+// Obsługa zewnętrznego przycisku (jeśli w HTML jest przycisk id="btn-owner-pdf")
 // Используем DOM.ownerPdfButton (поддерживается в updateDOMRefs)
 if (DOM.ownerPdfButton) {
     DOM.ownerPdfButton.addEventListener("click", async(e) => {
@@ -1385,18 +1385,18 @@ if (DOM.ownerPdfButton) {
             await collectPdfData(project);
             await saveQuoteToServer(project);
             await generateOwnerPdf(project, config);
-            console.info("generateOwnerPdf выполнена успешно (через btn-owner-pdf).");
+            console.info("generateOwnerPdf wykonano pomyślnie (przez btn-owner-pdf).");
         } catch (err) {
-            console.error("Ошибка при генерации PDF для владельца (через btn-owner-pdf):", err);
-            alert("Не удалось сгенерировать PDF для владельца. Проверьте консоль.");
+            console.error("Błąd przy generowaniu PDF dla właściciela (przez btn-owner-pdf):", err);
+            alert("Nie udało się wygenerować PDF dla właściciela. Sprawdź konsolę.");
         }
     });
 } else {
-    // Для отладки оставляем функцию в window
+    // Dla oddzielania zostaw funkcję w window
     if (typeof generateOwnerPdf === "function") {
         window.generateOwnerPdf = generateOwnerPdf;
-        console.info("generateOwnerPdf доступна как window.generateOwnerPdf для ручного вызова");
+        console.info("generateOwnerPdf dostępna jako window.generateOwnerPdf do ręcznego wywołania");
     } else {
-        console.warn("btn-owner-pdf не найден в DOM и generateOwnerPdf не доступна.");
+        console.warn("btn-owner-pdf nie znaleziono w DOM i generateOwnerPdf nie jest dostępna.");
     }
 }

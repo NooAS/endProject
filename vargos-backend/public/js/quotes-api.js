@@ -23,7 +23,7 @@ export function buildItemsArray(project) {
 export async function saveQuoteToServer(project) {
     var token = localStorage.getItem("token");
     if (!token) {
-        console.warn("Пользователь не авторизован — пропускаем сохранение");
+        console.warn("Użytkownik nie jest zalogowany — pomijanie zapisu");
         return;
     }
     var items = buildItemsArray(project);
@@ -51,16 +51,16 @@ export async function saveQuoteToServer(project) {
             body: JSON.stringify(payload)
         });
         var json = await res.json();
-        if (!res.ok) { console.error("Ошибка сохранения:", json); }
+        if (!res.ok) { console.error("Błąd zapisu:", json); }
         else { 
-            console.log("Смета сохранена успешно:", json);
+            console.log("Kosztorys zapisany pomyślnie:", json);
             // Если это была новая смета, сохраним её ID для последующих обновлений
             if (json.quoteId && !editQuoteId) {
                 localStorage.setItem("editQuoteId", json.quoteId);
             }
         }
     } catch (e) {
-        console.error("Ошибка сети:", e);
+        console.error("Błąd sieci:", e);
     }
 }
 
