@@ -1392,7 +1392,7 @@ if (DOM.ownerPdfButton) {
         }
     });
 } else {
-    // Dla oddzielania zostaw funkcję w window
+    // Dla debugowania zostaw funkcję w window
     if (typeof generateOwnerPdf === "function") {
         window.generateOwnerPdf = generateOwnerPdf;
         console.info("generateOwnerPdf dostępna jako window.generateOwnerPdf do ręcznego wywołania");
