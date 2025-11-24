@@ -319,7 +319,6 @@ export async function generateOwnerPdf(project, config) {
     const marginText = allCosts > 0 ? ((totalProfit / allCosts) * 100).toFixed(1) + "%" : "0%";
 
     pdf.setFontSize(12);
-    pdf.setFont("helvetica", "normal");
     pdf.text(`Suma netto (klient):     ${formatCurrency(netto)}`, margin, fy);
     pdf.text(`Koszt firmy:             ${formatCurrency(allCosts)}`, margin, fy + 6);
     pdf.text(`Zysk całkowity:         ${formatCurrency(totalProfit)}`, margin, fy + 12);
