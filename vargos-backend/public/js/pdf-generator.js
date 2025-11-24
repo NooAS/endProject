@@ -208,7 +208,7 @@ export async function generateOwnerPdf(project, config) {
         y += 6;
     }
 
-    pdf.text("Wersja wewnętrzna — zawiera koszty материалов, robocизны oraz marżę.", margin, y);
+    pdf.text("Wersja wewnętrzna — zawiera koszty materiałów, robocizny oraz marżę.", margin, y);
     y += 10;
 
     const tableHead = [
@@ -231,6 +231,7 @@ export async function generateOwnerPdf(project, config) {
 
     project.rooms.forEach(room => {
         const totals = room.getTotals(config);
+        const roomNetto = totals.netto;
 
         // Посчитаем companyCost по разделу/комнате (всех работ раздела)
         const roomCompanyCost = room.works.reduce((sum, w) => {
@@ -239,12 +240,17 @@ export async function generateOwnerPdf(project, config) {
             return sum + w.quantity * (material + labor);
         }, 0);
 
+        // Calculate room-level profit and margin
+        const roomProfit = roomNetto - roomCompanyCost;
+        const roomMargin = roomCompanyCost > 0 ? (roomProfit / roomCompanyCost) * 100 : 0;
+
         tableBody.push([
             { content: `${sectionIndex}`, styles: { fillColor: [240, 240, 240], fontStyle: "bold" } },
             { content: (room.name || "").toUpperCase(), styles: { fillColor: [240, 240, 240], fontStyle: "bold" } },
             "", "", "", "", "",
             { content: formatCurrency(roomCompanyCost), styles: { fillColor: [240, 240, 240], fontStyle: "bold" } },
-            "", "" // остальные поля остались пустыми
+            { content: formatCurrency(roomProfit), styles: { fillColor: [240, 240, 240], fontStyle: "bold" } },
+            { content: roomMargin.toFixed(1) + "%", styles: { fillColor: [240, 240, 240], fontStyle: "bold" } }
         ]);
 
         room.works.forEach((w, i) => {
@@ -322,13 +328,13 @@ export async function generateOwnerPdf(project, config) {
     pdf.text(`VAT ${config.vat}%:             ${formatCurrency(vatAmount)}`, margin, fy + 24);
     pdf.text(`Brutto klienta:          ${formatCurrency(brutto)}`, margin, fy + 30);
 
-    // Add notes if they exist, с корректным использованием шрифта
+    // Add notes if they exist
     if (project.notes && project.notes.trim()) {
         const pageWidth = pdf.internal.pageSize.getWidth();
         const notesY = fy + 40;
         pdf.setFontSize(11);
         pdf.setFont("helvetica", "bold");
-        pdf.text("Заметки:", margin, notesY);
+        pdf.text("Notatki:", margin, notesY);
         pdf.setFont("helvetica", "normal");
         pdf.setFontSize(9);
         const notesLines = pdf.splitTextToSize(project.notes, pageWidth - margin * 2);
