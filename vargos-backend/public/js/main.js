@@ -376,6 +376,7 @@ function nameInputTd(work) {
     const input = document.createElement("input");
     input.className = "input";
     input.value = work.name || "";
+    input.setAttribute("autocomplete", "off");
     input.oninput = () => { work.name = input.value; };
     td.appendChild(input);
     return td;
@@ -400,6 +401,7 @@ function qtyTd(work) {
     input.type = "number";
     input.className = "input";
     input.value = work.quantity;
+    input.setAttribute("autocomplete", "off");
     input.oninput = () => {
         work.quantity = parseFloat(input.value) || 0;
         renderProject();
@@ -414,6 +416,7 @@ function clientPriceTd(work) {
     input.type = "number";
     input.className = "input";
     input.value = work.clientPrice;
+    input.setAttribute("autocomplete", "off");
     input.oninput = () => {
         work.clientPrice = parseFloat(input.value) || 0;
         renderProject();
@@ -552,6 +555,7 @@ function createWorkRow(room, work, isDesktop) {
             nameInput.type = "text";
             nameInput.className = "input";
             nameInput.value = work.name || "";
+            nameInput.setAttribute("autocomplete", "off");
             nameInput.addEventListener("input", () => {
                 work.name = nameInput.value;
             });
@@ -582,6 +586,7 @@ function createWorkRow(room, work, isDesktop) {
         qtyInput.type = "number";
         qtyInput.className = "input";
         qtyInput.value = work.quantity;
+        qtyInput.setAttribute("autocomplete", "off");
         qtyInput.addEventListener("input", () => {
             work.quantity = parseFloat(qtyInput.value) || 0;
             refresh();
@@ -596,6 +601,7 @@ function createWorkRow(room, work, isDesktop) {
         clientPriceInput.type = "number";
         clientPriceInput.className = "input";
         clientPriceInput.value = work.clientPrice;
+        clientPriceInput.setAttribute("autocomplete", "off");
         clientPriceInput.addEventListener("input", () => {
             work.clientPrice = parseFloat(clientPriceInput.value) || 0;
             refresh();
@@ -611,6 +617,7 @@ function createWorkRow(room, work, isDesktop) {
             matInput.type = "number";
             matInput.className = "input";
             matInput.value = work.materialPrice;
+            matInput.setAttribute("autocomplete", "off");
             matInput.addEventListener("input", () => {
                 work.materialPrice = parseFloat(matInput.value) || 0;
                 refresh();
@@ -624,6 +631,7 @@ function createWorkRow(room, work, isDesktop) {
             labInput.type = "number";
             labInput.className = "input";
             labInput.value = work.laborPrice;
+            labInput.setAttribute("autocomplete", "off");
             labInput.addEventListener("input", () => {
                 work.laborPrice = parseFloat(labInput.value) || 0;
                 refresh();
@@ -713,6 +721,7 @@ function createWorkRow(room, work, isDesktop) {
     nameInput.type = "text";
     nameInput.className = "input full-width";
     nameInput.value = work.name || "";
+    nameInput.setAttribute("autocomplete", "off");
     nameInput.addEventListener("input", () => {
         work.name = nameInput.value;
         accHeader.querySelector("span").textContent = work.name || "Nowa pozycja";
@@ -735,6 +744,7 @@ function createWorkRow(room, work, isDesktop) {
     qty.type = "number";
     qty.className = "input";
     qty.value = work.quantity;
+    qty.setAttribute("autocomplete", "off");
     qty.addEventListener("input", () => {
         work.quantity = parseFloat(qty.value) || 0;
         renderProject();
@@ -745,6 +755,7 @@ function createWorkRow(room, work, isDesktop) {
     cPrice.type = "number";
     cPrice.className = "input";
     cPrice.value = work.clientPrice;
+    cPrice.setAttribute("autocomplete", "off");
     cPrice.addEventListener("input", () => {
         work.clientPrice = parseFloat(cPrice.value) || 0;
         renderProject();
@@ -756,6 +767,7 @@ function createWorkRow(room, work, isDesktop) {
         mat.type = "number";
         mat.className = "input";
         mat.value = work.materialPrice;
+        mat.setAttribute("autocomplete", "off");
         mat.addEventListener("input", () => {
             work.materialPrice = parseFloat(mat.value) || 0;
             renderProject();
@@ -766,6 +778,7 @@ function createWorkRow(room, work, isDesktop) {
         lab.type = "number";
         lab.className = "input";
         lab.value = work.laborPrice;
+        lab.setAttribute("autocomplete", "off");
         lab.addEventListener("input", () => {
             work.laborPrice = parseFloat(lab.value) || 0;
             renderProject();
@@ -819,6 +832,7 @@ function renderCategoriesModal() {
     addCatInput.type = "text";
     addCatInput.placeholder = "Nazwa nowej kategorii";
     addCatInput.className = "input";
+    addCatInput.setAttribute("autocomplete", "off");
 
     const addCatBtn = document.createElement("button");
     addCatBtn.className = "btn secondary";
@@ -902,6 +916,7 @@ function renderCategoriesModal() {
         tplNameInput.type = "text";
         tplNameInput.className = "input";
         tplNameInput.placeholder = "Nazwa pracy w tej kategorii";
+        tplNameInput.setAttribute("autocomplete", "off");
 
         const tplBtn = document.createElement("button");
         tplBtn.className = "btn secondary";
@@ -931,14 +946,17 @@ function renderCategoriesModal() {
         tplClientPriceInput.type = "number";
         tplClientPriceInput.className = "input input-small";
         tplClientPriceInput.placeholder = "Cena kl.";
+        tplClientPriceInput.setAttribute("autocomplete", "off");
         const tplMatPriceInput = document.createElement("input");
         tplMatPriceInput.type = "number";
         tplMatPriceInput.className = "input input-small";
         tplMatPriceInput.placeholder = "Mat.";
+        tplMatPriceInput.setAttribute("autocomplete", "off");
         const tplLabPriceInput = document.createElement("input");
         tplLabPriceInput.type = "number";
         tplLabPriceInput.className = "input input-small";
         tplLabPriceInput.placeholder = "Rob.";
+        tplLabPriceInput.setAttribute("autocomplete", "off");
         tplPricesRow.appendChild(tplClientPriceInput);
         tplPricesRow.appendChild(tplMatPriceInput);
         tplPricesRow.appendChild(tplLabPriceInput);
