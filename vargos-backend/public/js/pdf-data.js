@@ -65,7 +65,10 @@ export async function collectPdfData(project) {
         // Save to localStorage as fallback
         saveCompanyDataToStorage(companyData);
         // Save to server for user-specific persistence
-        await saveCompanyDataToServer(companyData);
+        const serverSaveSuccess = await saveCompanyDataToServer(companyData);
+        if (!serverSaveSuccess) {
+            console.warn("Failed to save company data to server, using localStorage fallback only");
+        }
     }
 
     let pdfPriceMode = loadPdfSettingsFromStorage().priceMode;
