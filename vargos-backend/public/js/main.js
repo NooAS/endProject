@@ -244,6 +244,9 @@ window.deleteQuote = deleteQuote;
 // --- PROJECT TABLE ---
 function clearRoomsUI() { if (DOM.roomsContainer) DOM.roomsContainer.innerHTML = ""; }
 
+// Store collapsed state for rooms
+const collapsedRooms = new Set();
+
 function renderProject() {
     updateDOMRefs(); // ensure refs are current
     clearRoomsUI();
@@ -262,18 +265,32 @@ function renderRoom(room) {
     roomCard.className = "room-card";
     roomCard.dataset.roomId = String(room.id);
 
+    const isCollapsed = collapsedRooms.has(room.id);
+
     const header = document.createElement("div");
     header.className = "room-header";
 
+    // Create collapsible title box with toggle
     const titleBox = document.createElement("div");
+    titleBox.className = "room-collapse-header";
+    titleBox.style.flex = "1";
+
+    // Collapse toggle arrow
+    const collapseToggle = document.createElement("span");
+    collapseToggle.className = "collapse-toggle";
+    if (isCollapsed) collapseToggle.classList.add("collapsed");
+    collapseToggle.textContent = "▼";
+
     const title = document.createElement("div");
     title.className = "room-title";
     title.textContent = config.useRooms ? `${room.number}. ${room.name}` : "Pozycje";
 
     const meta = document.createElement("div");
     meta.className = "room-meta";
-    meta.textContent = `ID: ${room.id}`;
+    meta.style.marginLeft = "10px";
+    meta.textContent = `(${room.works.length} prac)`;
 
+    titleBox.appendChild(collapseToggle);
     titleBox.appendChild(title);
     titleBox.appendChild(meta);
     header.appendChild(titleBox);
@@ -284,14 +301,18 @@ function renderRoom(room) {
     const addWorkBtn = document.createElement("button");
     addWorkBtn.className = "btn secondary";
     addWorkBtn.textContent = "Dodaj pracę";
-    addWorkBtn.addEventListener("click", () => addWorkToRoom(room));
+    addWorkBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        addWorkToRoom(room);
+    });
     actions.appendChild(addWorkBtn);
 
     if (config.useRooms) {
         const deleteRoomBtn = document.createElement("button");
         deleteRoomBtn.className = "btn secondary";
         deleteRoomBtn.textContent = "Usuń pokój";
-        deleteRoomBtn.addEventListener("click", () => {
+        deleteRoomBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
             project.removeRoom(room.id);
             renderProject();
         });
@@ -300,6 +321,23 @@ function renderRoom(room) {
 
     header.appendChild(actions);
     roomCard.appendChild(header);
+
+    // Create collapsible room body
+    const roomBody = document.createElement("div");
+    roomBody.className = "room-body";
+    if (isCollapsed) roomBody.classList.add("collapsed");
+
+    // Toggle collapse on title box click
+    titleBox.addEventListener("click", () => {
+        const wasCollapsed = collapsedRooms.has(room.id);
+        if (wasCollapsed) {
+            collapsedRooms.delete(room.id);
+        } else {
+            collapsedRooms.add(room.id);
+        }
+        collapseToggle.classList.toggle("collapsed");
+        roomBody.classList.toggle("collapsed");
+    });
 
     if (window.innerWidth > 768) {
         const table = document.createElement("table");
@@ -351,16 +389,17 @@ function renderRoom(room) {
         tableWrapper.className = "works-table-wrapper";
         tableWrapper.appendChild(table);
 
-        roomCard.appendChild(tableWrapper);
+        roomBody.appendChild(tableWrapper);
     } else {
         const worksContainer = document.createElement("div");
         worksContainer.className = "room-works-container";
         room.works.forEach(work => {
             worksContainer.appendChild(createWorkRow(room, work, false));
         });
-        roomCard.appendChild(worksContainer);
+        roomBody.appendChild(worksContainer);
     }
 
+    roomCard.appendChild(roomBody);
     roomsContainer.appendChild(roomCard);
 }
 
@@ -820,6 +859,9 @@ function addGlobalWork() {
 }
 
 /* ===== Категории Modal ===== */
+// Store collapsed state for categories
+const collapsedCategories = new Set();
+
 function renderCategoriesModal() {
     if (!DOM.categoriesListEl) return;
     DOM.categoriesListEl.innerHTML = "";
@@ -860,15 +902,35 @@ function renderCategoriesModal() {
 
     project.categories.forEach(cat => {
         const card = document.createElement("div");
-        card.className = "panel";
+        card.className = "panel category-card";
         card.style.marginBottom = "10px";
 
-        const header = document.createElement("div");
-        header.className = "row";
-        header.style.justifyContent = "space-between";
+        const isCollapsed = collapsedCategories.has(cat.id);
 
-        const leftHeader = document.createElement("div");
-        leftHeader.textContent = `${cat.name} (Szablonów: ${cat.templates.length})`;
+        // Create collapsible header
+        const header = document.createElement("div");
+        header.className = "category-header";
+
+        const headerLeft = document.createElement("div");
+        headerLeft.className = "category-header-left";
+
+        // Collapse toggle arrow
+        const collapseToggle = document.createElement("span");
+        collapseToggle.className = "collapse-toggle";
+        if (isCollapsed) collapseToggle.classList.add("collapsed");
+        collapseToggle.textContent = "▼";
+
+        const titleText = document.createElement("span");
+        titleText.className = "category-title";
+        titleText.textContent = cat.name;
+
+        const countText = document.createElement("span");
+        countText.className = "category-count";
+        countText.textContent = `(${cat.templates.length} szablonów)`;
+
+        headerLeft.appendChild(collapseToggle);
+        headerLeft.appendChild(titleText);
+        headerLeft.appendChild(countText);
 
         const tools = document.createElement("div");
         tools.style.display = "flex";
@@ -878,7 +940,8 @@ function renderCategoriesModal() {
         editCatBtn.style.cursor = "pointer";
         editCatBtn.textContent = "✎";
         editCatBtn.title = "Edytuj";
-        editCatBtn.onclick = async() => {
+        editCatBtn.onclick = async(e) => {
+            e.stopPropagation();
             const newName = await showInputModal("Zmień nazwę kategorii", "Nowa nazwa kategorii", cat.name);
             if (newName && newName.trim()) {
                 await updateCategoryOnServer(cat.id, newName);
@@ -890,7 +953,8 @@ function renderCategoriesModal() {
         deleteCatBtn.style.cursor = "pointer";
         deleteCatBtn.textContent = "🗑";
         deleteCatBtn.title = "Usuń";
-        deleteCatBtn.onclick = async() => {
+        deleteCatBtn.onclick = async(e) => {
+            e.stopPropagation();
             const confirmed = await showDeleteConfirmModal(
                 "Usuń kategorię?",
                 `Czy na pewno chcesz usunąć kategorię "${cat.name}"? Tej operacji nie można cofnąć.`
@@ -903,14 +967,31 @@ function renderCategoriesModal() {
 
         tools.appendChild(editCatBtn);
         tools.appendChild(deleteCatBtn);
-        header.appendChild(leftHeader);
+        header.appendChild(headerLeft);
         header.appendChild(tools);
         card.appendChild(header);
+
+        // Create collapsible content container
+        const contentContainer = document.createElement("div");
+        contentContainer.className = "collapsible-content";
+        if (isCollapsed) contentContainer.classList.add("collapsed");
+        contentContainer.style.marginTop = "8px";
+
+        // Toggle collapse on header click
+        header.addEventListener("click", () => {
+            const wasCollapsed = collapsedCategories.has(cat.id);
+            if (wasCollapsed) {
+                collapsedCategories.delete(cat.id);
+            } else {
+                collapsedCategories.add(cat.id);
+            }
+            collapseToggle.classList.toggle("collapsed");
+            contentContainer.classList.toggle("collapsed");
+        });
 
         // Добавление шаблона
         const addTplRow = document.createElement("div");
         addTplRow.className = "row";
-        addTplRow.style.marginTop = "8px";
 
         const tplNameInput = document.createElement("input");
         tplNameInput.type = "text";
@@ -924,7 +1005,7 @@ function renderCategoriesModal() {
 
         addTplRow.appendChild(tplNameInput);
         addTplRow.appendChild(tplBtn);
-        card.appendChild(addTplRow);
+        contentContainer.appendChild(addTplRow);
 
         const tplDefaultsLabel = document.createElement("label");
         tplDefaultsLabel.className = "checkbox";
@@ -935,7 +1016,7 @@ function renderCategoriesModal() {
         tplDefaultsSpan.textContent = "Użyć domyślnych cen";
         tplDefaultsLabel.appendChild(tplDefaultsCheck);
         tplDefaultsLabel.appendChild(tplDefaultsSpan);
-        card.appendChild(tplDefaultsLabel);
+        contentContainer.appendChild(tplDefaultsLabel);
 
         const tplPricesRow = document.createElement("div");
         tplPricesRow.className = "row";
@@ -960,7 +1041,7 @@ function renderCategoriesModal() {
         tplPricesRow.appendChild(tplClientPriceInput);
         tplPricesRow.appendChild(tplMatPriceInput);
         tplPricesRow.appendChild(tplLabPriceInput);
-        card.appendChild(tplPricesRow);
+        contentContainer.appendChild(tplPricesRow);
 
         tplDefaultsCheck.onchange = () => {
             tplPricesRow.style.display = tplDefaultsCheck.checked ? "flex" : "none";
@@ -1036,8 +1117,10 @@ function renderCategoriesModal() {
                 li.appendChild(right);
                 ul.appendChild(li);
             });
-            card.appendChild(ul);
+            contentContainer.appendChild(ul);
         }
+
+        card.appendChild(contentContainer);
         DOM.categoriesListEl.appendChild(card);
     });
 }

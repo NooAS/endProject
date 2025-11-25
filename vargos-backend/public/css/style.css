@@ -1185,3 +1185,107 @@ textarea.input:focus {
         font-size: 14px;
     }
 }
+
+
+/* ========================================= */
+/*     COLLAPSIBLE CATEGORIES & ROOMS        */
+/* ========================================= */
+
+/* CSS variable for collapsible max-height (large enough to accommodate content) */
+:root {
+    --collapsible-max-height: 2000px;
+}
+
+.collapse-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    font-size: 12px;
+    color: #6b7280;
+    transition: transform 0.2s ease;
+    flex-shrink: 0;
+    margin-right: 8px;
+}
+
+.collapse-toggle.collapsed {
+    transform: rotate(-90deg);
+}
+
+/* Collapsible content */
+.collapsible-content {
+    overflow: hidden;
+    transition: max-height 0.3s ease, opacity 0.2s ease;
+    max-height: var(--collapsible-max-height);
+    opacity: 1;
+}
+
+.collapsible-content.collapsed {
+    max-height: 0;
+    opacity: 0;
+    padding: 0;
+}
+
+/* Category card collapsible styling */
+.category-card {
+    margin-bottom: 10px;
+}
+
+.category-card .category-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    padding: 8px 10px;
+    margin: -8px -10px 0;
+    border-radius: 8px;
+    transition: background 0.2s;
+}
+
+.category-card .category-header:hover {
+    background: #f3f4f6;
+}
+
+.category-card .category-header-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+}
+
+.category-card .category-title {
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.category-card .category-count {
+    font-size: 12px;
+    color: #6b7280;
+}
+
+/* Room collapsible styling */
+.room-card .room-collapse-header {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    padding: 4px 0;
+}
+
+.room-card .room-collapse-header:hover .collapse-toggle {
+    color: #2563eb;
+}
+
+.room-card .room-body {
+    overflow: hidden;
+    transition: max-height 0.3s ease, opacity 0.2s ease, padding 0.3s ease;
+    max-height: var(--collapsible-max-height);
+    opacity: 1;
+}
+
+.room-card .room-body.collapsed {
+    max-height: 0;
+    opacity: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+}
