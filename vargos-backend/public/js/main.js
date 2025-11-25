@@ -277,7 +277,8 @@ function renderRoom(room) {
 
     // Collapse toggle arrow
     const collapseToggle = document.createElement("span");
-    collapseToggle.className = "collapse-toggle" + (isCollapsed ? " collapsed" : "");
+    collapseToggle.className = "collapse-toggle";
+    if (isCollapsed) collapseToggle.classList.add("collapsed");
     collapseToggle.textContent = "▼";
 
     const title = document.createElement("div");
@@ -323,7 +324,8 @@ function renderRoom(room) {
 
     // Create collapsible room body
     const roomBody = document.createElement("div");
-    roomBody.className = "room-body" + (isCollapsed ? " collapsed" : "");
+    roomBody.className = "room-body";
+    if (isCollapsed) roomBody.classList.add("collapsed");
 
     // Toggle collapse on title box click
     titleBox.addEventListener("click", () => {
@@ -914,7 +916,8 @@ function renderCategoriesModal() {
 
         // Collapse toggle arrow
         const collapseToggle = document.createElement("span");
-        collapseToggle.className = "collapse-toggle" + (isCollapsed ? " collapsed" : "");
+        collapseToggle.className = "collapse-toggle";
+        if (isCollapsed) collapseToggle.classList.add("collapsed");
         collapseToggle.textContent = "▼";
 
         const titleText = document.createElement("span");
@@ -970,7 +973,8 @@ function renderCategoriesModal() {
 
         // Create collapsible content container
         const contentContainer = document.createElement("div");
-        contentContainer.className = "collapsible-content" + (isCollapsed ? " collapsed" : "");
+        contentContainer.className = "collapsible-content";
+        if (isCollapsed) contentContainer.classList.add("collapsed");
         contentContainer.style.marginTop = "8px";
 
         // Toggle collapse on header click

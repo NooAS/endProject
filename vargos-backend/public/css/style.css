@@ -1191,19 +1191,9 @@ textarea.input:focus {
 /*     COLLAPSIBLE CATEGORIES & ROOMS        */
 /* ========================================= */
 
-/* Collapsible header (for categories and rooms) */
-.collapsible-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    cursor: pointer;
-    user-select: none;
-    padding: 8px 0;
-}
-
-.collapsible-header:hover {
-    background: #f9fafb;
-    border-radius: 6px;
+/* CSS variable for collapsible max-height (large enough to accommodate content) */
+:root {
+    --collapsible-max-height: 2000px;
 }
 
 .collapse-toggle {
@@ -1227,7 +1217,7 @@ textarea.input:focus {
 .collapsible-content {
     overflow: hidden;
     transition: max-height 0.3s ease, opacity 0.2s ease;
-    max-height: 2000px;
+    max-height: var(--collapsible-max-height);
     opacity: 1;
 }
 
@@ -1289,7 +1279,7 @@ textarea.input:focus {
 .room-card .room-body {
     overflow: hidden;
     transition: max-height 0.3s ease, opacity 0.2s ease, padding 0.3s ease;
-    max-height: 2000px;
+    max-height: var(--collapsible-max-height);
     opacity: 1;
 }
 
