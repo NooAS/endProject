@@ -26,7 +26,7 @@
 
             <div class="project-name-box">
                 <span>Nazwa projektu:</span>
-                <input id="projectName" type="text" placeholder="Np. Mieszkanie Dębowa 5" />
+                <input id="projectName" type="text" placeholder="Np. Mieszkanie Dębowa 5" autocomplete="off" />
             </div>
 
             <div class="auth-buttons">
@@ -73,7 +73,7 @@
 
                 <div class="setting-group">
                     <div class="setting-label">Nazwa projektu:</div>
-                    <input id="projectNameInputLocal" class="input full-width" placeholder="Np. Kuchnia 12" />
+                    <input id="projectNameInputLocal" class="input full-width" placeholder="Np. Kuchnia 12" autocomplete="off" />
                 </div>
 
                 <div class="setting-group">
@@ -159,7 +159,7 @@
                 </div>
 
                 <div id="notesContainer" style="display: none; margin-top: 10px;">
-                    <textarea id="projectNotes" class="input full-width" rows="5" placeholder="Notatki do użytku wewnętrznego (niewidoczne dla klienta)"></textarea>
+                    <textarea id="projectNotes" class="input full-width" rows="5" placeholder="Notatki do użytku wewnętrznego (niewidoczne dla klienta)" autocomplete="off"></textarea>
                 </div>
             </div>
 
@@ -190,16 +190,16 @@
             </div>
 
             <div class="modal-body">
-                <input id="pdfProjectName" class="input full-width" placeholder="Nazwa projektu" />
-                <input id="pdfObjectAddress" class="input full-width" placeholder="Adres inwestycji" />
+                <input id="pdfProjectName" class="input full-width" placeholder="Nazwa projektu" autocomplete="off" />
+                <input id="pdfObjectAddress" class="input full-width" placeholder="Adres inwestycji" autocomplete="off" />
 
                 <div class="setting-label">Dane firmy wystawiającej:</div>
-                <input id="pdfCompanyName" class="input full-width" placeholder="Nazwa firmy" />
-                <input id="pdfCompanyPerson" class="input full-width" placeholder="Osoba kontaktowa" />
-                <input id="pdfCompanyPhone" class="input full-width" placeholder="Telefon" />
-                <input id="pdfCompanyEmail" class="input full-width" placeholder="E-mail" />
-                <input id="pdfCompanyNip" class="input full-width" placeholder="NIP" />
-                <input id="pdfCompanyAddress" class="input full-width" placeholder="Adres firmy" />
+                <input id="pdfCompanyName" class="input full-width" placeholder="Nazwa firmy" autocomplete="organization" />
+                <input id="pdfCompanyPerson" class="input full-width" placeholder="Osoba kontaktowa" autocomplete="name" />
+                <input id="pdfCompanyPhone" class="input full-width" placeholder="Telefon" autocomplete="tel" />
+                <input id="pdfCompanyEmail" class="input full-width" placeholder="E-mail" autocomplete="email" />
+                <input id="pdfCompanyNip" class="input full-width" placeholder="NIP" autocomplete="off" />
+                <input id="pdfCompanyAddress" class="input full-width" placeholder="Adres firmy" autocomplete="street-address" />
 
                 <label class="checkbox">
                 <input id="pdfSaveCompanyDefaults" type="checkbox"> Zapisz dane jako domyślne
@@ -244,8 +244,8 @@
             </div>
 
             <div class="modal-body">
-                <input id="newEmailInput" class="input full-width" type="email" placeholder="Nowy email" style="margin-bottom: 10px;" />
-                <input id="emailPasswordInput" class="input full-width" type="password" placeholder="Aktualne hasło" style="margin-bottom: 10px;" />
+                <input id="newEmailInput" class="input full-width" type="email" placeholder="Nowy email" style="margin-bottom: 10px;" autocomplete="email" />
+                <input id="emailPasswordInput" class="input full-width" type="password" placeholder="Aktualne hasło" style="margin-bottom: 10px;" autocomplete="current-password" />
                 <button id="submitChangeEmail" class="btn full-width">Zmień login</button>
             </div>
         </div>
@@ -263,9 +263,9 @@
             </div>
 
             <div class="modal-body">
-                <input id="oldPasswordInput" class="input full-width" type="password" placeholder="Stare hasło" style="margin-bottom: 10px;" />
-                <input id="newPasswordInput" class="input full-width" type="password" placeholder="Nowe hasło" style="margin-bottom: 10px;" />
-                <input id="confirmPasswordInput" class="input full-width" type="password" placeholder="Potwierdź nowe hasło" style="margin-bottom: 10px;" />
+                <input id="oldPasswordInput" class="input full-width" type="password" placeholder="Stare hasło" style="margin-bottom: 10px;" autocomplete="current-password" />
+                <input id="newPasswordInput" class="input full-width" type="password" placeholder="Nowe hasło" style="margin-bottom: 10px;" autocomplete="new-password" />
+                <input id="confirmPasswordInput" class="input full-width" type="password" placeholder="Potwierdź nowe hasło" style="margin-bottom: 10px;" autocomplete="new-password" />
                 <button id="submitChangePassword" class="btn full-width">Zmień hasło</button>
             </div>
         </div>
