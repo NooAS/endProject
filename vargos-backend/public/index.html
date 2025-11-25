@@ -18,7 +18,8 @@
 </head>
 
 <body>
-
+    <input type="text" name="fake-username" id="fakeUsername" style="position:absolute; left:-9999px; top:-9999px;" autocomplete="username">
+    <input type="password" name="fake-password" id="fakePassword" style="position:absolute; left:-9999px; top:-9999px;" autocomplete="current-password">
     <header class="app-header">
         <div class="container header-inner">
 
@@ -126,8 +127,7 @@
                 <div class="panel-title">Pozycje</div>
 
                 <div id="roomControls" class="row">
-                    <input id="newRoomName" class="input" placeholder="Nazwa pokoju (opcjonalnie)" autocomplete="off" />
-                    <button id="addRoomBtn" class="btn">Dodaj pokój</button>
+                    <input id="newRoomName" name="position_name" class="input" placeholder="Nazwa pokoju (opcjonalnie)" autocomplete="nope" /> <button id="addRoomBtn" class="btn">Dodaj pokój</button>
                 </div>
 
                 <div id="globalWorkControls" class="row" style="display:none;">
