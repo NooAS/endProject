@@ -140,3 +140,44 @@ export const changePassword = async(req, res) => {
         res.status(500).json({ error: "Ошибка сервера" });
     }
 };
+
+export const getDefaultCompanyData = async(req, res) => {
+    try {
+        const userId = req.user.userId;
+
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { defaultCompanyData: true }
+        });
+
+        if (!user) {
+            return res.status(404).json({ error: "Пользователь не найден" });
+        }
+
+        res.json({ defaultCompanyData: user.defaultCompanyData || null });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Ошибка сервера" });
+    }
+};
+
+export const saveDefaultCompanyData = async(req, res) => {
+    try {
+        const userId = req.user.userId;
+        const { companyData } = req.body;
+
+        if (!companyData || typeof companyData !== "object") {
+            return res.status(400).json({ error: "Неверные данные компании" });
+        }
+
+        await prisma.user.update({
+            where: { id: userId },
+            data: { defaultCompanyData: companyData }
+        });
+
+        res.json({ message: "Данные компании сохранены" });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Ошибка сервера" });
+    }
+};

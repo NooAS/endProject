@@ -2,7 +2,7 @@
 
 import { Config } from "./config.js";
 import { Project, Room, Work } from "./project-models.js";
-import { formatCurrency, formatNumberPL, loadCompanyDataFromStorage, saveCompanyDataToStorage } from "./helpers.js";
+import { formatCurrency, formatNumberPL, loadCompanyDataFromStorage, saveCompanyDataToStorage, loadCompanyDataFromServer } from "./helpers.js";
 import { saveCategoriesToStorage } from "./categories-storage.js";
 import { loadPdfSettingsFromStorage, savePdfSettingsToStorage } from "./pdf-settings-storage.js";
 import { openModal, closeModal, showInputModal, showEditTemplateModal, showDeleteConfirmModal } from "./modals.js";
@@ -143,8 +143,52 @@ async function loadCategoriesFromServerF() {
 }
 
 // --- PDF ---
-if (DOM.pdfClientBtn) DOM.pdfClientBtn.addEventListener("click", () => openModal(DOM.pdfDataModal));
-if (DOM.pdfOwnerBtn) DOM.pdfOwnerBtn.addEventListener("click", () => openModal(DOM.pdfDataModal));
+// Function to load company data into the PDF modal fields
+async function loadCompanyDataIntoModal() {
+    // Try to load from server first (user-specific data)
+    let companyData = await loadCompanyDataFromServer();
+    
+    // If not available from server, fall back to localStorage
+    if (!companyData) {
+        companyData = loadCompanyDataFromStorage();
+    }
+    
+    if (companyData) {
+        const pdfCompanyNameInput = document.getElementById("pdfCompanyName");
+        const pdfCompanyPersonInput = document.getElementById("pdfCompanyPerson");
+        const pdfCompanyPhoneInput = document.getElementById("pdfCompanyPhone");
+        const pdfCompanyEmailInput = document.getElementById("pdfCompanyEmail");
+        const pdfCompanyNipInput = document.getElementById("pdfCompanyNip");
+        const pdfCompanyAddressInput = document.getElementById("pdfCompanyAddress");
+        
+        if (pdfCompanyNameInput) pdfCompanyNameInput.value = companyData.companyName || "";
+        if (pdfCompanyPersonInput) pdfCompanyPersonInput.value = companyData.companyPerson || "";
+        if (pdfCompanyPhoneInput) pdfCompanyPhoneInput.value = companyData.phone || "";
+        if (pdfCompanyEmailInput) pdfCompanyEmailInput.value = companyData.email || "";
+        if (pdfCompanyNipInput) pdfCompanyNipInput.value = companyData.nip || "";
+        if (pdfCompanyAddressInput) pdfCompanyAddressInput.value = companyData.address || "";
+    }
+    
+    // Also load project name and address if available
+    const pdfProjectNameInput = document.getElementById("pdfProjectName");
+    const pdfObjectAddressInput = document.getElementById("pdfObjectAddress");
+    
+    if (pdfProjectNameInput && project.name) {
+        pdfProjectNameInput.value = project.name;
+    }
+    if (pdfObjectAddressInput && project.pdfObjectAddress) {
+        pdfObjectAddressInput.value = project.pdfObjectAddress;
+    }
+}
+
+if (DOM.pdfClientBtn) DOM.pdfClientBtn.addEventListener("click", async () => {
+    await loadCompanyDataIntoModal();
+    openModal(DOM.pdfDataModal);
+});
+if (DOM.pdfOwnerBtn) DOM.pdfOwnerBtn.addEventListener("click", async () => {
+    await loadCompanyDataIntoModal();
+    openModal(DOM.pdfDataModal);
+});
 if (DOM.generateClientPdfBtn) {
     DOM.generateClientPdfBtn.addEventListener("click", async() => {
         try {
