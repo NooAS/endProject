@@ -16,11 +16,13 @@ body {
 
 body {
     font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    background: #f4f6f9;
+    background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+    background-attachment: fixed;
     color: #1f2933;
     /* Better text rendering */
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    line-height: 1.5;
 }
 
 /* Improve touch interactions */
@@ -29,68 +31,88 @@ button, a, input, select, textarea {
 }
 
 /* Better touch targets for small elements */
-button, a, .clickable {
-    min-height: 44px;
-    min-width: 44px;
+button, .clickable {
+    min-height: 48px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
 }
 
 
 /* Containers */
 
 .container {
-    max-width: 90%;
+    max-width: 1400px;
+    width: 100%;
     margin: 0 auto;
-    padding: 0 20px;
+    padding: 0 24px;
 }
 
 .auth-buttons {
     margin-left: auto;
-    /* ← толкает кнопки вправо */
     display: flex;
     align-items: center;
     gap: 12px;
 }
 
 .auth-btn {
-    padding: 10px 18px;
-    background-color: #2563eb;
+    padding: 10px 20px;
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
     color: white;
-    border-radius: 8px;
+    border-radius: 10px;
     text-decoration: none;
-    font-weight: 500;
-    transition: 0.2s;
+    font-weight: 600;
+    transition: all 0.25s ease;
     white-space: nowrap;
-    /* чтобы текст не переносился */
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+    font-size: 14px;
+}
+
+.auth-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
 }
 
 .logout-btn {
-    background: #dc2626;
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
 }
 
 .logout-btn:hover {
-    background: #b91c1c;
+    background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);
 }
 
 .app-header {
-    background: #ffffff;
-    border-bottom: 1px solid #d7dde5;
-    margin-bottom: 20px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(215, 221, 229, 0.8);
+    margin-bottom: 24px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
 }
 
 .header-inner {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 14px 0;
-    gap: 16px;
+    padding: 16px 0;
+    gap: 20px;
 }
 
 .header-inner h1 {
-    font-size: 24px;
+    font-size: 22px;
     font-weight: 700;
+    color: #1e3a5f;
+    background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
 .project-name-box {
@@ -115,12 +137,12 @@ button, a, .clickable {
 .profile-menu {
     position: absolute;
     top: 70px;
-    right: 20px;
+    right: 24px;
     background: #ffffff;
-    width: 260px;
-    border-radius: 12px;
-    box-shadow: 0px 6px 20px rgba(0, 0, 0, 0.15);
-    padding: 10px 0;
+    width: 280px;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.04);
+    padding: 12px 0;
     z-index: 2000;
 }
 
@@ -129,7 +151,7 @@ button, a, .clickable {
 }
 
 .menu-section {
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid #f0f0f5;
     padding: 8px 0;
 }
 
@@ -138,36 +160,47 @@ button, a, .clickable {
 }
 
 .menu-title {
-    font-size: 12px;
-    color: #666;
-    margin-bottom: 6px;
+    font-size: 11px;
+    color: #6b7280;
+    margin-bottom: 4px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
 .menu-item {
     width: 100%;
-    padding: 8px;
+    padding: 10px 12px;
     text-align: left;
     border: none;
     background: none;
     cursor: pointer;
     font-size: 14px;
-    border-radius: 5px;
+    border-radius: 8px;
+    transition: all 0.15s ease;
+    color: #374151;
 }
 
 .menu-item:hover {
-    background: #f0f0f5;
+    background: #f3f4f6;
+    color: #1f2937;
 }
 
 .menu-item.logout {
-    color: #d9534f;
+    color: #dc2626;
+    font-weight: 500;
+}
+
+.menu-item.logout:hover {
+    background: #fef2f2;
 }
 
 
 /* Выпадающее меню профиля */
 
 .profile-menu .menu-section {
-    padding: 8px 0;
-    border-bottom: 1px solid #eee;
+    padding: 6px 12px;
+    border-bottom: 1px solid #f0f0f5;
 }
 
 .profile-menu .menu-section:last-child {
@@ -175,32 +208,39 @@ button, a, .clickable {
 }
 
 .profile-menu .menu-title {
-    font-size: 13px;
-    font-weight: bold;
-    color: #555;
-    padding: 6px 18px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #6b7280;
+    padding: 8px 8px 4px;
     text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
 .profile-menu .menu-item {
     width: 100%;
     text-align: left;
-    padding: 10px 18px;
-    font-size: 15px;
-    color: #222;
+    padding: 10px 12px;
+    font-size: 14px;
+    color: #374151;
     background: none;
     border: none;
     outline: none;
     cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.15s ease;
 }
 
 .profile-menu .menu-item:hover {
-    background: #f1f1f1;
+    background: #f3f4f6;
 }
 
 .profile-menu .logout {
-    color: #c62828;
-    font-weight: bold;
+    color: #dc2626;
+    font-weight: 500;
+}
+
+.profile-menu .logout:hover {
+    background: #fef2f2;
 }
 
 
@@ -226,19 +266,26 @@ button, a, .clickable {
 
 .panel {
     background: #ffffff;
-    border-radius: 12px;
-    border: 1px solid #d7dde5;
-    box-shadow: 0 3px 8px rgba(15, 23, 42, 0.04);
-    padding: 18px 20px;
+    border-radius: 16px;
+    border: 1px solid rgba(215, 221, 229, 0.6);
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06), 0 1px 3px rgba(15, 23, 42, 0.04);
+    padding: 20px 24px;
     margin-bottom: 20px;
+    transition: box-shadow 0.2s ease;
+}
+
+.panel:hover {
+    box-shadow: 0 6px 20px rgba(15, 23, 42, 0.08), 0 2px 6px rgba(15, 23, 42, 0.04);
 }
 
 .panel-title {
-    font-size: 17px;
+    font-size: 16px;
     font-weight: 600;
-    margin-bottom: 12px;
-    border-bottom: 1px solid #e1e5ee;
-    padding-bottom: 8px;
+    margin-bottom: 16px;
+    border-bottom: 2px solid #e1e5ee;
+    padding-bottom: 10px;
+    color: #374151;
+    letter-spacing: -0.01em;
 }
 
 
@@ -247,16 +294,18 @@ button, a, .clickable {
 .row {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     flex-wrap: wrap;
 }
 
 .input {
-    border-radius: 8px;
-    border: 1px solid #cbd2e1;
-    padding: 8px 10px;
-    font-size: 14px;
+    border-radius: 10px;
+    border: 1.5px solid #dde2eb;
+    padding: 10px 14px;
+    font-size: 15px;
     min-width: 0;
+    transition: all 0.2s ease;
+    background: #fafbfc;
 }
 
 .input-small {
@@ -266,7 +315,8 @@ button, a, .clickable {
 .input:focus {
     outline: none;
     border-color: #2563eb;
-    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.25);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    background: #ffffff;
 }
 
 textarea.input {
@@ -278,37 +328,43 @@ textarea.input {
 textarea.input:focus {
     outline: none;
     border-color: #2563eb;
-    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.25);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
 
 
 /* Buttons */
 
 .btn {
-    border-radius: 8px;
+    border-radius: 10px;
     border: none;
-    padding: 8px 14px;
+    padding: 10px 18px;
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
-    background: #2563eb;
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
     color: #ffffff;
-    transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+    transition: all 0.25s ease;
+    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
 }
 
 .btn:hover {
-    background: #1d4ed8;
-    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.35);
     transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+}
+
+.btn:active {
+    transform: translateY(0);
 }
 
 .btn.secondary {
-    background: #e5e7f0;
-    color: #111827;
+    background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+    color: #374151;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
 }
 
 .btn.secondary:hover {
-    background: #d1d5e5;
+    background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .full-width {
@@ -318,18 +374,35 @@ textarea.input:focus {
 
 /* Settings */
 
+.setting-group {
+    margin-bottom: 16px;
+}
+
+.setting-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #4b5563;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
 .checkbox,
 .radio {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     font-size: 14px;
-    margin-bottom: 4px;
+    margin-bottom: 8px;
+    padding: 6px 0;
 }
 
 .checkbox input,
 .radio input {
     cursor: pointer;
+    width: 18px;
+    height: 18px;
+    accent-color: #2563eb;
 }
 
 
@@ -338,31 +411,41 @@ textarea.input:focus {
 .rooms-container {
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 16px;
 }
 
 .room-card {
-    border-radius: 10px;
+    border-radius: 12px;
     border: 1px solid #e1e5ee;
-    background: #ffffff;
-    padding: 12px;
+    background: linear-gradient(180deg, #ffffff 0%, #fafbfc 100%);
+    padding: 16px;
+    transition: all 0.2s ease;
+}
+
+.room-card:hover {
+    border-color: #c7d2e0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .room-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 12px;
+    margin-bottom: 14px;
 }
 
 .room-title {
     font-weight: 600;
     font-size: 15px;
+    color: #1f2937;
 }
 
 .room-meta {
     font-size: 12px;
     color: #6b7280;
+    background: #f3f4f6;
+    padding: 4px 10px;
+    border-radius: 20px;
 }
 
 
@@ -390,12 +473,20 @@ textarea.input:focus {
 /* Summary */
 
 .summary-box {
-    margin-top: 16px;
-    padding-top: 10px;
-    border-top: 1px solid #e1e5ee;
+    margin-top: 20px;
+    padding: 16px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    border: 1px solid #bae6fd;
     font-size: 15px;
     display: flex;
-    gap: 20px;
+    gap: 24px;
+    flex-wrap: wrap;
+}
+
+.summary-box p {
+    font-weight: 500;
+    color: #0c4a6e;
 }
 
 
@@ -404,14 +495,16 @@ textarea.input:focus {
 .modal-backdrop {
     position: fixed;
     inset: 0;
-    background: rgba(15, 23, 42, 0.45);
-    /* ciemne tło */
+    background: rgba(15, 23, 42, 0.5);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
     display: none;
     align-items: center;
     justify-content: center;
     z-index: 2000;
     opacity: 0;
-    transition: opacity .25s ease;
+    transition: opacity .3s ease;
+    padding: 20px;
 }
 
 .modal-backdrop.active {
@@ -421,20 +514,20 @@ textarea.input:focus {
 
 .modal {
     background: #ffffff;
-    border-radius: 12px;
-    padding: 20px 24px;
-    width: 95%;
+    border-radius: 20px;
+    padding: 24px 28px;
+    width: 100%;
     max-width: 720px;
     max-height: 90vh;
     overflow-y: auto;
-    box-shadow: 0 20px 45px rgba(0, 0, 0, .15), 0 0 0 1px rgba(0, 0, 0, .05);
-    transform: translateY(20px);
+    box-shadow: 0 25px 50px rgba(0, 0, 0, .2), 0 0 0 1px rgba(0, 0, 0, .05);
+    transform: translateY(20px) scale(0.98);
     opacity: 0;
-    transition: all .25s ease;
+    transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .modal-backdrop.active .modal {
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
     opacity: 1;
 }
 
@@ -442,29 +535,35 @@ textarea.input:focus {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 12px;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #e5e7eb;
 }
 
 .modal-header h2 {
     font-size: 18px;
     font-weight: 600;
+    color: #1f2937;
 }
 
 .modal-close {
     cursor: pointer;
-    font-size: 22px;
+    font-size: 24px;
     user-select: none;
-    padding: 4px;
+    padding: 8px;
     line-height: 1;
+    border-radius: 10px;
+    transition: all 0.2s ease;
+    color: #6b7280;
 }
 
 .modal-close:hover {
     color: #2563eb;
+    background: #f3f4f6;
 }
 
 .modal-open {
     overflow: hidden;
-    /* blokada scrolla */
 }
 
 
@@ -646,38 +745,38 @@ textarea.input:focus {
 
 @media (max-width: 992px) {
     .header-inner {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px;
+    }
+    .header-inner h1 {
+        font-size: 20px;
     }
     .app-main {
-        gap: 16px;
+        gap: 20px;
     }
     .sidebar {
-        width: 280px;
+        width: 320px;
     }
     .panel {
-        padding: 16px;
+        padding: 18px 20px;
     }
     .works-table {
         font-size: 12px;
     }
     /* Auth buttons responsive */
     .auth-buttons {
-        width: 100%;
-        justify-content: center;
+        margin-left: auto;
     }
     .auth-btn {
-        padding: 8px 16px;
+        padding: 10px 18px;
         font-size: 14px;
     }
     /* Profile menu adjustments */
     .profile-menu {
-        right: 10px;
-        left: 10px;
-        width: auto;
-        max-width: 400px;
-        margin: 0 auto;
+        right: 24px;
+        width: 280px;
     }
 }
 
@@ -685,22 +784,43 @@ textarea.input:focus {
 /* === Телефоны (до 768px) === */
 
 @media (max-width: 768px) {
+    body {
+        background: #f5f7fa;
+    }
     .container {
         max-width: 100%;
-        padding: 0 14px;
+        padding: 0 16px;
+    }
+    .app-header {
+        margin-bottom: 16px;
     }
     .header-inner {
         flex-direction: column;
-        gap: 8px;
+        gap: 12px;
         text-align: center;
         width: 100%;
+        padding: 14px 0;
     }
     .header-inner h1 {
         font-size: 20px;
+        order: 1;
+    }
+    .auth-buttons {
+        order: 2;
+        margin-left: 0;
+        width: 100%;
+        justify-content: center;
+    }
+    .auth-btn {
+        flex: 1;
+        max-width: 200px;
+        padding: 12px 16px;
+        font-size: 14px;
     }
     .project-name-box {
         flex-direction: column;
         width: 100%;
+        order: 3;
     }
     .project-name-box input {
         width: 100%;
@@ -708,40 +828,56 @@ textarea.input:focus {
     /* === Главный layout → одна колонка === */
     .app-main {
         flex-direction: column;
+        gap: 16px;
     }
     .sidebar {
         width: 100%;
+        order: 2;
     }
     .main-panel {
         width: 100%;
+        order: 1;
     }
     /* Panels */
     .panel {
-        padding: 16px;
+        padding: 18px 16px;
+        border-radius: 14px;
+        margin-bottom: 16px;
+    }
+    .panel-title {
+        font-size: 15px;
+        margin-bottom: 14px;
     }
     /* Inputs */
     .input {
         width: 100%;
         font-size: 16px; /* Prevent zoom on iOS */
+        padding: 12px 14px;
+    }
+    select.input {
+        font-size: 16px;
+        padding: 12px 14px;
     }
     /* Buttons - larger touch targets */
     .btn {
         width: 100%;
-        padding: 12px 14px;
-        font-size: 16px;
-        min-height: 44px; /* iOS recommended touch target */
+        padding: 14px 16px;
+        font-size: 15px;
+        min-height: 48px;
+        border-radius: 12px;
     }
     /* Summary */
     .summary-box {
         flex-direction: column;
-        gap: 6px;
+        gap: 8px;
+        padding: 14px;
     }
     /* Таблица прокручиваемая */
     .works-table-wrapper {
         overflow-x: auto;
         display: block;
         width: 100%;
-        -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+        -webkit-overflow-scrolling: touch;
     }
     .works-table {
         min-width: 800px;
@@ -751,6 +887,7 @@ textarea.input:focus {
     .row {
         flex-direction: column;
         width: 100%;
+        gap: 12px;
     }
     .row .input {
         width: 100%;
@@ -759,36 +896,42 @@ textarea.input:focus {
         width: 100%;
     }
     /* Modal improvements for mobile */
+    .modal-backdrop {
+        padding: 0;
+        align-items: flex-end;
+    }
     .modal {
         width: 100%;
         max-width: 100%;
         margin: 0;
-        border-radius: 12px 12px 0 0;
-        max-height: 95vh;
-    }
-    .modal-backdrop {
-        align-items: flex-end;
+        border-radius: 20px 20px 0 0;
+        max-height: 92vh;
+        padding: 20px 20px 30px;
     }
     /* Category modal improvements */
     .setting-group {
-        flex-direction: column;
+        margin-bottom: 14px;
     }
     .checkbox, .radio {
-        padding: 8px 0;
-        min-height: 44px;
+        padding: 10px 0;
+        min-height: 48px;
         align-items: center;
     }
     /* Profile menu full width on mobile */
     .profile-menu {
-        left: 10px;
-        right: 10px;
+        left: 16px;
+        right: 16px;
         width: auto;
-        top: 60px;
+        top: 70px;
+        border-radius: 16px;
     }
     .menu-item {
-        padding: 12px 18px;
-        font-size: 16px;
-        min-height: 44px;
+        padding: 14px 20px;
+        font-size: 15px;
+        min-height: 48px;
+    }
+    .menu-title {
+        padding: 10px 20px 6px;
     }
 }
 
@@ -796,18 +939,29 @@ textarea.input:focus {
 /* === Маленькие телефоны (до 480px) === */
 
 @media (max-width: 480px) {
+    .container {
+        padding: 0 14px;
+    }
     .header-inner h1 {
         font-size: 18px;
     }
+    .auth-btn {
+        padding: 10px 14px;
+        font-size: 13px;
+    }
+    .panel {
+        padding: 16px 14px;
+        border-radius: 12px;
+    }
     .panel-title {
-        font-size: 16px;
+        font-size: 14px;
     }
     .input-small {
         width: 100%;
     }
     .btn {
-        padding: 14px 16px;
-        font-size: 16px;
+        padding: 14px 14px;
+        font-size: 15px;
     }
     /* Уменьшаем табличные колонки */
     .works-table th,
@@ -815,17 +969,21 @@ textarea.input:focus {
         padding: 4px 6px;
     }
     .modal {
-        padding: 14px 18px;
+        padding: 16px 16px 28px;
         max-width: 100%;
+        border-radius: 16px 16px 0 0;
+    }
+    .modal-header {
+        margin-bottom: 14px;
     }
     .modal-header h2 {
         font-size: 16px;
     }
     .modal-close {
-        font-size: 24px;
-        padding: 8px;
-        min-width: 40px;
-        min-height: 40px;
+        font-size: 22px;
+        padding: 6px;
+        min-width: 36px;
+        min-height: 36px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -838,6 +996,10 @@ textarea.input:focus {
     }
     .room-actions .btn {
         width: 100%;
+    }
+    .summary-box {
+        font-size: 14px;
+        padding: 12px;
     }
 }
 
@@ -855,33 +1017,35 @@ textarea.input:focus {
     /* Контейнер карточки */
     .work-accordion {
         background: #ffffff;
-        border-radius: 12px;
-        margin-bottom: 16px;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+        border-radius: 14px;
+        margin-bottom: 14px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
         width: 100%;
         border: 1px solid #e5e7eb;
     }
     /* Шапка карточки (закрытое состояние) */
     .work-acc-header {
         padding: 16px 18px;
-        font-size: 16px;
+        font-size: 15px;
         display: flex;
         justify-content: space-between;
         align-items: center;
         cursor: pointer;
         font-weight: 600;
-        min-height: 50px;
+        min-height: 54px;
         user-select: none;
         -webkit-tap-highlight-color: rgba(0, 0, 0, 0.05);
+        color: #1f2937;
     }
     .work-acc-header:active {
         background: #f9fafb;
     }
     .work-acc-arrow {
         transition: transform 0.25s ease;
-        font-size: 18px;
-        min-width: 30px;
+        font-size: 16px;
+        min-width: 32px;
         text-align: center;
+        color: #6b7280;
     }
     /* Поворачиваем стрелку вниз */
     .work-acc-header.open .work-acc-arrow {
@@ -900,16 +1064,16 @@ textarea.input:focus {
     .work-acc-body .input,
     .work-acc-body select {
         width: 100%;
-        margin-bottom: 12px;
+        margin-bottom: 14px;
         font-size: 16px;
-        min-height: 44px;
-        padding: 10px 12px;
+        min-height: 48px;
+        padding: 12px 14px;
     }
     /* Кнопка удаления */
     .work-acc-body .btn.secondary {
         width: 100%;
-        margin-top: 10px;
-        min-height: 44px;
+        margin-top: 12px;
+        min-height: 48px;
     }
     /* Убираем горизонтальный скролл НАВСЕГДА */
     html,
@@ -969,7 +1133,7 @@ textarea.input:focus {
 .auth-wrapper {
     width: 100%;
     min-height: 100vh;
-    background: #f4f6f9;
+    background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -978,19 +1142,19 @@ textarea.input:focus {
 
 .auth-box {
     width: 100%;
-    max-width: 420px;
+    max-width: 400px;
     background: #ffffff;
-    border-radius: 18px;
-    padding: 40px 34px;
-    box-shadow: 0 12px 34px rgba(0, 0, 0, 0.12);
-    border: 1px solid #e5e7ef;
-    animation: fadeUp .45s ease;
+    border-radius: 24px;
+    padding: 40px 36px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.03);
+    border: none;
+    animation: fadeUp .5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 @keyframes fadeUp {
     from {
         opacity: 0;
-        transform: translateY(12px);
+        transform: translateY(20px);
     }
     to {
         opacity: 1;
@@ -1002,23 +1166,28 @@ textarea.input:focus {
 /* Logo & Greeting */
 
 .auth-logo {
-    width: 70px;
-    margin: 0 auto 14px;
+    width: 64px;
+    margin: 0 auto 18px;
     display: block;
 }
 
 .auth-title {
     text-align: center;
-    font-size: 26px;
+    font-size: 28px;
     font-weight: 700;
-    margin-bottom: 4px;
+    margin-bottom: 6px;
+    color: #1e3a5f;
+    background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
 .auth-subtitle {
     text-align: center;
     font-size: 14px;
     color: #6b7280;
-    margin-bottom: 24px;
+    margin-bottom: 28px;
 }
 
 
@@ -1026,26 +1195,35 @@ textarea.input:focus {
 
 .auth-tabs {
     display: flex;
-    justify-content: space-around;
-    margin-bottom: 24px;
+    justify-content: center;
+    margin-bottom: 28px;
+    gap: 8px;
+    background: #f3f4f6;
+    padding: 6px;
+    border-radius: 12px;
 }
 
 .auth-tab {
-    padding: 12px 20px;
+    padding: 12px 24px;
     cursor: pointer;
     font-weight: 600;
-    color: #55607a;
-    border-bottom: 2px solid transparent;
-    transition: .25s;
+    color: #6b7280;
+    border-radius: 10px;
+    transition: all 0.25s ease;
+    flex: 1;
+    text-align: center;
+    font-size: 14px;
 }
 
 .auth-tab.active {
-    color: #2563eb;
-    border-color: #2563eb;
+    color: #ffffff;
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
 }
 
-.auth-tab:hover {
-    color: #1d4ed8;
+.auth-tab:not(.active):hover {
+    color: #374151;
+    background: #e5e7eb;
 }
 
 
@@ -1071,23 +1249,24 @@ textarea.input:focus {
 
 .auth-input-wrapper {
     position: relative;
-    margin-bottom: 16px;
+    margin-bottom: 18px;
 }
 
 .auth-box input {
     width: 100%;
-    padding: 12px 42px 12px 14px;
-    border-radius: 10px;
-    border: 1px solid #cbd2e1;
-    background: #ffffff;
+    padding: 14px 44px 14px 16px;
+    border-radius: 12px;
+    border: 1.5px solid #e5e7eb;
+    background: #fafbfc;
     font-size: 15px;
-    transition: .2s;
+    transition: all 0.25s ease;
 }
 
 .auth-box input:focus {
     outline: none;
     border-color: #2563eb;
-    box-shadow: 0 0 0 2px rgba(37, 99, 235, .25);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    background: #ffffff;
 }
 
 
@@ -1095,12 +1274,14 @@ textarea.input:focus {
 
 .show-pass {
     position: absolute;
-    right: 12px;
+    right: 14px;
     top: 50%;
     font-size: 18px;
     cursor: pointer;
     transform: translateY(-50%);
-    color: #6b7280;
+    color: #9ca3af;
+    padding: 4px;
+    transition: color 0.2s ease;
 }
 
 .show-pass:hover {
@@ -1112,20 +1293,26 @@ textarea.input:focus {
 
 .auth-btn-main {
     width: 100%;
-    padding: 12px;
-    font-size: 17px;
+    padding: 14px;
+    font-size: 16px;
     font-weight: 600;
     border-radius: 12px;
     border: none;
     cursor: pointer;
-    background: #2563eb;
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
     color: #fff;
-    transition: .25s;
+    transition: all 0.25s ease;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+    margin-top: 8px;
 }
 
 .auth-btn-main:hover {
-    background: #1d4ed8;
-    box-shadow: 0 4px 12px rgba(37, 99, 235, .35);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.35);
+}
+
+.auth-btn-main:active {
+    transform: translateY(0);
 }
 
 
@@ -1133,8 +1320,9 @@ textarea.input:focus {
 
 .auth-msg {
     text-align: center;
-    margin-top: 12px;
+    margin-top: 14px;
     min-height: 20px;
+    font-size: 14px;
 }
 
 .auth-msg.error {
@@ -1152,37 +1340,50 @@ textarea.input:focus {
 @media (max-width: 768px) {
     .auth-wrapper {
         padding: 16px;
+        align-items: flex-start;
+        padding-top: 10vh;
     }
     .auth-box {
-        padding: 30px 24px;
+        padding: 32px 24px;
+        border-radius: 20px;
     }
     .auth-box input {
         font-size: 16px;
-        padding: 12px 42px 12px 14px;
+        padding: 14px 44px 14px 14px;
     }
     .auth-btn-main {
         font-size: 16px;
-        padding: 14px;
+        padding: 16px;
+        min-height: 52px;
     }
     .auth-tab {
         padding: 10px 16px;
-        font-size: 15px;
+        font-size: 14px;
+    }
+    .auth-tabs {
+        gap: 6px;
+        padding: 5px;
     }
 }
 
 @media (max-width: 480px) {
+    .auth-wrapper {
+        padding: 12px;
+        padding-top: 8vh;
+    }
     .auth-box {
-        padding: 24px 20px;
+        padding: 28px 20px;
+        border-radius: 18px;
     }
     .auth-title {
-        font-size: 22px;
+        font-size: 24px;
     }
     .auth-subtitle {
         font-size: 13px;
     }
     .auth-tab {
-        padding: 8px 12px;
-        font-size: 14px;
+        padding: 10px 12px;
+        font-size: 13px;
     }
 }
 
