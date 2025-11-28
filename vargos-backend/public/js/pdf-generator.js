@@ -3,7 +3,7 @@
 // Зависимости: window.jspdf (jsPDF + autotable), collectPdfData, formatCurrency, formatNumberPL
 import { formatCurrency, formatNumberPL } from "./helpers.js";
 import { collectPdfData } from "./pdf-data.js";
-import { registerInterFont } from "./inter-font.js";
+import { registerRobotoFont } from "./roboto-font.js";
 
 /**
  * Вспомогательная: получить отображаемое имя работы.
@@ -35,9 +35,9 @@ export async function generateClientPdf(project, config) {
         floatPrecision: 16
     });
 
-    // Register and set Inter font for Polish character support
-    registerInterFont(pdf);
-    pdf.setFont("Inter", "normal");
+    // Register and set Roboto font for Polish character support
+    registerRobotoFont(pdf);
+    pdf.setFont("Roboto", "normal");
     pdf.setFontSize(16);
 
     const { projectName, objectAddress, companyData, priceMode, priceDisplay } = pdfData || {};
@@ -158,7 +158,7 @@ export async function generateClientPdf(project, config) {
         body: tableBody,
         theme: "grid",
         styles: {
-            font: "Inter",
+            font: "Roboto",
             fontSize: 10,
             halign: "center",
             valign: "middle"
@@ -217,9 +217,9 @@ export async function generateOwnerPdf(project, config) {
         floatPrecision: 16
     });
 
-    // Register and set Inter font for Polish character support
-    registerInterFont(pdf);
-    pdf.setFont("Inter", "normal");
+    // Register and set Roboto font for Polish character support
+    registerRobotoFont(pdf);
+    pdf.setFont("Roboto", "normal");
     pdf.setFontSize(16);
 
     const { projectName, objectAddress, companyData } = pdfData || {};
@@ -314,7 +314,7 @@ export async function generateOwnerPdf(project, config) {
         body: tableBody,
         theme: "grid",
         styles: {
-            font: "Inter",
+            font: "Roboto",
             fontSize: 9,
             halign: "center",
             valign: "middle"
@@ -358,7 +358,7 @@ export async function generateOwnerPdf(project, config) {
         const pageWidth = pdf.internal.pageSize.getWidth();
         const notesY = fy + 40;
         pdf.setFontSize(11);
-        pdf.setFont("Inter", "normal");
+        pdf.setFont("Roboto", "normal");
         pdf.text("Notatki:", margin, notesY);
         pdf.setFontSize(9);
         const notesLines = pdf.splitTextToSize(project.notes, pageWidth - margin * 2);
