@@ -366,16 +366,17 @@ function calculateDailyEarnings(total, startedAt, finishedAt = null) {
     // Ensure total is a proper number (handle string input with comma as decimal separator)
     let numericTotal = total;
     if (typeof total === 'string') {
-        // Replace comma with dot for proper parsing (Polish locale uses comma)
-        numericTotal = parseFloat(total.replace(',', '.')) || 0;
+        // Remove thousands separators and replace comma decimal with dot for parsing
+        // Polish format: "1 234,56" or "1234,56" -> 1234.56
+        numericTotal = parseFloat(total.replace(/\s/g, '').replace(',', '.')) || 0;
     } else {
         numericTotal = parseFloat(total) || 0;
     }
     
     const { elapsedDays } = calculateWorkDuration(startedAt, finishedAt);
     
-    // Use actual days elapsed, with a minimum of 1 day to avoid inflated projections
-    // For work less than 1 day, daily earnings equals the total earned
+    // Use a minimum of 1 day to avoid inflated projections for short work periods
+    // For work less than 1 day, this shows the total as the daily rate
     const effectiveDays = Math.max(1, elapsedDays);
     
     return numericTotal / effectiveDays;
