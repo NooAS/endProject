@@ -27,9 +27,20 @@ export class Room {
     addWork(work) { this.works.push(work); }
     removeWork(workId) { this.works = this.works.filter(w => w.id !== workId); }
     getTotals(config) {
-        const netto = this.works.reduce((sum, w) => sum + w.clientTotal, 0);
-        const brutto = netto * (1 + config.vat / 100);
-        return { netto, brutto };
+        const clientTotal = this.works.reduce((sum, w) => sum + w.clientTotal, 0);
+        
+        // Handle VAT mode
+        if (config.vatMode === "subtractFromBrutto") {
+            // User entered brutto, so clientTotal is brutto
+            const brutto = clientTotal;
+            const netto = brutto / (1 + config.vat / 100);
+            return { netto, brutto };
+        } else {
+            // Default: addToNetto - user entered netto, calculate brutto
+            const netto = clientTotal;
+            const brutto = netto * (1 + config.vat / 100);
+            return { netto, brutto };
+        }
     }
 }
 
@@ -62,9 +73,17 @@ export class Project {
         return this.config.useNumbering ? `${room.number}.${index}` : String(index);
     }
     getTotals() {
-        const netto = this.rooms.reduce((sum, r) => sum + r.getTotals(this.config).netto, 0);
-        const brutto = netto * (1 + this.config.vat / 100);
-        return { netto, brutto };
+        // Reuse Room.getTotals() to avoid duplicating VAT calculation logic
+        let totalNetto = 0;
+        let totalBrutto = 0;
+        
+        this.rooms.forEach(room => {
+            const roomTotals = room.getTotals(this.config);
+            totalNetto += roomTotals.netto;
+            totalBrutto += roomTotals.brutto;
+        });
+        
+        return { netto: totalNetto, brutto: totalBrutto };
     }
     addCategory(name) {
         const trimmed = name.trim();

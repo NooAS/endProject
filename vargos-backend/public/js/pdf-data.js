@@ -1,7 +1,7 @@
 // Сбор информации для PDF
 
 import { saveCompanyDataToStorage, saveCompanyDataToServer } from "./helpers.js";
-import { loadPdfSettingsFromStorage } from "./pdf-settings-storage.js";
+import { loadPdfSettingsFromStorage, savePdfSettingsToStorage } from "./pdf-settings-storage.js";
 
 // Generate a default project name based on current date
 function generateDefaultProjectName() {
@@ -71,6 +71,20 @@ export async function collectPdfData(project) {
         }
     }
 
+    // Get PDF price display mode from modal radio buttons
+    const pdfPriceDisplayRadio = document.querySelector('input[name="pdfPriceDisplay"]:checked');
+    let pdfPriceDisplay = "netto"; // default
+    if (pdfPriceDisplayRadio) {
+        pdfPriceDisplay = pdfPriceDisplayRadio.value;
+    }
+
+    // Save the settings to localStorage
+    const currentSettings = loadPdfSettingsFromStorage();
+    savePdfSettingsToStorage({
+        ...currentSettings,
+        priceDisplay: pdfPriceDisplay
+    });
+
     let pdfPriceMode = loadPdfSettingsFromStorage().priceMode;
-    return { companyData, objectAddress, projectName, priceMode: pdfPriceMode };
+    return { companyData, objectAddress, projectName, priceMode: pdfPriceMode, priceDisplay: pdfPriceDisplay };
 }
