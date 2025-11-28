@@ -94,6 +94,13 @@ if (DOM.applyConfigBtn) {
         config.useCategories = DOM.cfgUseCategories ? DOM.cfgUseCategories.checked : true;
         config.useNumbering = DOM.cfgNumbering ? DOM.cfgNumbering.checked : true;
         config.vat = DOM.cfgVat ? (parseFloat(DOM.cfgVat.value) || 23) : 23;
+        // VAT mode
+        let vatModeRadio = document.querySelector('input[name="vatMode"]:checked');
+        if (vatModeRadio && vatModeRadio.value) {
+            config.vatMode = vatModeRadio.value;
+        } else {
+            config.vatMode = "addToNetto";
+        }
         // mode
         let modeRadio = document.querySelector('input[name="mode"]:checked');
         if (modeRadio && modeRadio.value) {
@@ -178,6 +185,13 @@ async function loadCompanyDataIntoModal() {
     }
     if (pdfObjectAddressInput && project.pdfObjectAddress) {
         pdfObjectAddressInput.value = project.pdfObjectAddress;
+    }
+    
+    // Load PDF price display setting from storage
+    const pdfSettings = loadPdfSettingsFromStorage();
+    const priceDisplayRadio = document.querySelector(`input[name="pdfPriceDisplay"][value="${pdfSettings.priceDisplay || "netto"}"]`);
+    if (priceDisplayRadio) {
+        priceDisplayRadio.checked = true;
     }
 }
 

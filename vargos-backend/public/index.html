@@ -93,7 +93,22 @@
                 </div>
 
                 <div class="setting-group">
-                    <div class="setting-label">Tryb kalkulatora:</div>
+                    <div class="setting-label">Sposób naliczania VAT:</div>
+                    <label class="radio"><input type="radio" name="vatMode" value="addToNetto" checked> Dodaj VAT do kwoty (netto → brutto)</label>
+                    <label class="radio"><input type="radio" name="vatMode" value="subtractFromBrutto"> Odejmij VAT od kwoty (brutto → netto)</label>
+                </div>
+
+                <div class="setting-group">
+                    <div class="setting-label">
+                        Tryb kalkulatora:
+                        <span class="tooltip-icon" id="calculatorModeTooltip">
+                            <span class="material-icons">help_outline</span>
+                            <span class="tooltip-text">
+                                <strong>Prosty:</strong> Tylko cena dla klienta.<br><br>
+                                <strong>Rozszerzony:</strong> Pokazuje również koszty materiałów i robocizny, co pozwala śledzić zysk firmy.
+                            </span>
+                        </span>
+                    </div>
                     <label class="radio"><input type="radio" name="mode" value="simple" checked> Prosty</label>
                     <label class="radio"><input type="radio" name="mode" value="extended"> Rozszerzony</label>
                 </div>
@@ -204,6 +219,13 @@
                 <label class="checkbox">
                 <input id="pdfSaveCompanyDefaults" type="checkbox"> Zapisz dane jako domyślne
             </label>
+
+                <div class="setting-group" style="margin-top: 16px;">
+                    <div class="setting-label">Kwoty w PDF:</div>
+                    <label class="radio"><input type="radio" name="pdfPriceDisplay" value="netto" checked> Tylko Netto</label>
+                    <label class="radio"><input type="radio" name="pdfPriceDisplay" value="brutto"> Tylko Brutto</label>
+                    <label class="radio"><input type="radio" name="pdfPriceDisplay" value="both"> Netto i Brutto</label>
+                </div>
             </div>
 
             <div class="modal-footer-buttons" style="margin-top:15px; display:flex; gap:10px;">

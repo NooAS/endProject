@@ -6,5 +6,6 @@ export class Config {
         this.useNumbering = true;
         this.mode = "simple"; // "simple" | "extended"
         this.vat = 23;
+        this.vatMode = "addToNetto"; // "addToNetto" | "subtractFromBrutto"
     }
 }
