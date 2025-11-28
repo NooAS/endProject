@@ -51,6 +51,7 @@
         <div class="menu-section">
             <div class="menu-title">Historia</div>
             <button class="menu-item" id="openHistoryBtn">Historia kosztorysów</button>
+            <button class="menu-item" id="openFinishedBtn">Zakończone prace</button>
         </div>
 
         <div class="menu-section">
@@ -250,6 +251,23 @@
 
             <div class="modal-body" id="historyContainer">
                 <!-- Tutaj JS wstawi listę kosztorysów -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================= -->
+    <!--   MODAL: FINISHED WORKS  -->
+    <!-- ========================= -->
+
+    <div id="finishedModal" class="modal-backdrop">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Zakończone prace</h2>
+                <div class="modal-close" onclick="closeModal(finishedModal)">✕</div>
+            </div>
+
+            <div class="modal-body" id="finishedContainer">
+                <!-- Tutaj JS wstawi listę zakończonych kosztorysów -->
             </div>
         </div>
     </div>

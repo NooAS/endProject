@@ -72,3 +72,78 @@ export async function loadQuotesHistory(renderCallback) {
     const quotes = await res.json();
     if (typeof renderCallback === "function") renderCallback(quotes);
 }
+
+// Update quote status
+export async function updateQuoteStatus(quoteId, status, dailyEarnings = null) {
+    const token = localStorage.getItem("token");
+    if (!token) {
+        console.warn("Użytkownik nie jest zalogowany");
+        return null;
+    }
+
+    try {
+        const body = { status };
+        if (dailyEarnings !== null) {
+            body.dailyEarnings = dailyEarnings;
+        }
+
+        const res = await fetch(`/quotes/${quoteId}/status`, {
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + token
+            },
+            body: JSON.stringify(body)
+        });
+
+        const json = await res.json();
+        if (!res.ok) {
+            console.error("Błąd aktualizacji statusu:", json);
+            return null;
+        }
+        return json;
+    } catch (e) {
+        console.error("Błąd sieci:", e);
+        return null;
+    }
+}
+
+// Get quotes by status
+export async function getQuotesByStatus(status) {
+    const token = localStorage.getItem("token");
+    if (!token) {
+        console.warn("Użytkownik nie jest zalogowany");
+        return [];
+    }
+
+    try {
+        const res = await fetch(`/quotes/status/${status}`, {
+            headers: { "Authorization": "Bearer " + token }
+        });
+        const quotes = await res.json();
+        return Array.isArray(quotes) ? quotes : [];
+    } catch (e) {
+        console.error("Błąd sieci:", e);
+        return [];
+    }
+}
+
+// Delete quote
+export async function deleteQuoteFromServer(quoteId) {
+    const token = localStorage.getItem("token");
+    if (!token) {
+        console.warn("Użytkownik nie jest zalogowany");
+        return false;
+    }
+
+    try {
+        const res = await fetch(`/quotes/${quoteId}`, {
+            method: "DELETE",
+            headers: { "Authorization": "Bearer " + token }
+        });
+        return res.ok;
+    } catch (e) {
+        console.error("Błąd sieci:", e);
+        return false;
+    }
+}

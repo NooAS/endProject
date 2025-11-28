@@ -7,7 +7,7 @@ import { saveCategoriesToStorage } from "./categories-storage.js";
 import { loadPdfSettingsFromStorage, savePdfSettingsToStorage } from "./pdf-settings-storage.js";
 import { openModal, closeModal, showInputModal, showEditTemplateModal, showDeleteConfirmModal } from "./modals.js";
 import { collectPdfData } from "./pdf-data.js";
-import { saveQuoteToServer, loadQuotesHistory } from "./quotes-api.js";
+import { saveQuoteToServer, loadQuotesHistory, updateQuoteStatus, getQuotesByStatus, deleteQuoteFromServer } from "./quotes-api.js";
 import { generateClientPdf, generateOwnerPdf } from "./pdf-generator.js";
 import {
     loadCategoriesFromServer,
@@ -22,6 +22,9 @@ import {
 // --- INIT ---
 const config = new Config();
 let project = new Project(config);
+
+// Timer intervals storage for cleanup
+const activeTimers = new Map();
 
 let pdfSettings = loadPdfSettingsFromStorage();
 let pdfPriceMode;
@@ -66,6 +69,9 @@ function updateDOMRefs() {
         openHistoryBtn: $id("openHistoryBtn"),
         historyModal: $id("historyModal"),
         historyContainer: $id("historyContainer"),
+        openFinishedBtn: $id("openFinishedBtn"),
+        finishedModal: $id("finishedModal"),
+        finishedContainer: $id("finishedContainer"),
         authBtn: $id("authBtn"),
         // optional global owner button (outside modal)
         ownerPdfButton: $id("btn-owner-pdf"),
@@ -254,28 +260,280 @@ if (DOM.openHistoryBtn) {
     });
 }
 
-function renderQuotesHistoryUI(quotes) {
-    DOM.historyContainer.innerHTML = "";
+// --- FINISHED WORKS MODAL ---
+if (DOM.openFinishedBtn) {
+    DOM.openFinishedBtn.addEventListener("click", () => {
+        openModal(DOM.finishedModal);
+        loadFinishedQuotes();
+    });
+}
+
+async function loadFinishedQuotes() {
+    const quotes = await getQuotesByStatus("finished");
+    renderFinishedQuotesUI(quotes);
+}
+
+function renderFinishedQuotesUI(quotes) {
+    DOM.finishedContainer.innerHTML = "";
     if (!Array.isArray(quotes) || !quotes.length) {
-        DOM.historyContainer.innerHTML = "<p>Нет смет.</p>";
+        DOM.finishedContainer.innerHTML = "<p>Brak zakończonych prac.</p>";
         return;
     }
     quotes.forEach(q => {
         const div = document.createElement("div");
         div.className = "panel";
         div.style.marginBottom = "15px";
+        
+        const finishedDate = q.finishedAt ? new Date(q.finishedAt).toLocaleString() : "";
+        const startedDate = q.startedAt ? new Date(q.startedAt).toLocaleString() : "";
+        
         div.innerHTML = `
             <h3>${q.name}</h3>
             <p>Suma: <strong>${(q.total || 0).toFixed(2)} zł</strong></p>
-            <p>Data: ${q.createdAt ? new Date(q.createdAt).toLocaleString() : ""}</p>
-            <div style="margin-top:12px; display:flex; gap:10px;">
-                <button class="btn" onclick="editQuote(${q.id})">Edytuj</button>
-                <button class="btn secondary" onclick="deleteQuote(${q.id})">Usuń</button>
+            <p>Rozpoczęto: ${startedDate}</p>
+            <p>Zakończono: ${finishedDate}</p>
+            ${q.dailyEarnings ? `<p>Zarobek dzienny: <strong>${q.dailyEarnings.toFixed(2)} zł</strong></p>` : ""}
+            <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
+                <button class="btn" onclick="returnToHistory(${q.id})">Wróć do historii</button>
+                <button class="btn secondary" onclick="deleteFinishedQuote(${q.id})">Usuń</button>
             </div>
         `;
-        DOM.historyContainer.appendChild(div);
+        DOM.finishedContainer.appendChild(div);
     });
 }
+
+async function returnToHistory(id) {
+    await updateQuoteStatus(id, "normal");
+    loadFinishedQuotes();
+}
+window.returnToHistory = returnToHistory;
+
+async function deleteFinishedQuote(id) {
+    const confirmed = await showDeleteConfirmModal(
+        "Usuń kosztorys?",
+        "Czy na pewno chcesz usunąć ten kosztorys? Tej operacji nie można cofnąć."
+    );
+    if (!confirmed) return;
+    
+    await deleteQuoteFromServer(id);
+    loadFinishedQuotes();
+}
+window.deleteFinishedQuote = deleteFinishedQuote;
+
+// Format timer display
+function formatTimer(ms) {
+    const seconds = Math.floor((ms / 1000) % 60);
+    const minutes = Math.floor((ms / (1000 * 60)) % 60);
+    const hours = Math.floor((ms / (1000 * 60 * 60)) % 24);
+    const days = Math.floor(ms / (1000 * 60 * 60 * 24));
+    
+    if (days > 0) {
+        return `${days}d ${hours}h ${minutes}m`;
+    }
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+}
+
+function renderQuotesHistoryUI(quotes) {
+    // Clear existing timers
+    activeTimers.forEach((intervalId) => clearInterval(intervalId));
+    activeTimers.clear();
+    
+    DOM.historyContainer.innerHTML = "";
+    if (!Array.isArray(quotes) || !quotes.length) {
+        DOM.historyContainer.innerHTML = "<p>Brak kosztorysów.</p>";
+        return;
+    }
+    
+    // Sort: inProgress first, then normal, exclude finished
+    const normalQuotes = quotes.filter(q => q.status === "normal" || !q.status);
+    const inProgressQuotes = quotes.filter(q => q.status === "inProgress");
+    
+    // Render in progress quotes first
+    if (inProgressQuotes.length > 0) {
+        const inProgressHeader = document.createElement("div");
+        inProgressHeader.className = "history-section-header";
+        inProgressHeader.innerHTML = "<h3 style='color:#2563eb; margin-bottom:12px;'>🔄 W trakcie realizacji</h3>";
+        DOM.historyContainer.appendChild(inProgressHeader);
+        
+        inProgressQuotes.forEach(q => {
+            DOM.historyContainer.appendChild(createQuoteCard(q, true));
+        });
+        
+        // Add separator
+        const separator = document.createElement("hr");
+        separator.style.margin = "20px 0";
+        separator.style.border = "none";
+        separator.style.borderTop = "1px solid #e5e7eb";
+        DOM.historyContainer.appendChild(separator);
+    }
+    
+    // Render normal quotes
+    if (normalQuotes.length > 0) {
+        const normalHeader = document.createElement("div");
+        normalHeader.className = "history-section-header";
+        normalHeader.innerHTML = "<h3 style='color:#374151; margin-bottom:12px;'>📋 Historia kosztorysów</h3>";
+        DOM.historyContainer.appendChild(normalHeader);
+        
+        normalQuotes.forEach(q => {
+            DOM.historyContainer.appendChild(createQuoteCard(q, false));
+        });
+    }
+}
+
+function createQuoteCard(q, isInProgress) {
+    const div = document.createElement("div");
+    div.className = "panel quote-card";
+    div.style.marginBottom = "15px";
+    if (isInProgress) {
+        div.style.borderLeft = "4px solid #2563eb";
+        div.style.background = "linear-gradient(to right, #eff6ff, #ffffff)";
+    }
+    
+    // Header with name and total
+    const header = document.createElement("div");
+    header.innerHTML = `
+        <h3>${q.name}</h3>
+        <p>Suma: <strong>${(q.total || 0).toFixed(2)} zł</strong></p>
+        <p>Data utworzenia: ${q.createdAt ? new Date(q.createdAt).toLocaleString() : ""}</p>
+    `;
+    div.appendChild(header);
+    
+    // Timer and daily earnings for in-progress quotes
+    if (isInProgress && q.startedAt) {
+        const timerSection = document.createElement("div");
+        timerSection.className = "timer-section";
+        timerSection.style.marginTop = "12px";
+        timerSection.style.padding = "12px";
+        timerSection.style.background = "#f0f9ff";
+        timerSection.style.borderRadius = "8px";
+        
+        const timerDisplay = document.createElement("div");
+        timerDisplay.style.fontSize = "18px";
+        timerDisplay.style.fontWeight = "600";
+        timerDisplay.style.color = "#2563eb";
+        timerDisplay.innerHTML = `⏱️ <span id="timer-${q.id}">00:00:00</span>`;
+        timerSection.appendChild(timerDisplay);
+        
+        // Update timer
+        const startTime = new Date(q.startedAt).getTime();
+        const updateTimer = () => {
+            const elapsed = Date.now() - startTime;
+            const timerEl = document.getElementById(`timer-${q.id}`);
+            if (timerEl) {
+                timerEl.textContent = formatTimer(elapsed);
+            }
+        };
+        updateTimer();
+        const intervalId = setInterval(updateTimer, 1000);
+        activeTimers.set(q.id, intervalId);
+        
+        // Daily earnings input
+        const earningsDiv = document.createElement("div");
+        earningsDiv.style.marginTop = "10px";
+        earningsDiv.innerHTML = `
+            <label style="font-size:13px; color:#374151;">Zarobek dzienny (zł):</label>
+            <div style="display:flex; gap:8px; margin-top:4px;">
+                <input type="number" id="earnings-${q.id}" class="input" style="width:120px;" value="${q.dailyEarnings || ''}" placeholder="0.00" />
+                <button class="btn secondary" onclick="saveDailyEarnings(${q.id})">Zapisz</button>
+            </div>
+        `;
+        timerSection.appendChild(earningsDiv);
+        
+        if (q.dailyEarnings) {
+            const earnedDisplay = document.createElement("p");
+            earnedDisplay.style.marginTop = "8px";
+            earnedDisplay.style.color = "#16a34a";
+            earnedDisplay.style.fontWeight = "500";
+            earnedDisplay.innerHTML = `💰 Aktualny zarobek dzienny: <strong>${q.dailyEarnings.toFixed(2)} zł</strong>`;
+            timerSection.appendChild(earnedDisplay);
+        }
+        
+        div.appendChild(timerSection);
+    }
+    
+    // Buttons section
+    const buttonsDiv = document.createElement("div");
+    buttonsDiv.style.marginTop = "12px";
+    buttonsDiv.style.display = "flex";
+    buttonsDiv.style.gap = "10px";
+    buttonsDiv.style.flexWrap = "wrap";
+    
+    // Edit button
+    const editBtn = document.createElement("button");
+    editBtn.className = "btn";
+    editBtn.textContent = "Edytuj";
+    editBtn.onclick = () => editQuote(q.id);
+    buttonsDiv.appendChild(editBtn);
+    
+    if (isInProgress) {
+        // Finish button
+        const finishBtn = document.createElement("button");
+        finishBtn.className = "btn";
+        finishBtn.style.background = "linear-gradient(135deg, #16a34a 0%, #15803d 100%)";
+        finishBtn.textContent = "Zakończ";
+        finishBtn.onclick = () => finishQuote(q.id);
+        buttonsDiv.appendChild(finishBtn);
+        
+        // Cancel in-progress button
+        const cancelBtn = document.createElement("button");
+        cancelBtn.className = "btn secondary";
+        cancelBtn.textContent = "Anuluj status";
+        cancelBtn.onclick = () => cancelInProgress(q.id);
+        buttonsDiv.appendChild(cancelBtn);
+    } else {
+        // Start work button
+        const startBtn = document.createElement("button");
+        startBtn.className = "btn";
+        startBtn.style.background = "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)";
+        startBtn.textContent = "Rozpocznij pracę";
+        startBtn.onclick = () => startWork(q.id);
+        buttonsDiv.appendChild(startBtn);
+        
+        // Delete button
+        const deleteBtn = document.createElement("button");
+        deleteBtn.className = "btn secondary";
+        deleteBtn.textContent = "Usuń";
+        deleteBtn.onclick = () => deleteQuote(q.id);
+        buttonsDiv.appendChild(deleteBtn);
+    }
+    
+    div.appendChild(buttonsDiv);
+    return div;
+}
+
+async function saveDailyEarnings(id) {
+    const input = document.getElementById(`earnings-${id}`);
+    if (!input) return;
+    
+    const value = parseFloat(input.value) || 0;
+    await updateQuoteStatus(id, "inProgress", value);
+    loadQuotesHistory(renderQuotesHistoryUI);
+}
+window.saveDailyEarnings = saveDailyEarnings;
+
+async function startWork(id) {
+    await updateQuoteStatus(id, "inProgress");
+    loadQuotesHistory(renderQuotesHistoryUI);
+}
+window.startWork = startWork;
+
+async function finishQuote(id) {
+    const confirmed = await showDeleteConfirmModal(
+        "Zakończ pracę?",
+        "Czy na pewno chcesz zakończyć tę pracę? Kosztorys zostanie przeniesiony do zakończonych prac."
+    );
+    if (!confirmed) return;
+    
+    await updateQuoteStatus(id, "finished");
+    loadQuotesHistory(renderQuotesHistoryUI);
+}
+window.finishQuote = finishQuote;
+
+async function cancelInProgress(id) {
+    await updateQuoteStatus(id, "normal");
+    loadQuotesHistory(renderQuotesHistoryUI);
+}
+window.cancelInProgress = cancelInProgress;
 
 function editQuote(id) {
     localStorage.setItem("editQuoteId", id);
@@ -291,11 +549,8 @@ async function deleteQuote(id) {
     );
     if (!confirmed) return;
     
-    const token = localStorage.getItem("token");
-    fetch("/quotes/" + id, {
-        method: "DELETE",
-        headers: { "Authorization": "Bearer " + token }
-    }).then(() => loadQuotesHistory(renderQuotesHistoryUI));
+    await deleteQuoteFromServer(id);
+    loadQuotesHistory(renderQuotesHistoryUI);
 }
 window.deleteQuote = deleteQuote;
 

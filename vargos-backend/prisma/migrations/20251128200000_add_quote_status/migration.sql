@@ -1,0 +1,5 @@
+-- AlterTable
+ALTER TABLE "Quote" ADD COLUMN "status" TEXT NOT NULL DEFAULT 'normal';
+ALTER TABLE "Quote" ADD COLUMN "startedAt" TIMESTAMP(3);
+ALTER TABLE "Quote" ADD COLUMN "finishedAt" TIMESTAMP(3);
+ALTER TABLE "Quote" ADD COLUMN "dailyEarnings" DOUBLE PRECISION;

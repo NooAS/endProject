@@ -4,7 +4,9 @@ import {
     saveQuote,
     getMyQuotes,
     getQuoteById,
-    deleteQuoteById
+    deleteQuoteById,
+    updateQuoteStatus,
+    getQuotesByStatus
 } from "../controllers/quoteController.js";
 
 const router = express.Router();
@@ -14,6 +16,12 @@ router.post("/save", auth, saveQuote);
 
 // история
 router.get("/my", auth, getMyQuotes);
+
+// get quotes by status
+router.get("/status/:status", auth, getQuotesByStatus);
+
+// update quote status
+router.patch("/:id/status", auth, updateQuoteStatus);
 
 // загрузить одну
 router.get("/:id", auth, getQuoteById);

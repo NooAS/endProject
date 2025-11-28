@@ -141,3 +141,72 @@ export const deleteQuoteById = async(req, res) => {
         res.status(500).json({ message: "Server error" });
     }
 };
+
+// Update quote status (normal -> inProgress -> finished)
+export const updateQuoteStatus = async(req, res) => {
+    try {
+        const id = Number(req.params.id);
+        const userId = req.user.userId;
+        const { status, dailyEarnings } = req.body;
+
+        const q = await prisma.quote.findFirst({
+            where: { id, userId }
+        });
+
+        if (!q) return res.status(404).json({ message: "Not found" });
+
+        const updateData = { status };
+
+        // When setting to inProgress, record startedAt
+        if (status === "inProgress" && q.status !== "inProgress") {
+            updateData.startedAt = new Date();
+            updateData.finishedAt = null;
+        }
+
+        // When setting to finished, record finishedAt
+        if (status === "finished") {
+            updateData.finishedAt = new Date();
+        }
+
+        // When returning to normal, clear dates
+        if (status === "normal") {
+            updateData.startedAt = null;
+            updateData.finishedAt = null;
+            updateData.dailyEarnings = null;
+        }
+
+        // Update daily earnings if provided
+        if (dailyEarnings !== undefined) {
+            updateData.dailyEarnings = dailyEarnings;
+        }
+
+        const updated = await prisma.quote.update({
+            where: { id },
+            data: updateData
+        });
+
+        res.json({ success: true, quote: updated });
+
+    } catch (e) {
+        console.log(e);
+        res.status(500).json({ message: "Server error" });
+    }
+};
+
+// Get quotes by status
+export const getQuotesByStatus = async(req, res) => {
+    try {
+        const userId = req.user.userId;
+        const { status } = req.params;
+
+        const quotes = await prisma.quote.findMany({
+            where: { userId, status },
+            include: { items: true },
+            orderBy: { createdAt: "desc" }
+        });
+
+        res.json(quotes);
+    } catch (e) {
+        res.status(500).json({ message: "Server error" });
+    }
+};
