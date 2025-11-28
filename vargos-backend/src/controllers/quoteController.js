@@ -149,6 +149,12 @@ export const updateQuoteStatus = async(req, res) => {
         const userId = req.user.userId;
         const { status, dailyEarnings } = req.body;
 
+        // Validate status parameter
+        const validStatuses = ["normal", "inProgress", "finished"];
+        if (!status || !validStatuses.includes(status)) {
+            return res.status(400).json({ message: "Invalid status. Must be one of: normal, inProgress, finished" });
+        }
+
         const q = await prisma.quote.findFirst({
             where: { id, userId }
         });
@@ -188,7 +194,7 @@ export const updateQuoteStatus = async(req, res) => {
         res.json({ success: true, quote: updated });
 
     } catch (e) {
-        console.log(e);
+        console.error("Error updating quote status:", e);
         res.status(500).json({ message: "Server error" });
     }
 };
@@ -207,6 +213,7 @@ export const getQuotesByStatus = async(req, res) => {
 
         res.json(quotes);
     } catch (e) {
+        console.error("Error getting quotes by status:", e);
         res.status(500).json({ message: "Server error" });
     }
 };
