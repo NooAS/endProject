@@ -287,30 +287,16 @@ function renderFinishedQuotesUI(quotes) {
         const finishedDate = q.finishedAt ? new Date(q.finishedAt).toLocaleString() : "";
         const startedDate = q.startedAt ? new Date(q.startedAt).toLocaleString() : "";
         
-        // Calculate daily earnings based on work duration
+        // Calculate daily earnings and work duration using shared utility
         const calculatedDailyEarnings = calculateDailyEarnings(q.total, q.startedAt, q.finishedAt);
-        
-        // Calculate work duration in days
-        let workDurationText = "";
-        if (q.startedAt && q.finishedAt) {
-            const startTime = new Date(q.startedAt).getTime();
-            const endTime = new Date(q.finishedAt).getTime();
-            const durationMs = endTime - startTime;
-            const durationDays = durationMs / (1000 * 60 * 60 * 24);
-            if (durationDays < 1) {
-                const durationHours = durationMs / (1000 * 60 * 60);
-                workDurationText = `${durationHours.toFixed(1)} godzin`;
-            } else {
-                workDurationText = `${durationDays.toFixed(1)} dni`;
-            }
-        }
+        const workDuration = calculateWorkDuration(q.startedAt, q.finishedAt);
         
         div.innerHTML = `
             <h3>${q.name}</h3>
             <p>Suma: <strong>${(q.total || 0).toFixed(2)} zł</strong></p>
             <p>Rozpoczęto: ${startedDate}</p>
             <p>Zakończono: ${finishedDate}</p>
-            ${workDurationText ? `<p>Czas pracy: <strong>${workDurationText}</strong></p>` : ""}
+            ${workDuration.displayText ? `<p>Czas pracy: <strong>${workDuration.displayText}</strong></p>` : ""}
             <p style="color:#16a34a; font-weight:500;">💰 Zarobek dzienny: <strong>${calculatedDailyEarnings.toFixed(2)} zł</strong></p>
             <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
                 <button class="btn" onclick="returnToHistory(${q.id})">Wróć do historii</button>
@@ -352,18 +338,38 @@ function formatTimer(ms) {
     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 }
 
-// Calculate daily earnings based on total and elapsed time
-function calculateDailyEarnings(total, startedAt, finishedAt = null) {
-    if (!startedAt || !total) return 0;
+// Calculate elapsed time between two dates and return duration info
+function calculateWorkDuration(startedAt, finishedAt = null) {
+    if (!startedAt) return { elapsedMs: 0, elapsedDays: 0, displayText: "" };
     
     const startTime = new Date(startedAt).getTime();
     const endTime = finishedAt ? new Date(finishedAt).getTime() : Date.now();
     const elapsedMs = endTime - startTime;
+    const elapsedDays = elapsedMs / (1000 * 60 * 60 * 24);
     
-    // Convert to days (at least 1 day to avoid division by zero)
-    const elapsedDays = Math.max(1, elapsedMs / (1000 * 60 * 60 * 24));
+    // Format display text
+    let displayText = "";
+    if (elapsedDays < 1) {
+        const elapsedHours = elapsedMs / (1000 * 60 * 60);
+        displayText = `${elapsedHours.toFixed(1)} godzin`;
+    } else {
+        displayText = `${elapsedDays.toFixed(1)} dni`;
+    }
     
-    return total / elapsedDays;
+    return { elapsedMs, elapsedDays, displayText };
+}
+
+// Calculate daily earnings based on total and elapsed time
+function calculateDailyEarnings(total, startedAt, finishedAt = null) {
+    if (!startedAt || !total) return 0;
+    
+    const { elapsedDays } = calculateWorkDuration(startedAt, finishedAt);
+    
+    // Use actual days elapsed, with a minimum of a small fraction to avoid division issues
+    // For sub-day work, calculate as fraction of day (e.g., 6 hours = 0.25 days)
+    const effectiveDays = Math.max(0.01, elapsedDays);
+    
+    return total / effectiveDays;
 }
 
 // Store collapsed state for history quotes
@@ -468,8 +474,8 @@ function createQuoteCard(q, isInProgress) {
     
     // Toggle collapse on header click
     headerWrapper.addEventListener("click", (e) => {
-        // Don't toggle if clicking on buttons
-        if (e.target.tagName === "BUTTON") return;
+        // Don't toggle if clicking on buttons (including nested elements inside buttons)
+        if (e.target.closest("button")) return;
         
         const wasCollapsed = collapsedQuotes.has(q.id);
         if (wasCollapsed) {
