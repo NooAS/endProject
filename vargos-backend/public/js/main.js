@@ -287,12 +287,17 @@ function renderFinishedQuotesUI(quotes) {
         const finishedDate = q.finishedAt ? new Date(q.finishedAt).toLocaleString() : "";
         const startedDate = q.startedAt ? new Date(q.startedAt).toLocaleString() : "";
         
+        // Calculate daily earnings and work duration using shared utility
+        const calculatedDailyEarnings = calculateDailyEarnings(q.total, q.startedAt, q.finishedAt);
+        const workDuration = calculateWorkDuration(q.startedAt, q.finishedAt);
+        
         div.innerHTML = `
             <h3>${q.name}</h3>
             <p>Suma: <strong>${(q.total || 0).toFixed(2)} zł</strong></p>
             <p>Rozpoczęto: ${startedDate}</p>
             <p>Zakończono: ${finishedDate}</p>
-            ${q.dailyEarnings ? `<p>Zarobek dzienny: <strong>${q.dailyEarnings.toFixed(2)} zł</strong></p>` : ""}
+            ${workDuration.displayText ? `<p>Czas pracy: <strong>${workDuration.displayText}</strong></p>` : ""}
+            <p style="color:#16a34a; font-weight:500;">💰 Zarobek dzienny: <strong>${calculatedDailyEarnings.toFixed(2)} zł</strong></p>
             <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
                 <button class="btn" onclick="returnToHistory(${q.id})">Wróć do historii</button>
                 <button class="btn secondary" onclick="deleteFinishedQuote(${q.id})">Usuń</button>
@@ -332,6 +337,43 @@ function formatTimer(ms) {
     }
     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 }
+
+// Calculate elapsed time between two dates and return duration info
+function calculateWorkDuration(startedAt, finishedAt = null) {
+    if (!startedAt) return { elapsedMs: 0, elapsedDays: 0, displayText: "" };
+    
+    const startTime = new Date(startedAt).getTime();
+    const endTime = finishedAt ? new Date(finishedAt).getTime() : Date.now();
+    const elapsedMs = endTime - startTime;
+    const elapsedDays = elapsedMs / (1000 * 60 * 60 * 24);
+    
+    // Format display text
+    let displayText = "";
+    if (elapsedDays < 1) {
+        const elapsedHours = elapsedMs / (1000 * 60 * 60);
+        displayText = `${elapsedHours.toFixed(1)} godzin`;
+    } else {
+        displayText = `${elapsedDays.toFixed(1)} dni`;
+    }
+    
+    return { elapsedMs, elapsedDays, displayText };
+}
+
+// Calculate daily earnings based on total and elapsed time
+function calculateDailyEarnings(total, startedAt, finishedAt = null) {
+    if (!startedAt || !total) return 0;
+    
+    const { elapsedDays } = calculateWorkDuration(startedAt, finishedAt);
+    
+    // Use actual days elapsed, with a minimum of a small fraction to avoid division issues
+    // For sub-day work, calculate as fraction of day (e.g., 6 hours = 0.25 days)
+    const effectiveDays = Math.max(0.01, elapsedDays);
+    
+    return total / effectiveDays;
+}
+
+// Store collapsed state for history quotes
+const collapsedQuotes = new Set();
 
 function renderQuotesHistoryUI(quotes) {
     // Clear existing timers
@@ -389,16 +431,63 @@ function createQuoteCard(q, isInProgress) {
         div.style.background = "linear-gradient(to right, #eff6ff, #ffffff)";
     }
     
-    // Header with name and total
-    const header = document.createElement("div");
-    header.innerHTML = `
-        <h3>${q.name}</h3>
-        <p>Suma: <strong>${(q.total || 0).toFixed(2)} zł</strong></p>
-        <p>Data utworzenia: ${q.createdAt ? new Date(q.createdAt).toLocaleString() : ""}</p>
-    `;
-    div.appendChild(header);
+    const isCollapsed = collapsedQuotes.has(q.id);
     
-    // Timer and daily earnings for in-progress quotes
+    // Collapsible header with name and summary
+    const headerWrapper = document.createElement("div");
+    headerWrapper.className = "quote-collapse-header";
+    headerWrapper.style.cursor = "pointer";
+    headerWrapper.style.display = "flex";
+    headerWrapper.style.alignItems = "center";
+    headerWrapper.style.gap = "10px";
+    
+    // Collapse toggle arrow
+    const collapseToggle = document.createElement("span");
+    collapseToggle.className = "collapse-toggle";
+    if (isCollapsed) collapseToggle.classList.add("collapsed");
+    collapseToggle.textContent = "▼";
+    headerWrapper.appendChild(collapseToggle);
+    
+    // Header content with name and total
+    const headerContent = document.createElement("div");
+    headerContent.style.flex = "1";
+    headerContent.innerHTML = `
+        <h3 style="margin:0; display:inline;">${q.name}</h3>
+        <span style="margin-left:12px; color:#6b7280; font-size:14px;">${(q.total || 0).toFixed(2)} zł</span>
+    `;
+    headerWrapper.appendChild(headerContent);
+    
+    div.appendChild(headerWrapper);
+    
+    // Collapsible body content
+    const bodyContent = document.createElement("div");
+    bodyContent.className = "collapsible-content";
+    if (isCollapsed) bodyContent.classList.add("collapsed");
+    bodyContent.style.marginTop = "12px";
+    
+    // Date info
+    const dateInfo = document.createElement("p");
+    dateInfo.style.color = "#6b7280";
+    dateInfo.style.fontSize = "13px";
+    dateInfo.innerHTML = `Data utworzenia: ${q.createdAt ? new Date(q.createdAt).toLocaleString() : ""}`;
+    bodyContent.appendChild(dateInfo);
+    
+    // Toggle collapse on header click
+    headerWrapper.addEventListener("click", (e) => {
+        // Don't toggle if clicking on buttons (including nested elements inside buttons)
+        if (e.target.closest("button")) return;
+        
+        const wasCollapsed = collapsedQuotes.has(q.id);
+        if (wasCollapsed) {
+            collapsedQuotes.delete(q.id);
+        } else {
+            collapsedQuotes.add(q.id);
+        }
+        collapseToggle.classList.toggle("collapsed");
+        bodyContent.classList.toggle("collapsed");
+    });
+    
+    // Timer and auto-calculated daily earnings for in-progress quotes
     if (isInProgress && q.startedAt) {
         const timerSection = document.createElement("div");
         timerSection.className = "timer-section";
@@ -414,41 +503,37 @@ function createQuoteCard(q, isInProgress) {
         timerDisplay.innerHTML = `⏱️ <span id="timer-${q.id}">00:00:00</span>`;
         timerSection.appendChild(timerDisplay);
         
-        // Update timer
+        // Auto-calculated daily earnings display
+        const earningsDisplay = document.createElement("div");
+        earningsDisplay.style.marginTop = "10px";
+        earningsDisplay.id = `earnings-display-${q.id}`;
+        timerSection.appendChild(earningsDisplay);
+        
+        // Update timer and calculate daily earnings
         const startTime = new Date(q.startedAt).getTime();
-        const updateTimer = () => {
+        const updateTimerAndEarnings = () => {
             const elapsed = Date.now() - startTime;
             const timerEl = document.getElementById(`timer-${q.id}`);
             if (timerEl) {
                 timerEl.textContent = formatTimer(elapsed);
             }
+            
+            // Calculate and display daily earnings
+            const dailyEarnings = calculateDailyEarnings(q.total, q.startedAt);
+            const earningsEl = document.getElementById(`earnings-display-${q.id}`);
+            if (earningsEl) {
+                earningsEl.innerHTML = `
+                    <p style="margin:0; color:#16a34a; font-weight:500;">
+                        💰 Zarobek dzienny: <strong>${dailyEarnings.toFixed(2)} zł</strong>
+                    </p>
+                `;
+            }
         };
-        updateTimer();
-        const intervalId = setInterval(updateTimer, 1000);
+        updateTimerAndEarnings();
+        const intervalId = setInterval(updateTimerAndEarnings, 1000);
         activeTimers.set(q.id, intervalId);
         
-        // Daily earnings input
-        const earningsDiv = document.createElement("div");
-        earningsDiv.style.marginTop = "10px";
-        earningsDiv.innerHTML = `
-            <label style="font-size:13px; color:#374151;">Zarobek dzienny (zł):</label>
-            <div style="display:flex; gap:8px; margin-top:4px;">
-                <input type="number" id="earnings-${q.id}" class="input" style="width:120px;" value="${q.dailyEarnings || ''}" placeholder="0.00" />
-                <button class="btn secondary" onclick="saveDailyEarnings(${q.id})">Zapisz</button>
-            </div>
-        `;
-        timerSection.appendChild(earningsDiv);
-        
-        if (q.dailyEarnings) {
-            const earnedDisplay = document.createElement("p");
-            earnedDisplay.style.marginTop = "8px";
-            earnedDisplay.style.color = "#16a34a";
-            earnedDisplay.style.fontWeight = "500";
-            earnedDisplay.innerHTML = `💰 Aktualny zarobek dzienny: <strong>${q.dailyEarnings.toFixed(2)} zł</strong>`;
-            timerSection.appendChild(earnedDisplay);
-        }
-        
-        div.appendChild(timerSection);
+        bodyContent.appendChild(timerSection);
     }
     
     // Buttons section
@@ -462,7 +547,7 @@ function createQuoteCard(q, isInProgress) {
     const editBtn = document.createElement("button");
     editBtn.className = "btn";
     editBtn.textContent = "Edytuj";
-    editBtn.onclick = () => editQuote(q.id);
+    editBtn.onclick = (e) => { e.stopPropagation(); editQuote(q.id); };
     buttonsDiv.appendChild(editBtn);
     
     if (isInProgress) {
@@ -471,14 +556,14 @@ function createQuoteCard(q, isInProgress) {
         finishBtn.className = "btn";
         finishBtn.style.background = "linear-gradient(135deg, #16a34a 0%, #15803d 100%)";
         finishBtn.textContent = "Zakończ";
-        finishBtn.onclick = () => finishQuote(q.id);
+        finishBtn.onclick = (e) => { e.stopPropagation(); finishQuote(q.id); };
         buttonsDiv.appendChild(finishBtn);
         
         // Cancel in-progress button
         const cancelBtn = document.createElement("button");
         cancelBtn.className = "btn secondary";
         cancelBtn.textContent = "Anuluj status";
-        cancelBtn.onclick = () => cancelInProgress(q.id);
+        cancelBtn.onclick = (e) => { e.stopPropagation(); cancelInProgress(q.id); };
         buttonsDiv.appendChild(cancelBtn);
     } else {
         // Start work button
@@ -486,30 +571,21 @@ function createQuoteCard(q, isInProgress) {
         startBtn.className = "btn";
         startBtn.style.background = "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)";
         startBtn.textContent = "Rozpocznij pracę";
-        startBtn.onclick = () => startWork(q.id);
+        startBtn.onclick = (e) => { e.stopPropagation(); startWork(q.id); };
         buttonsDiv.appendChild(startBtn);
         
         // Delete button
         const deleteBtn = document.createElement("button");
         deleteBtn.className = "btn secondary";
         deleteBtn.textContent = "Usuń";
-        deleteBtn.onclick = () => deleteQuote(q.id);
+        deleteBtn.onclick = (e) => { e.stopPropagation(); deleteQuote(q.id); };
         buttonsDiv.appendChild(deleteBtn);
     }
     
-    div.appendChild(buttonsDiv);
+    bodyContent.appendChild(buttonsDiv);
+    div.appendChild(bodyContent);
     return div;
 }
-
-async function saveDailyEarnings(id) {
-    const input = document.getElementById(`earnings-${id}`);
-    if (!input) return;
-    
-    const value = parseFloat(input.value) || 0;
-    await updateQuoteStatus(id, "inProgress", value);
-    loadQuotesHistory(renderQuotesHistoryUI);
-}
-window.saveDailyEarnings = saveDailyEarnings;
 
 async function startWork(id) {
     await updateQuoteStatus(id, "inProgress");

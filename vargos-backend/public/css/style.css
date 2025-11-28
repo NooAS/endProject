@@ -1597,6 +1597,22 @@ textarea.input:focus {
     box-shadow: 0 6px 20px rgba(15, 23, 42, 0.1);
 }
 
+/* Quote collapsible header */
+.quote-collapse-header {
+    padding: 4px 0;
+    border-radius: 8px;
+    transition: background 0.15s ease;
+}
+
+.quote-collapse-header:hover {
+    background: rgba(0, 0, 0, 0.02);
+}
+
+.quote-collapse-header h3 {
+    color: #1f2937;
+    font-size: 16px;
+}
+
 .timer-section {
     border: 1px solid #bae6fd;
 }
