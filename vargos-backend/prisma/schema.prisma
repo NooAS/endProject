@@ -56,14 +56,18 @@ model Job {
 }
 
 model Quote {
-  id        Int         @id @default(autoincrement())
-  userId    Int
-  user      User        @relation(fields: [userId], references: [id])
-  name      String
-  total     Float
-  notes     String?
-  createdAt DateTime    @default(now())
-  items     QuoteItem[]
+  id            Int         @id @default(autoincrement())
+  userId        Int
+  user          User        @relation(fields: [userId], references: [id])
+  name          String
+  total         Float
+  notes         String?
+  createdAt     DateTime    @default(now())
+  status        String      @default("normal")
+  startedAt     DateTime?
+  finishedAt    DateTime?
+  dailyEarnings Float?
+  items         QuoteItem[]
 }
 
 model QuoteItem {

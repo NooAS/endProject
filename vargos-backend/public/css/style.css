@@ -1583,3 +1583,81 @@ textarea.input:focus {
         transform: none;
     }
 }
+
+/* ========================================= */
+/*     QUOTE STATUS STYLES                   */
+/* ========================================= */
+
+.quote-card {
+    transition: all 0.2s ease;
+}
+
+.quote-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(15, 23, 42, 0.1);
+}
+
+.timer-section {
+    border: 1px solid #bae6fd;
+}
+
+.history-section-header h3 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* In-progress quote highlight */
+.quote-card.in-progress {
+    border-left: 4px solid #2563eb;
+    background: linear-gradient(to right, #eff6ff, #ffffff);
+}
+
+/* Finished works modal styles */
+#finishedContainer .panel {
+    border-left: 4px solid #16a34a;
+    background: linear-gradient(to right, #f0fdf4, #ffffff);
+}
+
+/* Button for starting work */
+.btn-start-work {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+    box-shadow: 0 2px 6px rgba(245, 158, 11, 0.25);
+}
+
+.btn-start-work:hover {
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.35);
+}
+
+/* Button for finishing work */
+.btn-finish {
+    background: linear-gradient(135deg, #16a34a 0%, #15803d 100%) !important;
+    box-shadow: 0 2px 6px rgba(22, 163, 74, 0.25);
+}
+
+.btn-finish:hover {
+    box-shadow: 0 4px 12px rgba(22, 163, 74, 0.35);
+}
+
+/* Timer display */
+.timer-display {
+    font-size: 24px;
+    font-weight: 700;
+    color: #2563eb;
+    font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+}
+
+/* Responsive adjustments for quote cards */
+@media (max-width: 768px) {
+    .quote-card .timer-section {
+        padding: 10px;
+    }
+    
+    .quote-card .timer-section input {
+        width: 100% !important;
+    }
+    
+    .quote-card .timer-section > div {
+        flex-direction: column;
+    }
+}
