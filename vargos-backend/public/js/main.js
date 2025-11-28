@@ -363,13 +363,22 @@ function calculateWorkDuration(startedAt, finishedAt = null) {
 function calculateDailyEarnings(total, startedAt, finishedAt = null) {
     if (!startedAt || !total) return 0;
     
+    // Ensure total is a proper number (handle string input with comma as decimal separator)
+    let numericTotal = total;
+    if (typeof total === 'string') {
+        // Replace comma with dot for proper parsing (Polish locale uses comma)
+        numericTotal = parseFloat(total.replace(',', '.')) || 0;
+    } else {
+        numericTotal = parseFloat(total) || 0;
+    }
+    
     const { elapsedDays } = calculateWorkDuration(startedAt, finishedAt);
     
-    // Use actual days elapsed, with a minimum of a small fraction to avoid division issues
-    // For sub-day work, calculate as fraction of day (e.g., 6 hours = 0.25 days)
-    const effectiveDays = Math.max(0.01, elapsedDays);
+    // Use actual days elapsed, with a minimum of 1 day to avoid inflated projections
+    // For work less than 1 day, daily earnings equals the total earned
+    const effectiveDays = Math.max(1, elapsedDays);
     
-    return total / effectiveDays;
+    return numericTotal / effectiveDays;
 }
 
 // Store collapsed state for history quotes
