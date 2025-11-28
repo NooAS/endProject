@@ -1506,14 +1506,22 @@ textarea.input:focus {
     vertical-align: middle;
 }
 
-.tooltip-icon .material-icons {
-    font-size: 18px;
-    color: #6b7280;
-    transition: color 0.2s ease;
+.tooltip-question {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #6b7280;
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 700;
+    transition: background 0.2s ease;
 }
 
-.tooltip-icon:hover .material-icons {
-    color: #2563eb;
+.tooltip-icon:hover .tooltip-question {
+    background: #2563eb;
 }
 
 .tooltip-text {
