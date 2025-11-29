@@ -365,9 +365,9 @@ function calculateDailyEarnings(total, startedAt, finishedAt = null) {
     
     const { elapsedDays } = calculateWorkDuration(startedAt, finishedAt);
     
-    // Use actual days elapsed, with a minimum of a small fraction to avoid division issues
-    // For sub-day work, calculate as fraction of day (e.g., 6 hours = 0.25 days)
-    const effectiveDays = Math.max(0.01, elapsedDays);
+    // Use actual days elapsed, with a minimum of 1 day to avoid inflated values for short jobs.
+    // For jobs completed in less than a day, daily earnings equals the total earned.
+    const effectiveDays = Math.max(1, elapsedDays);
     
     return total / effectiveDays;
 }
