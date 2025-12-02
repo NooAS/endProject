@@ -33,32 +33,32 @@
             <div class="auth-buttons">
                 <a href="/auth.html" id="authBtn" class="auth-btn">Zaloguj / Rejestracja</a>
                 <button id="profileBtn" class="auth-btn profile-btn" style="display:none;">Profil</button>
+                
+                <!-- Menu profilu -->
+                <div id="profileMenu" class="profile-menu hidden">
+
+                    <div class="menu-section">
+                        <div class="menu-title">Konto</div>
+                        <button class="menu-item" id="changeLoginBtn">Zmień login</button>
+                        <button class="menu-item" id="changePasswordBtn">Zmień hasło</button>
+                    </div>
+
+                    <div class="menu-section">
+                        <div class="menu-title">Historia</div>
+                        <button class="menu-item" id="openHistoryBtn">Historia kosztorysów</button>
+                        <button class="menu-item" id="openFinishedBtn">Zakończone prace</button>
+                    </div>
+
+                    <div class="menu-section">
+                        <button class="menu-item logout" id="logoutBtnInside">Wyloguj</button>
+                    </div>
+
+                </div>
             </div>
 
 
         </div>
     </header>
-
-    <!-- Menu profilu -->
-    <div id="profileMenu" class="profile-menu hidden">
-
-        <div class="menu-section">
-            <div class="menu-title">Konto</div>
-            <button class="menu-item" id="changeLoginBtn">Zmień login</button>
-            <button class="menu-item" id="changePasswordBtn">Zmień hasło</button>
-        </div>
-
-        <div class="menu-section">
-            <div class="menu-title">Historia</div>
-            <button class="menu-item" id="openHistoryBtn">Historia kosztorysów</button>
-            <button class="menu-item" id="openFinishedBtn">Zakończone prace</button>
-        </div>
-
-        <div class="menu-section">
-            <button class="menu-item logout" id="logoutBtnInside">Wyloguj</button>
-        </div>
-
-    </div>
 
 
 
@@ -125,10 +125,7 @@
 
             <!-- PDF (SIDEBAR DEFAULT) -->
             <div id="pdfPanel" class="panel">
-                <div class="panel-title">Generowanie PDF</div>
-
-                <button id="pdfClientBtn" class="btn full-width">PDF dla klienta</button>
-                <button id="pdfOwnerBtn" class="btn secondary full-width" style="margin-top:8px;">PDF dla firmy</button>
+                <button id="pdfGenerateBtn" class="btn full-width">Generowanie PDF</button>
             </div>
 
         </aside>

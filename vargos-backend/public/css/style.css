@@ -58,6 +58,7 @@ a {
     display: flex;
     align-items: center;
     gap: 12px;
+    position: relative;
 }
 
 .auth-btn {
@@ -136,8 +137,9 @@ a {
 
 .profile-menu {
     position: absolute;
-    top: 70px;
-    right: 24px;
+    top: 100%;
+    right: 0;
+    margin-top: 8px;
     background: #ffffff;
     width: 280px;
     border-radius: 16px;
@@ -775,7 +777,7 @@ textarea.input:focus {
     }
     /* Profile menu adjustments */
     .profile-menu {
-        right: 24px;
+        right: 0;
         width: 280px;
     }
 }
@@ -919,10 +921,11 @@ textarea.input:focus {
     }
     /* Profile menu full width on mobile */
     .profile-menu {
+        position: fixed;
         left: 16px;
         right: 16px;
         width: auto;
-        top: 70px;
+        top: 140px;
         border-radius: 16px;
     }
     .menu-item {
