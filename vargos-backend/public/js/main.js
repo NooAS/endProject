@@ -53,8 +53,7 @@ function updateDOMRefs() {
         globalWorkControls: $id("globalWorkControls"),
         sumNettoEl: $id("sumNetto"),
         sumBruttoEl: $id("sumBrutto"),
-        pdfClientBtn: $id("pdfClientBtn"),
-        pdfOwnerBtn: $id("pdfOwnerBtn"),
+        pdfGenerateBtn: $id("pdfGenerateBtn"),
         categoriesModal: $id("categoriesModal"),
         categoriesListEl: $id("categoriesList"),
         manageCategoriesBtn: $id("manageCategoriesBtn"),
@@ -201,11 +200,7 @@ async function loadCompanyDataIntoModal() {
     }
 }
 
-if (DOM.pdfClientBtn) DOM.pdfClientBtn.addEventListener("click", async () => {
-    await loadCompanyDataIntoModal();
-    openModal(DOM.pdfDataModal);
-});
-if (DOM.pdfOwnerBtn) DOM.pdfOwnerBtn.addEventListener("click", async () => {
+if (DOM.pdfGenerateBtn) DOM.pdfGenerateBtn.addEventListener("click", async () => {
     await loadCompanyDataIntoModal();
     openModal(DOM.pdfDataModal);
 });
