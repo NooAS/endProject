@@ -47,10 +47,31 @@ a {
 /* Containers */
 
 .container {
-    max-width: 1400px;
+    max-width: 94%;
     width: 100%;
     margin: 0 auto;
     padding: 0 24px;
+}
+
+/* For medium screens, limit to reasonable width */
+@media (min-width: 1200px) and (max-width: 1599px) {
+    .container {
+        max-width: 1400px;
+    }
+}
+
+/* For large screens (Full HD), use percentage-based width */
+@media (min-width: 1600px) {
+    .container {
+        max-width: 92%;
+    }
+}
+
+/* For extra large screens (2K and above), use more space */
+@media (min-width: 2000px) {
+    .container {
+        max-width: 90%;
+    }
 }
 
 .auth-buttons {
