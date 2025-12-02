@@ -636,21 +636,24 @@ textarea.input:focus {
 }
 
 
-/* Категория + шаблон — небольшие */
+/* Категория + шаблон — адаптивная ширина */
 
 .works-table .col-cat {
-    width: 100px;
+    width: 130px;
+    min-width: 100px;
 }
 
 .works-table .col-template {
-    width: 120px;
+    width: 150px;
+    min-width: 120px;
 }
 
 
-/* Единица измерения */
+/* Единица измерения — увеличенная минимальная ширина */
 
 .works-table .col-jm {
-    width: 70px;
+    width: 80px;
+    min-width: 70px;
 }
 
 
@@ -673,12 +676,14 @@ textarea.input:focus {
 }
 
 
-/* Автоматические — можно переносить строки */
+/* Автоматические — ограниченная ширина для баланса */
 
 .works-table .col-sumakl,
 .works-table .col-kosztfirmy,
 .works-table .col-zysk {
-    min-width: 20px;
+    width: 90px;
+    min-width: 70px;
+    max-width: 100px;
     white-space: normal !important;
     text-align: right;
 }
@@ -1143,6 +1148,65 @@ textarea.input:focus {
     vertical-align: middle;
     padding: 6px 8px;
     white-space: nowrap;
+}
+
+/* ======== Responsive table columns ======== */
+
+/* Medium screens (1200px - 1999px, includes 1680x1050) */
+@media (min-width: 1200px) and (max-width: 1999px) {
+    .works-table .col-cat {
+        width: 150px;
+        min-width: 130px;
+    }
+    
+    .works-table .col-template {
+        width: 170px;
+        min-width: 140px;
+    }
+    
+    .works-table .col-jm {
+        width: 90px;
+        min-width: 80px;
+    }
+    
+    .works-table .col-sumakl,
+    .works-table .col-kosztfirmy,
+    .works-table .col-zysk {
+        width: 85px;
+        min-width: 70px;
+        max-width: 95px;
+    }
+}
+
+/* Large screens (2K and above - 2000px+) */
+@media (min-width: 2000px) {
+    .works-table .col-cat {
+        width: 160px;
+        min-width: 140px;
+    }
+    
+    .works-table .col-template {
+        width: 180px;
+        min-width: 150px;
+    }
+    
+    .works-table .col-jm {
+        width: 100px;
+        min-width: 85px;
+    }
+    
+    .works-table .col-sumakl,
+    .works-table .col-kosztfirmy,
+    .works-table .col-zysk {
+        width: 90px;
+        min-width: 75px;
+        max-width: 100px;
+    }
+    
+    /* Allow nazwa column to take more space on wide screens */
+    .works-table .col-nazwa {
+        width: 320px;
+    }
 }
 
 
