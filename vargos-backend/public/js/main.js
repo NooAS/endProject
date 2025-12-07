@@ -2044,6 +2044,14 @@ async function openChartsModal() {
         
         const quotes = await res.json();
         
+        // Create a map of category IDs to names
+        const categoryMap = {};
+        if (project.categories && Array.isArray(project.categories)) {
+            project.categories.forEach(cat => {
+                categoryMap[cat.id] = cat.name;
+            });
+        }
+        
         // Aggregate data by category
         const expensesByCategory = {};
         const profitByCategory = {};
@@ -2052,22 +2060,28 @@ async function openChartsModal() {
             if (!quote.items || !Array.isArray(quote.items)) return;
             
             quote.items.forEach(item => {
-                const category = item.category || 'Bez kategorii';
+                // Get category name from ID, or use 'Bez kategorii' as default
+                let categoryName = 'Bez kategorii';
+                if (item.category) {
+                    const catId = parseInt(item.category);
+                    categoryName = categoryMap[catId] || `Kategoria ${item.category}`;
+                }
+                
                 const expense = item.total || 0;
                 const materialCost = (item.materialPrice || 0) * (item.quantity || 1);
                 const laborCost = (item.laborPrice || 0) * (item.quantity || 1);
                 const totalCost = materialCost + laborCost;
                 const profit = expense - totalCost;
                 
-                if (!expensesByCategory[category]) {
-                    expensesByCategory[category] = 0;
+                if (!expensesByCategory[categoryName]) {
+                    expensesByCategory[categoryName] = 0;
                 }
-                if (!profitByCategory[category]) {
-                    profitByCategory[category] = 0;
+                if (!profitByCategory[categoryName]) {
+                    profitByCategory[categoryName] = 0;
                 }
                 
-                expensesByCategory[category] += expense;
-                profitByCategory[category] += profit;
+                expensesByCategory[categoryName] += expense;
+                profitByCategory[categoryName] += profit;
             });
         });
         
@@ -2075,6 +2089,12 @@ async function openChartsModal() {
         const categories = Object.keys(expensesByCategory);
         const expenses = categories.map(cat => expensesByCategory[cat]);
         const profits = categories.map(cat => profitByCategory[cat]);
+        
+        // Check if there's any data
+        if (categories.length === 0) {
+            alert("Brak danych do wyświetlenia. Utwórz i zapisz kilka kosztorysów.");
+            return;
+        }
         
         // Open modal
         const chartsModal = document.getElementById("chartsModal");
