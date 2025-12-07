@@ -132,10 +132,16 @@ export async function importCategoriesToServer(fileContent, replaceExisting = fa
     }
 
     try {
-        const data = JSON.parse(fileContent);
+        let data;
+        try {
+            data = JSON.parse(fileContent);
+        } catch (parseError) {
+            alert("Nieprawidłowy format pliku JSON");
+            return false;
+        }
         
         if (!data.categories || !Array.isArray(data.categories)) {
-            alert("Nieprawidłowy format pliku");
+            alert("Nieprawidłowy format pliku - brak tablicy kategorii");
             return false;
         }
 

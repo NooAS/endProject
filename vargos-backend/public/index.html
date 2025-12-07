@@ -466,6 +466,59 @@
         </div>
     </div>
 
+    <!-- ========================= -->
+    <!--  MODAL: IMPORT CONFIRM   -->
+    <!-- ========================= -->
+
+    <div id="importConfirmModal" class="modal-backdrop">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Tryb importu kategorii</h2>
+                <div class="modal-close" onclick="closeModal(importConfirmModal)">✕</div>
+            </div>
+
+            <div class="modal-body">
+                <p style="margin-bottom: 15px; font-size: 15px;">Wybierz sposób importu kategorii:</p>
+                
+                <div style="margin-bottom: 20px; padding: 15px; border: 1px solid #e5e7eb; border-radius: 8px; background: #f9fafb;">
+                    <label class="radio" style="display: flex; align-items: start; margin-bottom: 10px; cursor: pointer;">
+                        <input type="radio" name="importMode" value="merge" checked style="margin-top: 4px; margin-right: 10px;">
+                        <div>
+                            <strong>Połącz z istniejącymi</strong>
+                            <div style="font-size: 13px; color: #6b7280; margin-top: 4px;">
+                                Dodaje nowe kategorie i szablony, zachowując istniejące.
+                                Duplikaty są pomijane.
+                            </div>
+                        </div>
+                    </label>
+                    
+                    <label class="radio" style="display: flex; align-items: start; cursor: pointer;">
+                        <input type="radio" name="importMode" value="replace" style="margin-top: 4px; margin-right: 10px;">
+                        <div>
+                            <strong style="color: #dc2626;">Zastąp wszystkie</strong>
+                            <div style="font-size: 13px; color: #6b7280; margin-top: 4px;">
+                                ⚠️ Usuwa wszystkie obecne kategorie i szablony,
+                                a następnie importuje nowe z pliku.
+                            </div>
+                        </div>
+                    </label>
+                </div>
+
+                <div class="modal-footer-buttons" style="display:flex; gap:10px;">
+                    <button id="importConfirmYes" class="btn full-width">Importuj</button>
+                    <button id="importConfirmNo" class="btn secondary full-width">Anuluj</button>
+                </div>
+            </div>
+        </div>
+    </div>
+                <div class="modal-footer-buttons" style="display:flex; gap:10px;">
+                    <button id="deleteConfirmYes" class="btn full-width" style="background: #dc2626;">Usuń</button>
+                    <button id="deleteConfirmNo" class="btn secondary full-width">Anuluj</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 
 
     <script type="module" src="js/main.js"></script>

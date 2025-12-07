@@ -69,11 +69,20 @@ router.get("/export", authMiddleware, async(req, res) => {
             categories: categories.map(c => ({
                 name: c.name,
                 order: c.order,
-                templates: c.templates.map(t => ({
-                    name: t.name,
-                    defaults: typeof t.defaults === "string" ?
-                        JSON.parse(t.defaults) : t.defaults || null
-                }))
+                templates: c.templates.map(t => {
+                    let defaults = null;
+                    try {
+                        defaults = typeof t.defaults === "string" ?
+                            JSON.parse(t.defaults) : t.defaults || null;
+                    } catch (e) {
+                        console.error("Invalid JSON in template defaults:", e);
+                        defaults = null;
+                    }
+                    return {
+                        name: t.name,
+                        defaults
+                    };
+                })
             }))
         };
 
@@ -123,9 +132,20 @@ router.post("/import", authMiddleware, async(req, res) => {
             });
 
             let category;
-            if (existingCategory && !replaceExisting) {
+            if (replaceExisting) {
+                // В режиме замены всегда создаём новую категорию
+                // (старые уже удалены выше)
+                category = await prisma.category.create({
+                    data: {
+                        name: cat.name.trim(),
+                        order: cat.order || 0,
+                        userId
+                    }
+                });
+            } else if (existingCategory) {
+                // В режиме слияния используем существующую категорию
                 category = existingCategory;
-            } else if (!existingCategory) {
+            } else {
                 // Создаём новую категорию
                 category = await prisma.category.create({
                     data: {

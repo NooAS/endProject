@@ -5,7 +5,7 @@ import { Project, Room, Work } from "./project-models.js";
 import { formatCurrency, formatNumberPL, loadCompanyDataFromStorage, saveCompanyDataToStorage, loadCompanyDataFromServer } from "./helpers.js";
 import { saveCategoriesToStorage } from "./categories-storage.js";
 import { loadPdfSettingsFromStorage, savePdfSettingsToStorage } from "./pdf-settings-storage.js";
-import { openModal, closeModal, showInputModal, showEditTemplateModal, showDeleteConfirmModal } from "./modals.js";
+import { openModal, closeModal, showInputModal, showEditTemplateModal, showDeleteConfirmModal, showImportConfirmModal } from "./modals.js";
 import { collectPdfData } from "./pdf-data.js";
 import { saveQuoteToServer, loadQuotesHistory, updateQuoteStatus, getQuotesByStatus, deleteQuoteFromServer } from "./quotes-api.js";
 import { generateClientPdf, generateOwnerPdf } from "./pdf-generator.js";
@@ -1407,11 +1407,13 @@ function renderCategoriesModal() {
 
         const reader = new FileReader();
         reader.onload = async(event) => {
-            const replaceExisting = confirm(
-                "Czy zastąpić istniejące kategorie?\n\n" +
-                "TAK - usunie wszystkie obecne kategorie i szablony\n" +
-                "NIE - doda tylko nowe kategorie i szablony"
-            );
+            const replaceExisting = await showImportConfirmModal();
+            
+            // If user cancelled (null), stop
+            if (replaceExisting === null) {
+                fileInput.value = ""; // Reset file input
+                return;
+            }
             
             const success = await importCategoriesToServer(event.target.result, replaceExisting);
             if (success) {

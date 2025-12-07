@@ -142,5 +142,42 @@ export function showDeleteConfirmModal(title, message) {
     });
 }
 
+export function showImportConfirmModal() {
+    return new Promise((resolve) => {
+        const modal = document.getElementById("importConfirmModal");
+        const yesBtn = document.getElementById("importConfirmYes");
+        const noBtn = document.getElementById("importConfirmNo");
+
+        if (!modal || !yesBtn || !noBtn) {
+            console.error("Import confirm modal elements not found");
+            resolve(null);
+            return;
+        }
+
+        const cleanup = () => {
+            yesBtn.onclick = null;
+            noBtn.onclick = null;
+            closeModal(modal);
+        };
+
+        yesBtn.onclick = () => {
+            const replaceMode = document.querySelector('input[name="importMode"]:checked')?.value === "replace";
+            cleanup();
+            resolve(replaceMode);
+        };
+
+        noBtn.onclick = () => {
+            cleanup();
+            resolve(null);
+        };
+
+        openModal(modal);
+        // Set default to merge mode
+        const mergeRadio = document.querySelector('input[name="importMode"][value="merge"]');
+        if (mergeRadio) mergeRadio.checked = true;
+        noBtn.focus();
+    });
+}
+
 window.closeModal = closeModal;
 window.openModal = openModal;
