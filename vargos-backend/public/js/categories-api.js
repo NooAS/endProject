@@ -92,3 +92,73 @@ export async function loadCategoriesFromServer() {
             })) : []
     }));
 }
+
+export async function exportCategoriesFromServer() {
+    const token = localStorage.getItem("token");
+    if (!token) {
+        alert("Musisz być zalogowany, aby eksportować kategorie");
+        return;
+    }
+
+    try {
+        const res = await fetch("/categories/export", {
+            headers: { "Authorization": "Bearer " + token }
+        });
+
+        if (!res.ok) {
+            throw new Error("Błąd eksportu kategorii");
+        }
+
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `categories-export-${Date.now()}.json`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+    } catch (e) {
+        console.error("Export error:", e);
+        alert("Błąd podczas eksportowania kategorii");
+    }
+}
+
+export async function importCategoriesToServer(fileContent, replaceExisting = false) {
+    const token = localStorage.getItem("token");
+    if (!token) {
+        alert("Musisz być zalogowany, aby importować kategorie");
+        return false;
+    }
+
+    try {
+        const data = JSON.parse(fileContent);
+        
+        if (!data.categories || !Array.isArray(data.categories)) {
+            alert("Nieprawidłowy format pliku");
+            return false;
+        }
+
+        const res = await fetch("/categories/import", {
+            method: "POST",
+            headers: {
+                "Authorization": "Bearer " + token,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                categories: data.categories,
+                replaceExisting
+            })
+        });
+
+        if (!res.ok) {
+            throw new Error("Błąd importu kategorii");
+        }
+
+        return true;
+    } catch (e) {
+        console.error("Import error:", e);
+        alert("Błąd podczas importowania kategorii: " + e.message);
+        return false;
+    }
+}
