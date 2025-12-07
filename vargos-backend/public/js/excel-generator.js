@@ -204,7 +204,8 @@ export async function generateOwnerExcel(project, config) {
     
     project.rooms.forEach(room => {
         roomHeaderRows.push(currentRow);
-        currentRow += 1 + room.works.length; // room header + work items
+        // Each room section has: 1 header row + N work items
+        currentRow += 1 + room.works.length;
     });
 
     // Apply styling to room header rows
@@ -221,9 +222,14 @@ export async function generateOwnerExcel(project, config) {
         }
     });
 
-    // Apply styling to footer totals (last 6 rows)
-    const totalRowsStart = range.e.r - 5;
-    for (let R = totalRowsStart; R <= range.e.r; R++) {
+    // Apply styling to footer totals
+    // The footer consists of 6 rows starting after 2 blank spacing rows
+    // We style the first column (labels) and leave the second column (values) unstyled
+    const footerStartRow = range.e.r - (project.notes && project.notes.trim() ? 8 : 5);
+    const footerRowCount = 6; // The 6 summary rows (netto, cost, profit, margin, VAT, brutto)
+    
+    for (let i = 0; i < footerRowCount; i++) {
+        const R = footerStartRow + i;
         for (let C = 0; C <= 1; C++) {
             const cellAddress = window.XLSX.utils.encode_cell({ r: R, c: C });
             if (ws[cellAddress]) {
