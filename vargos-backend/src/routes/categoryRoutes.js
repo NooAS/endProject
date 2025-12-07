@@ -173,10 +173,15 @@ router.post("/import", authMiddleware, async(req, res) => {
                     });
 
                     if (!existingTemplate) {
+                        // Ensure defaults is properly formatted for JSON storage
+                        const defaultsValue = tpl.defaults 
+                            ? (typeof tpl.defaults === 'string' ? tpl.defaults : JSON.stringify(tpl.defaults))
+                            : null;
+                            
                         await prisma.template.create({
                             data: {
                                 name: tpl.name.trim(),
-                                defaults: tpl.defaults || null,
+                                defaults: defaultsValue,
                                 categoryId: category.id,
                                 userId
                             }

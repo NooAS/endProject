@@ -1381,7 +1381,7 @@ function renderCategoriesModal() {
 
     const exportBtn = document.createElement("button");
     exportBtn.className = "btn secondary";
-    exportBtn.textContent = "📥 Eksportuj";
+    exportBtn.textContent = "⬇️ Eksportuj";
     exportBtn.title = "Eksportuj kategorie i szablony do pliku JSON";
     exportBtn.addEventListener("click", async() => {
         await exportCategoriesFromServer();
@@ -1389,7 +1389,7 @@ function renderCategoriesModal() {
 
     const importBtn = document.createElement("button");
     importBtn.className = "btn secondary";
-    importBtn.textContent = "📤 Importuj";
+    importBtn.textContent = "⬆️ Importuj";
     importBtn.title = "Importuj kategorie i szablony z pliku JSON";
     
     const fileInput = document.createElement("input");
