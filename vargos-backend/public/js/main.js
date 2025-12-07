@@ -9,6 +9,7 @@ import { openModal, closeModal, showInputModal, showEditTemplateModal, showDelet
 import { collectPdfData } from "./pdf-data.js";
 import { saveQuoteToServer, loadQuotesHistory, updateQuoteStatus, getQuotesByStatus, deleteQuoteFromServer } from "./quotes-api.js";
 import { generateClientPdf, generateOwnerPdf } from "./pdf-generator.js";
+import { generateOwnerExcel } from "./excel-generator.js";
 import {
     loadCategoriesFromServer,
     createCategoryOnServer,
@@ -62,6 +63,7 @@ function updateDOMRefs() {
         pdfDataModal: $id("pdfDataModal"),
         generateClientPdfBtn: $id("generateClientPdfBtn"),
         generateOwnerPdfBtn: $id("generateOwnerPdfBtn"),
+        generateOwnerExcelBtn: $id("generateOwnerExcelBtn"),
         saveToHistoryBtn: $id("saveToHistoryBtn"),
         profileBtn: $id("profileBtn"),
         profileMenu: $id("profileMenu"),
@@ -326,6 +328,21 @@ if (DOM.generateOwnerPdfBtn) {
         } catch (err) {
             console.error("Błąd przy generowaniu PDF dla właściciela:", err);
             alert("Nie udało się wygenerować PDF dla właściciela. Sprawdź konsolę.");
+        }
+    });
+}
+
+// --- GENERATE OWNER EXCEL ---
+if (DOM.generateOwnerExcelBtn) {
+    DOM.generateOwnerExcelBtn.addEventListener("click", async() => {
+        try {
+            await collectPdfData(project);
+            await saveQuoteToServer(project);
+            await generateOwnerExcel(project, config);
+            closeModal(DOM.pdfDataModal);
+        } catch (err) {
+            console.error("Błąd przy generowaniu Excel dla właściciela:", err);
+            alert("Nie udało się wygenerować Excel dla właściciela. Sprawdź konsolę.");
         }
     });
 }
