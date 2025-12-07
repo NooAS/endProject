@@ -15,6 +15,9 @@
     <!-- jsPDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 
 <body>
@@ -47,6 +50,11 @@
                         <div class="menu-title">Historia</div>
                         <button class="menu-item" id="openHistoryBtn">Historia kosztorysów</button>
                         <button class="menu-item" id="openFinishedBtn">Zakończone prace</button>
+                    </div>
+
+                    <div class="menu-section">
+                        <div class="menu-title">Analizy</div>
+                        <button class="menu-item" id="openChartsBtn">Wykresy i statystyki</button>
                     </div>
 
                     <div class="menu-section">
@@ -265,6 +273,51 @@
 
             <div class="modal-body" id="finishedContainer">
                 <!-- Tutaj JS wstawi listę zakończonych kosztorysów -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================= -->
+    <!--   MODAL: QUOTE VERSIONS  -->
+    <!-- ========================= -->
+
+    <div id="versionsModal" class="modal-backdrop">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 id="versionsModalTitle">Wersje kosztorysu</h2>
+                <div class="modal-close" onclick="closeModal(versionsModal)">✕</div>
+            </div>
+
+            <div class="modal-body" id="versionsContainer">
+                <!-- Tutaj JS wstawi listę wersji kosztorysu -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================= -->
+    <!--   MODAL: CHARTS          -->
+    <!-- ========================= -->
+
+    <div id="chartsModal" class="modal-backdrop">
+        <div class="modal modal-large">
+            <div class="modal-header">
+                <h2>Wykresy i statystyki</h2>
+                <div class="modal-close" onclick="closeModal(chartsModal)">✕</div>
+            </div>
+
+            <div class="modal-body" id="chartsContainer">
+                <div style="margin-bottom: 30px;">
+                    <h3>Diagram kosztów według kategorii</h3>
+                    <div style="max-width: 500px; margin: 0 auto;">
+                        <canvas id="expensesPieChart"></canvas>
+                    </div>
+                </div>
+                <div style="margin-bottom: 30px;">
+                    <h3>Wykres zysku według kategorii</h3>
+                    <div style="max-width: 800px; margin: 0 auto;">
+                        <canvas id="profitLineChart"></canvas>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

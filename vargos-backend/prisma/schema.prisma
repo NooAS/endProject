@@ -63,11 +63,16 @@ model Quote {
   total         Float
   notes         String?
   createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
   status        String      @default("normal")
   startedAt     DateTime?
   finishedAt    DateTime?
   dailyEarnings Float?
+  version       Int         @default(1)
+  parentQuoteId Int?
   items         QuoteItem[]
+
+  @@index([userId, name, createdAt])
 }
 
 model QuoteItem {

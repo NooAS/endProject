@@ -375,8 +375,8 @@ function renderFinishedQuotesUI(quotes) {
         div.className = "panel";
         div.style.marginBottom = "15px";
         
-        const finishedDate = q.finishedAt ? new Date(q.finishedAt).toLocaleString() : "";
-        const startedDate = q.startedAt ? new Date(q.startedAt).toLocaleString() : "";
+        const finishedDate = q.finishedAt ? new Date(q.finishedAt).toLocaleString('pl-PL') : "";
+        const startedDate = q.startedAt ? new Date(q.startedAt).toLocaleString('pl-PL') : "";
         
         // Calculate daily earnings and work duration using shared utility
         const calculatedDailyEarnings = calculateDailyEarnings(q.total, q.startedAt, q.finishedAt);
@@ -542,8 +542,15 @@ function createQuoteCard(q, isInProgress) {
     // Header content with name and total
     const headerContent = document.createElement("div");
     headerContent.style.flex = "1";
+    
+    // Add version count badge if there are multiple versions
+    const versionBadge = q.versionCount && q.versionCount > 1 
+        ? `<span style="margin-left:8px; background:#3b82f6; color:white; padding:2px 8px; border-radius:12px; font-size:12px; font-weight:500;">${q.versionCount} wersji</span>`
+        : '';
+    
     headerContent.innerHTML = `
         <h3 style="margin:0; display:inline;">${q.name}</h3>
+        ${versionBadge}
         <span style="margin-left:12px; color:#6b7280; font-size:14px;">${(q.total || 0).toFixed(2)} zł</span>
     `;
     headerWrapper.appendChild(headerContent);
@@ -560,7 +567,7 @@ function createQuoteCard(q, isInProgress) {
     const dateInfo = document.createElement("p");
     dateInfo.style.color = "#6b7280";
     dateInfo.style.fontSize = "13px";
-    dateInfo.innerHTML = `Data utworzenia: ${q.createdAt ? new Date(q.createdAt).toLocaleString() : ""}`;
+    dateInfo.innerHTML = `Data utworzenia: ${q.createdAt ? new Date(q.createdAt).toLocaleString('pl-PL') : ""}`;
     bodyContent.appendChild(dateInfo);
     
     // Toggle collapse on header click
@@ -640,6 +647,16 @@ function createQuoteCard(q, isInProgress) {
     editBtn.textContent = "Edytuj";
     editBtn.onclick = (e) => { e.stopPropagation(); editQuote(q.id); };
     buttonsDiv.appendChild(editBtn);
+    
+    // View versions button (if there are multiple versions)
+    if (q.versionCount && q.versionCount > 1) {
+        const versionsBtn = document.createElement("button");
+        versionsBtn.className = "btn";
+        versionsBtn.style.background = "linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)";
+        versionsBtn.textContent = "Zobacz wersje";
+        versionsBtn.onclick = (e) => { e.stopPropagation(); viewQuoteVersions(q.name); };
+        buttonsDiv.appendChild(versionsBtn);
+    }
     
     if (isInProgress) {
         // Finish button
@@ -1934,6 +1951,295 @@ async function loadQuoteFromServer(id) {
     }
 }
 window.loadQuoteFromServer = loadQuoteFromServer;
+
+// --- VIEW QUOTE VERSIONS ---
+async function viewQuoteVersions(quoteName) {
+    const token = localStorage.getItem("token");
+    if (!token) {
+        alert("Nie zalogowano");
+        return;
+    }
+
+    try {
+        const res = await fetch(`/quotes/versions/${encodeURIComponent(quoteName)}`, {
+            headers: { "Authorization": "Bearer " + token }
+        });
+        
+        if (!res.ok) {
+            alert("Błąd przy ładowaniu wersji");
+            return;
+        }
+        
+        const versions = await res.json();
+        
+        const versionsModal = document.getElementById("versionsModal");
+        const versionsModalTitle = document.getElementById("versionsModalTitle");
+        const versionsContainer = document.getElementById("versionsContainer");
+        
+        if (versionsModalTitle) {
+            versionsModalTitle.textContent = `Wersje: ${quoteName}`;
+        }
+        
+        if (versionsContainer) {
+            versionsContainer.innerHTML = "";
+            
+            if (versions.length === 0) {
+                versionsContainer.innerHTML = "<p>Brak wersji.</p>";
+            } else {
+                versions.forEach(version => {
+                    const versionCard = document.createElement("div");
+                    versionCard.className = "panel";
+                    versionCard.style.marginBottom = "15px";
+                    
+                    const isLatest = version === versions[0];
+                    const latestBadge = isLatest 
+                        ? '<span style="background:#16a34a; color:white; padding:2px 8px; border-radius:12px; font-size:12px; margin-left:8px;">Najnowsza</span>'
+                        : '';
+                    
+                    versionCard.innerHTML = `
+                        <h3>Wersja ${version.version} ${latestBadge}</h3>
+                        <p>Data utworzenia: ${new Date(version.createdAt).toLocaleString('pl-PL')}</p>
+                        <p>Data aktualizacji: ${new Date(version.updatedAt).toLocaleString('pl-PL')}</p>
+                        <p>Suma: <strong>${(version.total || 0).toFixed(2)} zł</strong></p>
+                        <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
+                            <button class="btn" onclick="editQuote(${version.id})">Edytuj tę wersję</button>
+                            <button class="btn secondary" onclick="deleteQuote(${version.id})">Usuń</button>
+                        </div>
+                    `;
+                    
+                    versionsContainer.appendChild(versionCard);
+                });
+            }
+        }
+        
+        openModal(versionsModal);
+    } catch (e) {
+        console.error("Błąd przy ładowaniu wersji:", e);
+        alert("Błąd sieci");
+    }
+}
+window.viewQuoteVersions = viewQuoteVersions;
+
+// --- CHARTS ---
+let expensesPieChart = null;
+let profitLineChart = null;
+
+async function openChartsModal() {
+    const token = localStorage.getItem("token");
+    if (!token) {
+        alert("Nie zalogowano");
+        return;
+    }
+
+    try {
+        // Load quotes to analyze
+        const res = await fetch("/quotes/my", {
+            headers: { "Authorization": "Bearer " + token }
+        });
+        
+        if (!res.ok) {
+            alert("Błąd przy ładowaniu danych");
+            return;
+        }
+        
+        const quotes = await res.json();
+        
+        // Create a map of category IDs to names
+        const categoryMap = {};
+        if (project.categories && Array.isArray(project.categories)) {
+            project.categories.forEach(cat => {
+                categoryMap[cat.id] = cat.name;
+            });
+        }
+        
+        // Aggregate data by category
+        const expensesByCategory = {};
+        const profitByCategory = {};
+        
+        quotes.forEach(quote => {
+            if (!quote.items || !Array.isArray(quote.items)) return;
+            
+            quote.items.forEach(item => {
+                // Get category name from ID, or use 'Bez kategorii' as default
+                let categoryName = 'Bez kategorii';
+                if (item.category) {
+                    const catId = parseInt(item.category);
+                    if (!isNaN(catId) && categoryMap[catId]) {
+                        categoryName = categoryMap[catId];
+                    } else if (item.category) {
+                        // If not in map but has value, try to use it as string
+                        categoryName = String(item.category);
+                    }
+                }
+                
+                const expense = item.total || 0;
+                const materialCost = (item.materialPrice || 0) * (item.quantity || 1);
+                const laborCost = (item.laborPrice || 0) * (item.quantity || 1);
+                const totalCost = materialCost + laborCost;
+                const profit = expense - totalCost;
+                
+                if (!expensesByCategory[categoryName]) {
+                    expensesByCategory[categoryName] = 0;
+                }
+                if (!profitByCategory[categoryName]) {
+                    profitByCategory[categoryName] = 0;
+                }
+                
+                expensesByCategory[categoryName] += expense;
+                profitByCategory[categoryName] += profit;
+            });
+        });
+        
+        // Prepare chart data
+        const categories = Object.keys(expensesByCategory);
+        const expenses = categories.map(cat => expensesByCategory[cat]);
+        const profits = categories.map(cat => profitByCategory[cat]);
+        
+        // Check if there's any data
+        if (categories.length === 0) {
+            alert("Brak danych do wyświetlenia. Utwórz i zapisz kilka kosztorysów.");
+            return;
+        }
+        
+        // Open modal
+        const chartsModal = document.getElementById("chartsModal");
+        openModal(chartsModal);
+        
+        // Wait for modal animation to complete before rendering charts
+        // Using requestAnimationFrame for better timing
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                renderExpensesPieChart(categories, expenses);
+                renderProfitLineChart(categories, profits);
+            });
+        });
+        
+    } catch (e) {
+        console.error("Błąd przy ładowaniu danych do wykresów:", e);
+        alert("Błąd sieci");
+    }
+}
+
+function renderExpensesPieChart(categories, expenses) {
+    const ctx = document.getElementById("expensesPieChart");
+    if (!ctx) return;
+    
+    // Destroy previous chart if exists
+    if (expensesPieChart) {
+        expensesPieChart.destroy();
+    }
+    
+    // Generate colors
+    const colors = generateColors(categories.length);
+    
+    expensesPieChart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: categories,
+            datasets: [{
+                data: expenses,
+                backgroundColor: colors,
+                borderWidth: 2,
+                borderColor: '#ffffff'
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = context.parsed || 0;
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = ((value / total) * 100).toFixed(1);
+                            return `${label}: ${value.toFixed(2)} zł (${percentage}%)`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function renderProfitLineChart(categories, profits) {
+    const ctx = document.getElementById("profitLineChart");
+    if (!ctx) return;
+    
+    // Destroy previous chart if exists
+    if (profitLineChart) {
+        profitLineChart.destroy();
+    }
+    
+    profitLineChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: categories,
+            datasets: [{
+                label: 'Zysk (zł)',
+                data: profits,
+                backgroundColor: profits.map(p => p >= 0 ? 'rgba(22, 163, 74, 0.7)' : 'rgba(220, 38, 38, 0.7)'),
+                borderColor: profits.map(p => p >= 0 ? 'rgb(22, 163, 74)' : 'rgb(220, 38, 38)'),
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Zysk (zł)'
+                    },
+                    ticks: {
+                        callback: function(value) {
+                            return value.toFixed(2) + ' zł';
+                        }
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const value = context.parsed.y || 0;
+                            return `Zysk: ${value.toFixed(2)} zł`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function generateColors(count) {
+    const colors = [
+        '#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6',
+        '#ec4899', '#14b8a6', '#f97316', '#6366f1', '#84cc16'
+    ];
+    
+    const result = [];
+    for (let i = 0; i < count; i++) {
+        result.push(colors[i % colors.length]);
+    }
+    return result;
+}
+
+// Add event listener for charts button
+const openChartsBtn = document.getElementById("openChartsBtn");
+if (openChartsBtn) {
+    openChartsBtn.addEventListener("click", () => {
+        if (DOM.profileMenu) DOM.profileMenu.classList.add("hidden");
+        openChartsModal();
+    });
+}
 
 // --- INIT ---
 (async function init() {

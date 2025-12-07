@@ -549,6 +549,10 @@ textarea.input:focus {
     transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+.modal-large {
+    max-width: 1000px;
+}
+
 .modal-backdrop.active .modal {
     transform: translateY(0) scale(1);
     opacity: 1;
