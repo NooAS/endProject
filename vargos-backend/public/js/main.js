@@ -131,6 +131,13 @@ if (DOM.applyConfigBtn) {
                 
                 // Keep only the first room
                 project.rooms = [firstRoom];
+                
+                // Regenerate work IDs to avoid duplicates
+                firstRoom.number = 1;
+                firstRoom.works.forEach((work, workIndex) => {
+                    const index = workIndex + 1;
+                    work.id = newUseNumbering ? `${firstRoom.number}.${index}` : String(index);
+                });
             }
         } else if (!oldUseRooms && newUseRooms) {
             // Switching from single room to multiple rooms mode
@@ -169,13 +176,25 @@ if (DOM.applyConfigBtn) {
         // Handle useNumbering change
         if (oldUseNumbering !== newUseNumbering) {
             // Re-generate work IDs based on new numbering setting
-            project.rooms.forEach((room, roomIndex) => {
-                room.number = roomIndex + 1;
-                room.works.forEach((work, workIndex) => {
-                    const index = workIndex + 1;
-                    work.id = newUseNumbering ? `${room.number}.${index}` : String(index);
+            if (newUseNumbering) {
+                // Switching to numbered mode - use room.workIndex format
+                project.rooms.forEach((room, roomIndex) => {
+                    room.number = roomIndex + 1;
+                    room.works.forEach((work, workIndex) => {
+                        const index = workIndex + 1;
+                        work.id = `${room.number}.${index}`;
+                    });
                 });
-            });
+            } else {
+                // Switching to non-numbered mode - use sequential numbering across all works
+                let globalIndex = 1;
+                project.rooms.forEach((room, roomIndex) => {
+                    room.number = roomIndex + 1;
+                    room.works.forEach((work) => {
+                        work.id = String(globalIndex++);
+                    });
+                });
+            }
         }
         
         // Handle mode change (simple <-> extended)
