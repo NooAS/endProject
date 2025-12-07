@@ -2191,7 +2191,7 @@ function renderChartsWithFilters() {
     if (scope === "single") {
         // Single quote mode
         const quoteId = quoteSelect ? parseInt(quoteSelect.value) : null;
-        if (!quoteId) {
+        if (!quoteId || isNaN(quoteId)) {
             alert("Proszę wybrać kosztorys");
             return;
         }
@@ -2277,25 +2277,34 @@ function filterQuotesByTimePeriod(quotes, period) {
         return quotes;
     }
     
+    // Time period constants (in milliseconds)
+    const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+    const MONTH_MS = 30 * 24 * 60 * 60 * 1000;
+    const YEAR_MS = 365 * 24 * 60 * 60 * 1000;
+    
     const now = new Date();
     let cutoffDate;
     
     switch (period) {
         case "week":
-            cutoffDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            cutoffDate = new Date(now.getTime() - WEEK_MS);
             break;
         case "month":
-            cutoffDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+            // Use proper month calculation instead of fixed 30 days
+            cutoffDate = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
             break;
         case "year":
-            cutoffDate = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+            cutoffDate = new Date(now.getTime() - YEAR_MS);
             break;
         default:
             return quotes;
     }
     
     return quotes.filter(quote => {
+        if (!quote.createdAt) return false;
         const quoteDate = new Date(quote.createdAt);
+        // Check if date is valid
+        if (isNaN(quoteDate.getTime())) return false;
         return quoteDate >= cutoffDate;
     });
 }
