@@ -106,10 +106,9 @@ export const getMyQuotes = async(req, res) => {
                 quotesByName[quote.name] = quote;
                 versionCounts[quote.name] = 1;
             } else {
-                // Keep the latest version (higher version number or newer createdAt)
+                // Keep the latest version (higher version number)
                 const existing = quotesByName[quote.name];
-                if (quote.version > existing.version || 
-                    (quote.version === existing.version && quote.createdAt > existing.createdAt)) {
+                if (quote.version > existing.version) {
                     quotesByName[quote.name] = quote;
                 }
                 versionCounts[quote.name]++;
@@ -122,8 +121,8 @@ export const getMyQuotes = async(req, res) => {
             versionCount: versionCounts[quote.name]
         }));
 
-        // Sort by createdAt descending
-        latestQuotes.sort((a, b) => b.createdAt - a.createdAt);
+        // Sort by createdAt descending (most recent first)
+        latestQuotes.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
         res.json(latestQuotes);
     } catch (e) {

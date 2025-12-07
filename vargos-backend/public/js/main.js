@@ -375,8 +375,8 @@ function renderFinishedQuotesUI(quotes) {
         div.className = "panel";
         div.style.marginBottom = "15px";
         
-        const finishedDate = q.finishedAt ? new Date(q.finishedAt).toLocaleString() : "";
-        const startedDate = q.startedAt ? new Date(q.startedAt).toLocaleString() : "";
+        const finishedDate = q.finishedAt ? new Date(q.finishedAt).toLocaleString('pl-PL') : "";
+        const startedDate = q.startedAt ? new Date(q.startedAt).toLocaleString('pl-PL') : "";
         
         // Calculate daily earnings and work duration using shared utility
         const calculatedDailyEarnings = calculateDailyEarnings(q.total, q.startedAt, q.finishedAt);
@@ -567,7 +567,7 @@ function createQuoteCard(q, isInProgress) {
     const dateInfo = document.createElement("p");
     dateInfo.style.color = "#6b7280";
     dateInfo.style.fontSize = "13px";
-    dateInfo.innerHTML = `Data utworzenia: ${q.createdAt ? new Date(q.createdAt).toLocaleString() : ""}`;
+    dateInfo.innerHTML = `Data utworzenia: ${q.createdAt ? new Date(q.createdAt).toLocaleString('pl-PL') : ""}`;
     bodyContent.appendChild(dateInfo);
     
     // Toggle collapse on header click
@@ -1998,8 +1998,8 @@ async function viewQuoteVersions(quoteName) {
                     
                     versionCard.innerHTML = `
                         <h3>Wersja ${version.version} ${latestBadge}</h3>
-                        <p>Data utworzenia: ${new Date(version.createdAt).toLocaleString()}</p>
-                        <p>Data aktualizacji: ${new Date(version.updatedAt).toLocaleString()}</p>
+                        <p>Data utworzenia: ${new Date(version.createdAt).toLocaleString('pl-PL')}</p>
+                        <p>Data aktualizacji: ${new Date(version.updatedAt).toLocaleString('pl-PL')}</p>
                         <p>Suma: <strong>${(version.total || 0).toFixed(2)} zł</strong></p>
                         <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
                             <button class="btn" onclick="editQuote(${version.id})">Edytuj tę wersję</button>
@@ -2064,7 +2064,12 @@ async function openChartsModal() {
                 let categoryName = 'Bez kategorii';
                 if (item.category) {
                     const catId = parseInt(item.category);
-                    categoryName = categoryMap[catId] || `Kategoria ${item.category}`;
+                    if (!isNaN(catId) && categoryMap[catId]) {
+                        categoryName = categoryMap[catId];
+                    } else if (item.category) {
+                        // If not in map but has value, try to use it as string
+                        categoryName = String(item.category);
+                    }
                 }
                 
                 const expense = item.total || 0;
@@ -2100,11 +2105,14 @@ async function openChartsModal() {
         const chartsModal = document.getElementById("chartsModal");
         openModal(chartsModal);
         
-        // Wait for modal to be visible before rendering charts
-        setTimeout(() => {
-            renderExpensesPieChart(categories, expenses);
-            renderProfitLineChart(categories, profits);
-        }, 100);
+        // Wait for modal animation to complete before rendering charts
+        // Using requestAnimationFrame for better timing
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                renderExpensesPieChart(categories, expenses);
+                renderProfitLineChart(categories, profits);
+            });
+        });
         
     } catch (e) {
         console.error("Błąd przy ładowaniu danych do wykresów:", e);
