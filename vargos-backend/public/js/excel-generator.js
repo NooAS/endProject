@@ -1,7 +1,6 @@
 // Excel generation for company (owner) version
 // Exports: generateOwnerExcel(project, config)
-// Dependencies: window.XLSX (SheetJS), collectPdfData, formatCurrency, formatNumberPL
-import { formatCurrency, formatNumberPL } from "./helpers.js";
+// Dependencies: window.XLSX (SheetJS), collectPdfData
 import { collectPdfData } from "./pdf-data.js";
 
 /**
@@ -75,7 +74,7 @@ export async function generateOwnerExcel(project, config) {
         }, 0);
 
         const roomProfit = roomNetto - roomCompanyCost;
-        const roomMargin = roomCompanyCost > 0 ? (roomProfit / roomCompanyCost) * 100 : 0;
+        const roomMargin = roomCompanyCost > 0 ? (roomProfit / roomCompanyCost) : 0;
 
         // Room header row
         wsData.push([
@@ -88,7 +87,7 @@ export async function generateOwnerExcel(project, config) {
             "",
             roomCompanyCost,
             roomProfit,
-            roomMargin.toFixed(1) + "%"
+            roomMargin / 100  // Convert to decimal for Excel percentage format
         ]);
 
         // Work items
@@ -102,7 +101,7 @@ export async function generateOwnerExcel(project, config) {
             const clientTotal = w.quantity * clientNet;
             const companyCost = w.quantity * cost;
             const profit = clientTotal - companyCost;
-            const marginPercent = companyCost > 0 ? (profit / companyCost) * 100 : 0;
+            const marginPercent = companyCost > 0 ? (profit / companyCost) : 0;
 
             wsData.push([
                 room.number + "." + (i + 1),
@@ -114,7 +113,7 @@ export async function generateOwnerExcel(project, config) {
                 labor,
                 companyCost,
                 profit,
-                marginPercent.toFixed(1) + "%"
+                marginPercent / 100  // Convert to decimal for Excel percentage format
             ]);
         });
 
@@ -136,12 +135,12 @@ export async function generateOwnerExcel(project, config) {
     }, 0);
 
     const totalProfit = netto - allCosts;
-    const marginPercent = allCosts > 0 ? ((totalProfit / allCosts) * 100).toFixed(1) : "0";
+    const marginPercent = allCosts > 0 ? (totalProfit / allCosts) : 0;
 
     wsData.push(["Suma netto (klient):", netto]);
     wsData.push(["Koszt firmy:", allCosts]);
     wsData.push(["Zysk calkowity:", totalProfit]);
-    wsData.push(["Marza:", marginPercent + "%"]);
+    wsData.push(["Marza:", marginPercent / 100]);  // Convert to decimal for Excel percentage format
     wsData.push(["VAT " + config.vat + "%:", vatAmount]);
     wsData.push(["Brutto klienta:", brutto]);
 
@@ -169,6 +168,18 @@ export async function generateOwnerExcel(project, config) {
         { wch: 10 }   // Marza %
     ];
     ws['!cols'] = colWidths;
+
+    // Apply percentage formatting to margin column (column J, index 9)
+    // Format cells starting from row 7 (after headers) to the data rows
+    const headerRowCount = 6; // Number of rows before the data table starts
+    const range = window.XLSX.utils.decode_range(ws['!ref']);
+    
+    for (let R = headerRowCount; R <= range.e.r; R++) {
+        const cellAddress = window.XLSX.utils.encode_cell({ r: R, c: 9 }); // Column J (Marza %)
+        if (ws[cellAddress] && typeof ws[cellAddress].v === 'number') {
+            ws[cellAddress].z = '0.0%'; // Excel percentage format with 1 decimal place
+        }
+    }
 
     // Add worksheet to workbook
     window.XLSX.utils.book_append_sheet(wb, ws, "Wycena dla firmy");
