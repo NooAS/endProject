@@ -648,6 +648,14 @@ function createQuoteCard(q, isInProgress) {
     editBtn.onclick = (e) => { e.stopPropagation(); editQuote(q.id); };
     buttonsDiv.appendChild(editBtn);
     
+    // View charts button
+    const chartsBtn = document.createElement("button");
+    chartsBtn.className = "btn";
+    chartsBtn.style.background = "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)";
+    chartsBtn.textContent = "Wykresy";
+    chartsBtn.onclick = (e) => { e.stopPropagation(); viewQuoteCharts(q.id); };
+    buttonsDiv.appendChild(chartsBtn);
+    
     // View versions button (if there are multiple versions)
     if (q.versionCount && q.versionCount > 1) {
         const versionsBtn = document.createElement("button");
@@ -2020,9 +2028,43 @@ async function viewQuoteVersions(quoteName) {
 }
 window.viewQuoteVersions = viewQuoteVersions;
 
+// --- VIEW CHARTS FOR SPECIFIC QUOTE ---
+async function viewQuoteCharts(quoteId) {
+    // Close history modal
+    closeModal(DOM.historyModal);
+    
+    // Open charts modal with pre-selected quote
+    await openChartsModal();
+    
+    // Set filters to single quote mode
+    const scopeSelect = document.getElementById("chartScope");
+    const quoteSelect = document.getElementById("chartQuote");
+    const quoteSelector = document.getElementById("quoteSelector");
+    
+    if (scopeSelect) {
+        scopeSelect.value = "single";
+        if (quoteSelector) {
+            quoteSelector.style.display = "block";
+        }
+        const timePeriodSelector = document.getElementById("timePeriodSelector");
+        if (timePeriodSelector) {
+            timePeriodSelector.style.display = "none";
+        }
+    }
+    
+    if (quoteSelect) {
+        quoteSelect.value = String(quoteId);
+    }
+    
+    // Render charts for selected quote
+    renderChartsWithFilters();
+}
+window.viewQuoteCharts = viewQuoteCharts;
+
 // --- CHARTS ---
 let expensesPieChart = null;
 let profitLineChart = null;
+let allQuotesData = []; // Store quotes data for filtering
 
 async function openChartsModal() {
     const token = localStorage.getItem("token");
@@ -2042,61 +2084,9 @@ async function openChartsModal() {
             return;
         }
         
-        const quotes = await res.json();
+        allQuotesData = await res.json();
         
-        // Create a map of category IDs to names
-        const categoryMap = {};
-        if (project.categories && Array.isArray(project.categories)) {
-            project.categories.forEach(cat => {
-                categoryMap[cat.id] = cat.name;
-            });
-        }
-        
-        // Aggregate data by category
-        const expensesByCategory = {};
-        const profitByCategory = {};
-        
-        quotes.forEach(quote => {
-            if (!quote.items || !Array.isArray(quote.items)) return;
-            
-            quote.items.forEach(item => {
-                // Get category name from ID, or use 'Bez kategorii' as default
-                let categoryName = 'Bez kategorii';
-                if (item.category) {
-                    const catId = parseInt(item.category);
-                    if (!isNaN(catId) && categoryMap[catId]) {
-                        categoryName = categoryMap[catId];
-                    } else if (item.category) {
-                        // If not in map but has value, try to use it as string
-                        categoryName = String(item.category);
-                    }
-                }
-                
-                const expense = item.total || 0;
-                const materialCost = (item.materialPrice || 0) * (item.quantity || 1);
-                const laborCost = (item.laborPrice || 0) * (item.quantity || 1);
-                const totalCost = materialCost + laborCost;
-                const profit = expense - totalCost;
-                
-                if (!expensesByCategory[categoryName]) {
-                    expensesByCategory[categoryName] = 0;
-                }
-                if (!profitByCategory[categoryName]) {
-                    profitByCategory[categoryName] = 0;
-                }
-                
-                expensesByCategory[categoryName] += expense;
-                profitByCategory[categoryName] += profit;
-            });
-        });
-        
-        // Prepare chart data
-        const categories = Object.keys(expensesByCategory);
-        const expenses = categories.map(cat => expensesByCategory[cat]);
-        const profits = categories.map(cat => profitByCategory[cat]);
-        
-        // Check if there's any data
-        if (categories.length === 0) {
+        if (!allQuotesData || allQuotesData.length === 0) {
             alert("Brak danych do wyświetlenia. Utwórz i zapisz kilka kosztorysów.");
             return;
         }
@@ -2105,12 +2095,17 @@ async function openChartsModal() {
         const chartsModal = document.getElementById("chartsModal");
         openModal(chartsModal);
         
+        // Populate quote selector
+        populateQuoteSelector(allQuotesData);
+        
+        // Setup filter controls
+        setupChartFilterControls();
+        
         // Wait for modal animation to complete before rendering charts
         // Using requestAnimationFrame for better timing
         requestAnimationFrame(() => {
             requestAnimationFrame(() => {
-                renderExpensesPieChart(categories, expenses);
-                renderProfitLineChart(categories, profits);
+                renderChartsWithFilters();
             });
         });
         
@@ -2118,6 +2113,191 @@ async function openChartsModal() {
         console.error("Błąd przy ładowaniu danych do wykresów:", e);
         alert("Błąd sieci");
     }
+}
+
+function populateQuoteSelector(quotes) {
+    const quoteSelect = document.getElementById("chartQuote");
+    if (!quoteSelect) return;
+    
+    // Clear existing options except the first one
+    quoteSelect.innerHTML = '<option value="">Wybierz kosztorys...</option>';
+    
+    // Group quotes by name to show versions
+    const quotesByName = {};
+    quotes.forEach(q => {
+        if (!quotesByName[q.name]) {
+            quotesByName[q.name] = [];
+        }
+        quotesByName[q.name].push(q);
+    });
+    
+    // Add quotes to selector
+    Object.keys(quotesByName).forEach(name => {
+        const versions = quotesByName[name];
+        if (versions.length === 1) {
+            const option = document.createElement("option");
+            option.value = versions[0].id;
+            option.textContent = name;
+            quoteSelect.appendChild(option);
+        } else {
+            // Multiple versions - show them grouped
+            versions.forEach((q, idx) => {
+                const option = document.createElement("option");
+                option.value = q.id;
+                option.textContent = `${name} (v${q.version || idx + 1})`;
+                quoteSelect.appendChild(option);
+            });
+        }
+    });
+}
+
+function setupChartFilterControls() {
+    const scopeSelect = document.getElementById("chartScope");
+    const quoteSelector = document.getElementById("quoteSelector");
+    const timePeriodSelector = document.getElementById("timePeriodSelector");
+    const applyBtn = document.getElementById("applyChartFilters");
+    
+    if (!scopeSelect) return;
+    
+    // Toggle visibility based on scope
+    scopeSelect.addEventListener("change", () => {
+        const scope = scopeSelect.value;
+        if (quoteSelector) {
+            quoteSelector.style.display = scope === "single" ? "block" : "none";
+        }
+        if (timePeriodSelector) {
+            timePeriodSelector.style.display = scope === "all" ? "block" : "none";
+        }
+    });
+    
+    // Apply filters button
+    if (applyBtn) {
+        applyBtn.addEventListener("click", () => {
+            renderChartsWithFilters();
+        });
+    }
+}
+
+function renderChartsWithFilters() {
+    const scopeSelect = document.getElementById("chartScope");
+    const quoteSelect = document.getElementById("chartQuote");
+    const timePeriodSelect = document.getElementById("chartTimePeriod");
+    
+    if (!scopeSelect) return;
+    
+    const scope = scopeSelect.value;
+    let quotesToAnalyze = [];
+    
+    if (scope === "single") {
+        // Single quote mode
+        const quoteId = quoteSelect ? parseInt(quoteSelect.value) : null;
+        if (!quoteId) {
+            alert("Proszę wybrać kosztorys");
+            return;
+        }
+        const quote = allQuotesData.find(q => q.id === quoteId);
+        if (quote) {
+            quotesToAnalyze = [quote];
+        }
+    } else {
+        // All quotes mode with time period filter
+        const timePeriod = timePeriodSelect ? timePeriodSelect.value : "all";
+        quotesToAnalyze = filterQuotesByTimePeriod(allQuotesData, timePeriod);
+    }
+    
+    if (quotesToAnalyze.length === 0) {
+        alert("Brak danych do wyświetlenia dla wybranych filtrów");
+        return;
+    }
+    
+    // Create a map of category IDs to names
+    const categoryMap = {};
+    if (project.categories && Array.isArray(project.categories)) {
+        project.categories.forEach(cat => {
+            categoryMap[cat.id] = cat.name;
+        });
+    }
+    
+    // Aggregate data by category
+    const expensesByCategory = {};
+    const profitByCategory = {};
+    
+    quotesToAnalyze.forEach(quote => {
+        if (!quote.items || !Array.isArray(quote.items)) return;
+        
+        quote.items.forEach(item => {
+            // Get category name from ID, or use 'Bez kategorii' as default
+            let categoryName = 'Bez kategorii';
+            if (item.category) {
+                const catId = parseInt(item.category);
+                if (!isNaN(catId) && categoryMap[catId]) {
+                    categoryName = categoryMap[catId];
+                } else if (item.category) {
+                    // If not in map but has value, try to use it as string
+                    categoryName = String(item.category);
+                }
+            }
+            
+            const expense = item.total || 0;
+            const materialCost = (item.materialPrice || 0) * (item.quantity || 1);
+            const laborCost = (item.laborPrice || 0) * (item.quantity || 1);
+            const totalCost = materialCost + laborCost;
+            const profit = expense - totalCost;
+            
+            if (!expensesByCategory[categoryName]) {
+                expensesByCategory[categoryName] = 0;
+            }
+            if (!profitByCategory[categoryName]) {
+                profitByCategory[categoryName] = 0;
+            }
+            
+            expensesByCategory[categoryName] += expense;
+            profitByCategory[categoryName] += profit;
+        });
+    });
+    
+    // Prepare chart data
+    const categories = Object.keys(expensesByCategory);
+    const expenses = categories.map(cat => expensesByCategory[cat]);
+    const profits = categories.map(cat => profitByCategory[cat]);
+    
+    // Check if there's any data
+    if (categories.length === 0) {
+        alert("Brak danych do wyświetlenia dla wybranych filtrów");
+        return;
+    }
+    
+    // Render charts
+    renderExpensesPieChart(categories, expenses);
+    renderProfitLineChart(categories, profits);
+}
+
+function filterQuotesByTimePeriod(quotes, period) {
+    if (period === "all") {
+        return quotes;
+    }
+    
+    const now = new Date();
+    let cutoffDate;
+    
+    switch (period) {
+        case "week":
+            cutoffDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            break;
+        case "month":
+            cutoffDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+            break;
+        case "year":
+            cutoffDate = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+            break;
+        default:
+            return quotes;
+    }
+    
+    return quotes.filter(quote => {
+        const quoteDate = new Date(quote.createdAt);
+        return quoteDate >= cutoffDate;
+    });
 }
 
 function renderExpensesPieChart(categories, expenses) {
