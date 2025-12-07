@@ -2175,7 +2175,7 @@ async function generateOwnerPdf() {
             const clientTotal = w.quantity * clientNet;
             const companyCost = w.quantity * cost;
             const profit = clientTotal - companyCost;
-            const marginPercent = companyCost > 0 ? (profit / companyCost) * 100 : 0;
+            const marginPercent = clientTotal > 0 ? (profit / clientTotal) * 100 : 0;
 
             tableBody.push([
                 `${room.number}.${i+1}`,
@@ -2233,7 +2233,7 @@ async function generateOwnerPdf() {
     pdf.text(`Suma netto (klient):     ${formatCurrency(netto)}`, margin, fy);
     pdf.text(`Koszt firmy:             ${formatCurrency(allCosts)}`, margin, fy + 6);
     pdf.text(`Zysk całkowity:         ${formatCurrency(totalProfit)}`, margin, fy + 12);
-    pdf.text(`Marża:                   ${((totalProfit / allCosts) * 100).toFixed(1)}%`, margin, fy + 18);
+    pdf.text(`Marża:                   ${((totalProfit / netto) * 100).toFixed(1)}%`, margin, fy + 18);
     pdf.text(`VAT ${config.vat}%:             ${formatCurrency(vatAmount)}`, margin, fy + 24);
     pdf.text(`Brutto klienta:          ${formatCurrency(brutto)}`, margin, fy + 30);
 

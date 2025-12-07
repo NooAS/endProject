@@ -268,7 +268,7 @@ export async function generateOwnerPdf(project, config) {
         }, 0);
 
         const roomProfit = roomNetto - roomCompanyCost;
-        const roomMargin = roomCompanyCost > 0 ? (roomProfit / roomCompanyCost) * 100 : 0;
+        const roomMargin = roomNetto > 0 ? (roomProfit / roomNetto) * 100 : 0;
 
         tableBody.push([
             { content: "" + sectionIndex, styles: { fillColor: [240, 240, 240], fontStyle: "bold" } },
@@ -289,7 +289,7 @@ export async function generateOwnerPdf(project, config) {
             const clientTotal = w.quantity * clientNet;
             const companyCost = w.quantity * cost;
             const profit = clientTotal - companyCost;
-            const marginPercent = companyCost > 0 ? (profit / companyCost) * 100 : 0;
+            const marginPercent = clientTotal > 0 ? (profit / clientTotal) * 100 : 0;
 
             tableBody.push([
                 room.number + "." + (i + 1),
@@ -343,7 +343,7 @@ export async function generateOwnerPdf(project, config) {
     }, 0);
 
     const totalProfit = netto - allCosts;
-    const marginText = allCosts > 0 ? ((totalProfit / allCosts) * 100).toFixed(1) + "%" : "0%";
+    const marginText = netto > 0 ? ((totalProfit / netto) * 100).toFixed(1) + "%" : "0%";
 
     pdf.setFontSize(12);
     pdf.text("Suma netto (klient):     " + formatCurrency(netto), margin, fy);
