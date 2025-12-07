@@ -16,6 +16,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
     
+    <!-- SheetJS for Excel generation -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
@@ -234,10 +237,11 @@
                 </div>
             </div>
 
-            <div class="modal-footer-buttons" style="margin-top:15px; display:flex; gap:10px;">
+            <div class="modal-footer-buttons" style="margin-top:15px; display:flex; gap:10px; flex-wrap:wrap;">
                 <button id="saveToHistoryBtn" class="btn full-width">Zapisz do historii</button>
                 <button id="generateClientPdfBtn" class="btn full-width">Generuj PDF (klient)</button>
                 <button id="generateOwnerPdfBtn" class="btn secondary full-width">PDF dla firmy</button>
+                <button id="generateOwnerExcelBtn" class="btn secondary full-width">Excel dla firmy</button>
             </div>
 
         </div>
