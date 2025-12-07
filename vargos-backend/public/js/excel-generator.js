@@ -87,7 +87,7 @@ export async function generateOwnerExcel(project, config) {
             "",
             roomCompanyCost,
             roomProfit,
-            roomMargin / 100  // Convert to decimal for Excel percentage format
+            roomMargin  // Excel percentage format will handle the conversion
         ]);
 
         // Work items
@@ -113,7 +113,7 @@ export async function generateOwnerExcel(project, config) {
                 labor,
                 companyCost,
                 profit,
-                marginPercent / 100  // Convert to decimal for Excel percentage format
+                marginPercent  // Excel percentage format will handle the conversion
             ]);
         });
 
@@ -140,7 +140,7 @@ export async function generateOwnerExcel(project, config) {
     wsData.push(["Suma netto (klient):", netto]);
     wsData.push(["Koszt firmy:", allCosts]);
     wsData.push(["Zysk calkowity:", totalProfit]);
-    wsData.push(["Marza:", marginPercent / 100]);  // Convert to decimal for Excel percentage format
+    wsData.push(["Marza:", marginPercent]);  // Excel percentage format will handle the conversion
     wsData.push(["VAT " + config.vat + "%:", vatAmount]);
     wsData.push(["Brutto klienta:", brutto]);
 
@@ -156,7 +156,7 @@ export async function generateOwnerExcel(project, config) {
 
     // Set column widths
     const colWidths = [
-        { wch: 8 },   // Lp
+        { wch: 25 },  // Lp (wider to accommodate footer labels like "Suma netto (klient):")
         { wch: 35 },  // Rodzaj prac
         { wch: 6 },   // Jm
         { wch: 8 },   // Ilosc
