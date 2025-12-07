@@ -306,6 +306,45 @@
             </div>
 
             <div class="modal-body" id="chartsContainer">
+                <!-- Filter Options -->
+                <div style="margin-bottom: 30px; padding: 15px; background: #f3f4f6; border-radius: 8px;">
+                    <div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: center;">
+                        <!-- Scope Selector -->
+                        <div style="flex: 1; min-width: 200px;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 500;">Zakres:</label>
+                            <select id="chartScope" class="input" style="width: 100%;">
+                                <option value="all">Wszystkie kosztorysy</option>
+                                <option value="single">Pojedynczy kosztorys</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Quote Selector (hidden by default) -->
+                        <div id="quoteSelector" style="flex: 1; min-width: 200px; display: none;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 500;">Kosztorys:</label>
+                            <select id="chartQuote" class="input" style="width: 100%;">
+                                <option value="">Wybierz kosztorys...</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Time Period Filter (only for "all" scope) -->
+                        <div id="timePeriodSelector" style="flex: 1; min-width: 200px;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 500;">Okres:</label>
+                            <select id="chartTimePeriod" class="input" style="width: 100%;">
+                                <option value="all">Wszystkie</option>
+                                <option value="week">Ostatni tydzień</option>
+                                <option value="month">Ostatni miesiąc</option>
+                                <option value="year">Ostatni rok</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Apply Button -->
+                        <div style="align-self: flex-end;">
+                            <button id="applyChartFilters" class="btn">Zastosuj</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts -->
                 <div style="margin-bottom: 30px;">
                     <h3>Diagram kosztów według kategorii</h3>
                     <div style="max-width: 500px; margin: 0 auto;">
