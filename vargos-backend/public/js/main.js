@@ -95,30 +95,107 @@ if (DOM.projectNameLocalInput) {
 // --- CONFIG ---
 if (DOM.applyConfigBtn) {
     DOM.applyConfigBtn.addEventListener("click", () => {
-        config.useRooms = DOM.cfgUseRooms ? DOM.cfgUseRooms.checked : true;
-        config.useCategories = DOM.cfgUseCategories ? DOM.cfgUseCategories.checked : true;
-        config.useNumbering = DOM.cfgNumbering ? DOM.cfgNumbering.checked : true;
-        config.vat = DOM.cfgVat ? (parseFloat(DOM.cfgVat.value) || 23) : 23;
+        // Store old config values to detect changes
+        const oldUseRooms = config.useRooms;
+        const oldUseCategories = config.useCategories;
+        const oldUseNumbering = config.useNumbering;
+        const oldMode = config.mode;
+        
+        // Read new config values
+        const newUseRooms = DOM.cfgUseRooms ? DOM.cfgUseRooms.checked : true;
+        const newUseCategories = DOM.cfgUseCategories ? DOM.cfgUseCategories.checked : true;
+        const newUseNumbering = DOM.cfgNumbering ? DOM.cfgNumbering.checked : true;
+        const newVat = DOM.cfgVat ? (parseFloat(DOM.cfgVat.value) || 23) : 23;
+        
         // VAT mode
         let vatModeRadio = document.querySelector('input[name="vatMode"]:checked');
-        if (vatModeRadio && vatModeRadio.value) {
-            config.vatMode = vatModeRadio.value;
-        } else {
-            config.vatMode = "addToNetto";
-        }
+        const newVatMode = (vatModeRadio && vatModeRadio.value) ? vatModeRadio.value : "addToNetto";
+        
         // mode
         let modeRadio = document.querySelector('input[name="mode"]:checked');
-        if (modeRadio && modeRadio.value) {
-            config.mode = modeRadio.value;
-        } else {
-            config.mode = "simple";
+        const newMode = (modeRadio && modeRadio.value) ? modeRadio.value : "simple";
+        
+        // Handle useRooms change
+        if (oldUseRooms && !newUseRooms) {
+            // Switching from multiple rooms to single room mode
+            // Merge all rooms into one
+            if (project.rooms.length > 1) {
+                const firstRoom = project.rooms[0];
+                firstRoom.name = "Pozycje ogólne";
+                
+                // Collect all works from other rooms
+                for (let i = 1; i < project.rooms.length; i++) {
+                    const room = project.rooms[i];
+                    room.works.forEach(work => firstRoom.addWork(work));
+                }
+                
+                // Keep only the first room
+                project.rooms = [firstRoom];
+            }
+        } else if (!oldUseRooms && newUseRooms) {
+            // Switching from single room to multiple rooms mode
+            // Just update the room name if it's the default
+            if (project.rooms.length === 1 && project.rooms[0].name === "Pozycje ogólne") {
+                project.rooms[0].name = "Pokój 1";
+            }
         }
+        
+        // Handle useCategories change
+        if (oldUseCategories && !newUseCategories) {
+            // Switching from categories to names
+            // Populate work names from selected templates
+            project.rooms.forEach(room => {
+                room.works.forEach(work => {
+                    if (work.categoryId && work.templateId) {
+                        const cat = project.categories.find(c => c.id === work.categoryId);
+                        if (cat) {
+                            const tpl = cat.templates.find(t => t.id === work.templateId);
+                            if (tpl) {
+                                work.name = tpl.name;
+                            }
+                        }
+                    }
+                    // Clear category and template references
+                    work.categoryId = null;
+                    work.templateId = null;
+                });
+            });
+        } else if (!oldUseCategories && newUseCategories) {
+            // Switching from names to categories
+            // Keep existing work names, user can assign categories later
+            // No data loss here
+        }
+        
+        // Handle useNumbering change
+        if (oldUseNumbering !== newUseNumbering) {
+            // Re-generate work IDs based on new numbering setting
+            project.rooms.forEach((room, roomIndex) => {
+                room.number = roomIndex + 1;
+                room.works.forEach((work, workIndex) => {
+                    const index = workIndex + 1;
+                    work.id = newUseNumbering ? `${room.number}.${index}` : String(index);
+                });
+            });
+        }
+        
+        // Handle mode change (simple <-> extended)
+        // No data adaptation needed - prices are preserved
+        // Extended mode shows material/labor prices, simple mode hides them
+        // But the data is still there
+        
+        // Update config with new values
+        config.useRooms = newUseRooms;
+        config.useCategories = newUseCategories;
+        config.useNumbering = newUseNumbering;
+        config.vat = newVat;
+        config.vatMode = newVatMode;
+        config.mode = newMode;
+        
+        // Update UI controls visibility
         if (DOM.roomControls) DOM.roomControls.style.display = config.useRooms ? "flex" : "none";
         if (DOM.globalWorkControls) DOM.globalWorkControls.style.display = config.useRooms ? "none" : "flex";
-        // Сохраняем категории, но пересобираем объект
-        const cats = project.categories;
-        project = new Project(config);
-        project.categories = cats;
+        
+        // Re-render the project with updated config
         renderProject();
     });
 }
