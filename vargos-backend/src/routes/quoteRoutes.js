@@ -6,7 +6,8 @@ import {
     getQuoteById,
     deleteQuoteById,
     updateQuoteStatus,
-    getQuotesByStatus
+    getQuotesByStatus,
+    getQuoteVersions
 } from "../controllers/quoteController.js";
 
 const router = express.Router();
@@ -19,6 +20,9 @@ router.get("/my", auth, getMyQuotes);
 
 // get quotes by status
 router.get("/status/:status", auth, getQuotesByStatus);
+
+// get all versions of a quote by name
+router.get("/versions/:name", auth, getQuoteVersions);
 
 // update quote status
 router.patch("/:id/status", auth, updateQuoteStatus);

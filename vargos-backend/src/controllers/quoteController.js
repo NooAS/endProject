@@ -33,27 +33,29 @@ export const saveQuote = async(req, res) => {
             });
         } else {
             // Проверяем, существует ли смета с таким же именем
-            const existingQuote = await prisma.quote.findFirst({
+            const existingQuotes = await prisma.quote.findMany({
                 where: {
                     userId,
                     name
+                },
+                orderBy: {
+                    version: 'desc'
                 }
             });
 
-            if (existingQuote) {
-                // Если существует - обновляем
-                // Сначала удаляем старые items
-                await prisma.quoteItem.deleteMany({
-                    where: { quoteId: existingQuote.id }
-                });
+            if (existingQuotes.length > 0) {
+                // Если существует - создаём новую версию
+                const latestVersion = existingQuotes[0].version;
+                const parentId = existingQuotes[0].parentQuoteId || existingQuotes[0].id;
                 
-                // Затем обновляем quote и создаем новые items
-                quote = await prisma.quote.update({
-                    where: { id: existingQuote.id },
+                quote = await prisma.quote.create({
                     data: {
+                        userId,
                         name,
                         total,
                         notes: notes || null,
+                        version: latestVersion + 1,
+                        parentQuoteId: parentId,
                         items: {
                             create: items
                         }
@@ -67,6 +69,7 @@ export const saveQuote = async(req, res) => {
                         name,
                         total,
                         notes: notes || null,
+                        version: 1,
                         items: {
                             create: items
                         }
@@ -85,14 +88,46 @@ export const saveQuote = async(req, res) => {
 
 export const getMyQuotes = async(req, res) => {
     try {
-        const quotes = await prisma.quote.findMany({
-            where: { userId: req.user.userId },
+        const userId = req.user.userId;
+        
+        // Get all quotes for the user
+        const allQuotes = await prisma.quote.findMany({
+            where: { userId },
             include: { items: true },
             orderBy: { createdAt: "desc" }
         });
 
-        res.json(quotes);
+        // Group quotes by name and get the latest version of each
+        const quotesByName = {};
+        const versionCounts = {};
+        
+        for (const quote of allQuotes) {
+            if (!quotesByName[quote.name]) {
+                quotesByName[quote.name] = quote;
+                versionCounts[quote.name] = 1;
+            } else {
+                // Keep the latest version (higher version number or newer createdAt)
+                const existing = quotesByName[quote.name];
+                if (quote.version > existing.version || 
+                    (quote.version === existing.version && quote.createdAt > existing.createdAt)) {
+                    quotesByName[quote.name] = quote;
+                }
+                versionCounts[quote.name]++;
+            }
+        }
+
+        // Convert to array and add version count
+        const latestQuotes = Object.values(quotesByName).map(quote => ({
+            ...quote,
+            versionCount: versionCounts[quote.name]
+        }));
+
+        // Sort by createdAt descending
+        latestQuotes.sort((a, b) => b.createdAt - a.createdAt);
+
+        res.json(latestQuotes);
     } catch (e) {
+        console.error(e);
         res.status(500).json({ message: "Server error" });
     }
 };
@@ -214,6 +249,35 @@ export const getQuotesByStatus = async(req, res) => {
         res.json(quotes);
     } catch (e) {
         console.error("Error getting quotes by status:", e);
+        res.status(500).json({ message: "Server error" });
+    }
+};
+
+// Get all versions of a quote by name
+export const getQuoteVersions = async(req, res) => {
+    try {
+        const userId = req.user.userId;
+        const { name } = req.params;
+
+        const quotes = await prisma.quote.findMany({
+            where: { 
+                userId, 
+                name: decodeURIComponent(name) 
+            },
+            include: { items: true },
+            orderBy: [
+                { version: "desc" },
+                { createdAt: "desc" }
+            ]
+        });
+
+        if (quotes.length === 0) {
+            return res.status(404).json({ message: "No versions found" });
+        }
+
+        res.json(quotes);
+    } catch (e) {
+        console.error("Error getting quote versions:", e);
         res.status(500).json({ message: "Server error" });
     }
 };
