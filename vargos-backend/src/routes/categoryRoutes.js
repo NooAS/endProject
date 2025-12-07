@@ -48,6 +48,157 @@ router.get("/", authMiddleware, async(req, res) => {
     }
 });
 
+/* ===============================
+   Экспорт категорий и шаблонов
+=============================== */
+router.get("/export", authMiddleware, async(req, res) => {
+    try {
+        const userId = req.user.userId;
+
+        const categories = await prisma.category.findMany({
+            where: { userId },
+            orderBy: { order: 'asc' },
+            include: {
+                templates: true
+            }
+        });
+
+        const exportData = {
+            version: "1.0",
+            exportDate: new Date().toISOString(),
+            categories: categories.map(c => ({
+                name: c.name,
+                order: c.order,
+                templates: c.templates.map(t => {
+                    let defaults = null;
+                    try {
+                        defaults = typeof t.defaults === "string" ?
+                            JSON.parse(t.defaults) : t.defaults || null;
+                    } catch (e) {
+                        console.error("Invalid JSON in template defaults:", e);
+                        defaults = null;
+                    }
+                    return {
+                        name: t.name,
+                        defaults
+                    };
+                })
+            }))
+        };
+
+        res.setHeader('Content-Type', 'application/json');
+        res.setHeader('Content-Disposition', `attachment; filename="categories-export-${Date.now()}.json"`);
+        res.json(exportData);
+
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ message: "Ошибка экспорта категорий" });
+    }
+});
+
+/* ===============================
+   Импорт категорий и шаблонов
+=============================== */
+router.post("/import", authMiddleware, async(req, res) => {
+    try {
+        const userId = req.user.userId;
+        const { categories, replaceExisting } = req.body;
+
+        if (!categories || !Array.isArray(categories)) {
+            return res.status(400).json({ message: "Неверный формат данных" });
+        }
+
+        // Если replaceExisting = true, удаляем все существующие категории
+        if (replaceExisting) {
+            // Удаляем все шаблоны пользователя
+            await prisma.template.deleteMany({
+                where: { userId }
+            });
+            // Удаляем все категории пользователя
+            await prisma.category.deleteMany({
+                where: { userId }
+            });
+        }
+
+        // Создаём категории и шаблоны из импорта
+        for (const cat of categories) {
+            if (!cat.name || !cat.name.trim()) {
+                continue; // Пропускаем невалидные категории
+            }
+
+            // Проверяем, существует ли уже категория с таким именем
+            let existingCategory = await prisma.category.findFirst({
+                where: { userId, name: cat.name.trim() }
+            });
+
+            let category;
+            if (replaceExisting) {
+                // В режиме замены всегда создаём новую категорию
+                // (старые уже удалены выше)
+                category = await prisma.category.create({
+                    data: {
+                        name: cat.name.trim(),
+                        order: cat.order || 0,
+                        userId
+                    }
+                });
+            } else if (existingCategory) {
+                // В режиме слияния используем существующую категорию
+                category = existingCategory;
+            } else {
+                // Создаём новую категорию
+                category = await prisma.category.create({
+                    data: {
+                        name: cat.name.trim(),
+                        order: cat.order || 0,
+                        userId
+                    }
+                });
+            }
+
+            // Создаём шаблоны для категории
+            if (category && cat.templates && Array.isArray(cat.templates)) {
+                for (const tpl of cat.templates) {
+                    if (!tpl.name || !tpl.name.trim()) {
+                        continue;
+                    }
+
+                    // Проверяем, существует ли уже шаблон с таким именем в этой категории
+                    const existingTemplate = await prisma.template.findFirst({
+                        where: {
+                            userId,
+                            categoryId: category.id,
+                            name: tpl.name.trim()
+                        }
+                    });
+
+                    if (!existingTemplate) {
+                        // Ensure defaults is properly formatted for JSON storage
+                        const defaultsValue = tpl.defaults 
+                            ? (typeof tpl.defaults === 'string' ? tpl.defaults : JSON.stringify(tpl.defaults))
+                            : null;
+                            
+                        await prisma.template.create({
+                            data: {
+                                name: tpl.name.trim(),
+                                defaults: defaultsValue,
+                                categoryId: category.id,
+                                userId
+                            }
+                        });
+                    }
+                }
+            }
+        }
+
+        res.json({ message: "Импорт завершён успешно" });
+
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ message: "Ошибка импорта категорий" });
+    }
+});
+
 
 
 /* ===============================

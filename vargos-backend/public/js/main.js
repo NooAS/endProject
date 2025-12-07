@@ -5,7 +5,7 @@ import { Project, Room, Work } from "./project-models.js";
 import { formatCurrency, formatNumberPL, loadCompanyDataFromStorage, saveCompanyDataToStorage, loadCompanyDataFromServer } from "./helpers.js";
 import { saveCategoriesToStorage } from "./categories-storage.js";
 import { loadPdfSettingsFromStorage, savePdfSettingsToStorage } from "./pdf-settings-storage.js";
-import { openModal, closeModal, showInputModal, showEditTemplateModal, showDeleteConfirmModal } from "./modals.js";
+import { openModal, closeModal, showInputModal, showEditTemplateModal, showDeleteConfirmModal, showImportConfirmModal } from "./modals.js";
 import { collectPdfData } from "./pdf-data.js";
 import { saveQuoteToServer, loadQuotesHistory, updateQuoteStatus, getQuotesByStatus, deleteQuoteFromServer } from "./quotes-api.js";
 import { generateClientPdf, generateOwnerPdf } from "./pdf-generator.js";
@@ -16,7 +16,9 @@ import {
     deleteCategoryFromServer,
     createTemplateOnServer,
     updateTemplateOnServer,
-    deleteTemplateFromServer
+    deleteTemplateFromServer,
+    exportCategoriesFromServer,
+    importCategoriesToServer
 } from "./categories-api.js";
 
 // --- INIT ---
@@ -1370,6 +1372,63 @@ const collapsedCategories = new Set();
 function renderCategoriesModal() {
     if (!DOM.categoriesListEl) return;
     DOM.categoriesListEl.innerHTML = "";
+
+    // Add export/import buttons row
+    const importExportRow = document.createElement("div");
+    importExportRow.className = "row";
+    importExportRow.style.marginBottom = "15px";
+    importExportRow.style.gap = "10px";
+
+    const exportBtn = document.createElement("button");
+    exportBtn.className = "btn secondary";
+    exportBtn.textContent = "⬇️ Eksportuj";
+    exportBtn.title = "Eksportuj kategorie i szablony do pliku JSON";
+    exportBtn.addEventListener("click", async() => {
+        await exportCategoriesFromServer();
+    });
+
+    const importBtn = document.createElement("button");
+    importBtn.className = "btn secondary";
+    importBtn.textContent = "⬆️ Importuj";
+    importBtn.title = "Importuj kategorie i szablony z pliku JSON";
+    
+    const fileInput = document.createElement("input");
+    fileInput.type = "file";
+    fileInput.accept = ".json";
+    fileInput.style.display = "none";
+    
+    importBtn.addEventListener("click", () => {
+        fileInput.click();
+    });
+
+    fileInput.addEventListener("change", async(e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = async(event) => {
+            const replaceExisting = await showImportConfirmModal();
+            
+            // If user cancelled (null), stop
+            if (replaceExisting === null) {
+                fileInput.value = ""; // Reset file input
+                return;
+            }
+            
+            const success = await importCategoriesToServer(event.target.result, replaceExisting);
+            if (success) {
+                alert("Import zakończony pomyślnie!");
+                await loadCategoriesFromServerF();
+            }
+            fileInput.value = ""; // Reset file input
+        };
+        reader.readAsText(file);
+    });
+
+    importExportRow.appendChild(exportBtn);
+    importExportRow.appendChild(importBtn);
+    importExportRow.appendChild(fileInput);
+    DOM.categoriesListEl.appendChild(importExportRow);
 
     const addCatRow = document.createElement("div");
     addCatRow.className = "row";
