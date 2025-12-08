@@ -181,6 +181,19 @@ export async function generateOwnerExcel(project, config) {
         }
     }
 
+    // Apply percentage formatting to the overall margin in footer section
+    // Search for the "Marza:" cell and format the adjacent cell (column B)
+    for (let R = 0; R <= range.e.r; R++) {
+        const labelCell = window.XLSX.utils.encode_cell({ r: R, c: 0 }); // Column A
+        if (ws[labelCell] && ws[labelCell].v === "Marza:") {
+            const valueCellAddress = window.XLSX.utils.encode_cell({ r: R, c: 1 }); // Column B
+            if (ws[valueCellAddress] && typeof ws[valueCellAddress].v === 'number') {
+                ws[valueCellAddress].z = '0.0%'; // Excel percentage format with 1 decimal place
+            }
+            break; // Found and formatted, no need to continue
+        }
+    }
+
     // Apply styling to make the table more readable
     // Note: SheetJS community edition has limited styling support
     // For better styling, the commercial version or alternative libraries would be needed
