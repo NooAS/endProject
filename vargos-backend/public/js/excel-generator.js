@@ -74,7 +74,7 @@ export async function generateOwnerExcel(project, config) {
         }, 0);
 
         const roomProfit = roomNetto - roomCompanyCost;
-        const roomMargin = roomCompanyCost > 0 ? (roomProfit / roomCompanyCost) : 0;
+        const roomMargin = roomNetto > 0 ? (roomProfit / roomNetto) : 0;
 
         // Room header row
         wsData.push([
@@ -101,7 +101,7 @@ export async function generateOwnerExcel(project, config) {
             const clientTotal = w.quantity * clientNet;
             const companyCost = w.quantity * cost;
             const profit = clientTotal - companyCost;
-            const marginPercent = companyCost > 0 ? (profit / companyCost) : 0;
+            const marginPercent = clientTotal > 0 ? (profit / clientTotal) : 0;
 
             wsData.push([
                 room.number + "." + (i + 1),
@@ -135,7 +135,7 @@ export async function generateOwnerExcel(project, config) {
     }, 0);
 
     const totalProfit = netto - allCosts;
-    const marginPercent = allCosts > 0 ? (totalProfit / allCosts) : 0;
+    const marginPercent = netto > 0 ? (totalProfit / netto) : 0;
 
     wsData.push(["Suma netto (klient):", netto]);
     wsData.push(["Koszt firmy:", allCosts]);
@@ -178,6 +178,67 @@ export async function generateOwnerExcel(project, config) {
         const cellAddress = window.XLSX.utils.encode_cell({ r: R, c: 9 }); // Column J (Marza %)
         if (ws[cellAddress] && typeof ws[cellAddress].v === 'number') {
             ws[cellAddress].z = '0.0%'; // Excel percentage format with 1 decimal place
+        }
+    }
+
+    // Apply styling to make the table more readable
+    // Note: SheetJS community edition has limited styling support
+    // For better styling, the commercial version or alternative libraries would be needed
+    
+    // Apply bold style to header row (row index headerRowCount)
+    const headerRow = headerRowCount;
+    for (let C = 0; C <= 9; C++) {
+        const cellAddress = window.XLSX.utils.encode_cell({ r: headerRow, c: C });
+        if (ws[cellAddress]) {
+            ws[cellAddress].s = {
+                font: { bold: true, sz: 11 },
+                fill: { fgColor: { rgb: "D3D3D3" } },
+                alignment: { horizontal: "center", vertical: "center" }
+            };
+        }
+    }
+
+    // Track room header rows for styling
+    const roomHeaderRows = [];
+    let currentRow = headerRowCount + 1;
+    
+    project.rooms.forEach(room => {
+        roomHeaderRows.push(currentRow);
+        // Each room section has: 1 header row + N work items
+        currentRow += 1 + room.works.length;
+    });
+
+    // Apply styling to room header rows
+    roomHeaderRows.forEach(rowIndex => {
+        for (let C = 0; C <= 9; C++) {
+            const cellAddress = window.XLSX.utils.encode_cell({ r: rowIndex, c: C });
+            if (ws[cellAddress]) {
+                ws[cellAddress].s = {
+                    font: { bold: true, sz: 10 },
+                    fill: { fgColor: { rgb: "E8F4F8" } },
+                    alignment: { horizontal: "left", vertical: "center" }
+                };
+            }
+        }
+    });
+
+    // Apply styling to footer totals
+    // The footer consists of 6 rows starting after 2 blank spacing rows
+    // We style the first column (labels) and leave the second column (values) unstyled
+    const footerStartRow = range.e.r - (project.notes && project.notes.trim() ? 8 : 5);
+    const footerRowCount = 6; // The 6 summary rows (netto, cost, profit, margin, VAT, brutto)
+    
+    for (let i = 0; i < footerRowCount; i++) {
+        const R = footerStartRow + i;
+        for (let C = 0; C <= 1; C++) {
+            const cellAddress = window.XLSX.utils.encode_cell({ r: R, c: C });
+            if (ws[cellAddress]) {
+                ws[cellAddress].s = {
+                    font: { bold: true, sz: 10 },
+                    fill: { fgColor: { rgb: "FFF4E6" } },
+                    alignment: { horizontal: "left", vertical: "center" }
+                };
+            }
         }
     }
 
