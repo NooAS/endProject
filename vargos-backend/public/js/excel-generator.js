@@ -184,7 +184,10 @@ export async function generateOwnerExcel(project, config) {
     // Apply percentage formatting to the overall margin in footer section
     // Search for the "Marza:" cell and format the adjacent cell (column B)
     // Start search from after the data table for better performance
-    const dataTableRows = project.rooms.reduce((sum, r) => sum + 1 + r.works.length, 0);
+    const dataTableRows = project.rooms.reduce((sum, r) => {
+        const worksCount = Array.isArray(r.works) ? r.works.length : 0;
+        return sum + 1 + worksCount; // 1 room header + N work items
+    }, 0);
     const marginSearchStartRow = headerRowCount + dataTableRows;
     for (let R = marginSearchStartRow; R <= range.e.r; R++) {
         const labelCell = window.XLSX.utils.encode_cell({ r: R, c: 0 }); // Column A
