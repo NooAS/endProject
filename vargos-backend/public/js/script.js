@@ -1645,8 +1645,27 @@ function buildItemsArray() {
 
     for (const room of project.rooms) {
         for (const w of room.works) {
+            // Find category and template names for fallback matching
+            let categoryName = null;
+            let templateName = null;
+            
+            if (w.categoryId && project.categories) {
+                const cat = project.categories.find(c => c.id === w.categoryId);
+                if (cat) {
+                    categoryName = cat.name;
+                    if (w.templateId && cat.templates) {
+                        const tpl = cat.templates.find(t => t.id === w.templateId);
+                        if (tpl) {
+                            templateName = tpl.name;
+                        }
+                    }
+                }
+            }
+            
             items.push({
                 category: w.categoryId ? String(w.categoryId) : null, // строка или null
+                categoryName: categoryName,
+                templateName: templateName,
                 room: room.name || null,
                 job: w.name || "",
 
@@ -1857,25 +1876,39 @@ function addWorkFromQuote(i) {
     w.laborPrice = i.laborPrice || 0;
     w.templateId = i.templateId || null;
 
-    if (w.templateId && w.categoryId) {
-        const cat = project.categories.find(c => c.id === w.categoryId);
-        if (cat) {
-            const tpl = cat.templates.find(t => t.id === w.templateId);
-            if (tpl && tpl.defaults) {
-                w.clientPrice = tpl.defaults.clientPrice || w.clientPrice;
-                w.materialPrice = tpl.defaults.materialPrice || w.materialPrice;
-                w.laborPrice = tpl.defaults.laborPrice || w.laborPrice;
-            }
-        }
-    }
-
-
     // Категории: если конфиг говорит "используем категории" и в item есть строка категории
     // то создаём или находим категорию с таким именем и привязываем work.categoryId
     if (config.useCategories && i.category !== undefined && i.category !== null) {
         let catId = parseInt(i.category, 10);
         let cat = project.categories.find(c => c.id === catId);
-        if (cat) w.categoryId = cat.id;
+        
+        // If category not found by ID, try to match by name as fallback
+        if (!cat && i.categoryName) {
+            cat = project.categories.find(c => c.name === i.categoryName);
+        }
+        
+        if (cat) {
+            w.categoryId = cat.id;
+            
+            // Try to find template by ID first, then by name as fallback
+            let tpl = null;
+            if (w.templateId) {
+                tpl = cat.templates.find(t => t.id === w.templateId);
+            }
+            if (!tpl && i.templateName) {
+                tpl = cat.templates.find(t => t.name === i.templateName);
+            }
+            
+            // Update templateId and apply defaults if found
+            if (tpl) {
+                w.templateId = tpl.id;
+                if (tpl.defaults) {
+                    w.clientPrice = tpl.defaults.clientPrice || w.clientPrice;
+                    w.materialPrice = tpl.defaults.materialPrice || w.materialPrice;
+                    w.laborPrice = tpl.defaults.laborPrice || w.laborPrice;
+                }
+            }
+        }
     }
 
 

@@ -4,8 +4,27 @@ export function buildItemsArray(project) {
     const items = [];
     for (const room of project.rooms) {
         for (const w of room.works) {
+            // Find category and template names for fallback matching
+            let categoryName = null;
+            let templateName = null;
+            
+            if (w.categoryId && project.categories) {
+                const cat = project.categories.find(c => c.id === w.categoryId);
+                if (cat) {
+                    categoryName = cat.name;
+                    if (w.templateId && cat.templates) {
+                        const tpl = cat.templates.find(t => t.id === w.templateId);
+                        if (tpl) {
+                            templateName = tpl.name;
+                        }
+                    }
+                }
+            }
+            
             items.push({
                 category: w.categoryId ? String(w.categoryId) : null,
+                categoryName: categoryName,
+                templateName: templateName,
                 room: room.name || null,
                 job: w.name || "",
                 quantity: w.quantity || 0,

@@ -1974,12 +1974,29 @@ async function loadQuoteFromServer(id) {
                 // category could be id (string/number)
                 if (it.category !== undefined && it.category !== null && String(it.category).trim() !== "") {
                     const cid = Number(it.category);
-                    const cat = project.categories.find(c => Number(c.id) === cid);
+                    let cat = project.categories.find(c => Number(c.id) === cid);
+                    
+                    // If category not found by ID, try to match by name as fallback
+                    if (!cat && it.categoryName) {
+                        cat = project.categories.find(c => c.name === it.categoryName);
+                    }
+                    
                     if (cat) {
                         w.categoryId = cat.id;
+                        
+                        // Try to find template by ID first, then by name as fallback
+                        let tpl = null;
                         if (w.templateId) {
-                            const tpl = cat.templates.find(t => t.id === w.templateId);
-                            if (tpl && tpl.defaults) {
+                            tpl = cat.templates.find(t => t.id === w.templateId);
+                        }
+                        if (!tpl && it.templateName) {
+                            tpl = cat.templates.find(t => t.name === it.templateName);
+                        }
+                        
+                        // Update templateId if we found it by name
+                        if (tpl) {
+                            w.templateId = tpl.id;
+                            if (tpl.defaults) {
                                 if (typeof tpl.defaults.clientPrice === "number") w.clientPrice = tpl.defaults.clientPrice;
                                 if (typeof tpl.defaults.materialPrice === "number") w.materialPrice = tpl.defaults.materialPrice;
                                 if (typeof tpl.defaults.laborPrice === "number") w.laborPrice = tpl.defaults.laborPrice;
