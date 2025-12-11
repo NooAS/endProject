@@ -80,12 +80,14 @@ model QuoteItem {
   quoteId Int
   quote   Quote @relation(fields: [quoteId], references: [id])
 
-  category String?
-  room     String?
-  job      String
-  quantity Float
-  price    Float
-  total    Float
+  category     String?
+  categoryName String?
+  templateName String?
+  room         String?
+  job          String
+  quantity     Float
+  price        Float
+  total        Float
 
   materialPrice Float?
   laborPrice    Float?
