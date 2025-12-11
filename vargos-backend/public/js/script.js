@@ -1892,11 +1892,13 @@ function addWorkFromQuote(i) {
             
             // Try to find template by ID first, then by name as fallback
             let tpl = null;
-            if (w.templateId) {
-                tpl = cat.templates.find(t => t.id === w.templateId);
-            }
-            if (!tpl && i.templateName) {
-                tpl = cat.templates.find(t => t.name === i.templateName);
+            if (cat.templates && Array.isArray(cat.templates)) {
+                if (w.templateId) {
+                    tpl = cat.templates.find(t => t.id === w.templateId);
+                }
+                if (!tpl && i.templateName) {
+                    tpl = cat.templates.find(t => t.name === i.templateName);
+                }
             }
             
             // Update templateId and apply defaults if found

@@ -1986,11 +1986,13 @@ async function loadQuoteFromServer(id) {
                         
                         // Try to find template by ID first, then by name as fallback
                         let tpl = null;
-                        if (w.templateId) {
-                            tpl = cat.templates.find(t => t.id === w.templateId);
-                        }
-                        if (!tpl && it.templateName) {
-                            tpl = cat.templates.find(t => t.name === it.templateName);
+                        if (cat.templates && Array.isArray(cat.templates)) {
+                            if (w.templateId) {
+                                tpl = cat.templates.find(t => t.id === w.templateId);
+                            }
+                            if (!tpl && it.templateName) {
+                                tpl = cat.templates.find(t => t.name === it.templateName);
+                            }
                         }
                         
                         // Update templateId if we found it by name
