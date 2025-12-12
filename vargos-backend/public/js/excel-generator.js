@@ -181,6 +181,25 @@ export async function generateOwnerExcel(project, config) {
         }
     }
 
+    // Apply percentage formatting to the overall margin in footer section
+    // Search for the "Marza:" cell and format the adjacent cell (column B)
+    // Start search from after the data table for better performance
+    const dataTableRows = project.rooms.reduce((sum, r) => {
+        const worksCount = Array.isArray(r.works) ? r.works.length : 0;
+        return sum + 1 + worksCount; // 1 room header + N work items
+    }, 0);
+    const marginSearchStartRow = headerRowCount + dataTableRows;
+    for (let R = marginSearchStartRow; R <= range.e.r; R++) {
+        const labelCell = window.XLSX.utils.encode_cell({ r: R, c: 0 }); // Column A
+        if (ws[labelCell] && ws[labelCell].v === "Marza:") {
+            const valueCellAddress = window.XLSX.utils.encode_cell({ r: R, c: 1 }); // Column B
+            if (ws[valueCellAddress] && typeof ws[valueCellAddress].v === 'number') {
+                ws[valueCellAddress].z = '0.0%'; // Excel percentage format with 1 decimal place
+            }
+            break; // Found and formatted, no need to continue
+        }
+    }
+
     // Apply styling to make the table more readable
     // Note: SheetJS community edition has limited styling support
     // For better styling, the commercial version or alternative libraries would be needed
