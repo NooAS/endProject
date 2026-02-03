@@ -87,8 +87,11 @@ export async function generateClientPdf(project, config) {
     let tableHead;
     if (displayMode === "both") {
         tableHead = [["Lp", "Rodzaj prac", "Jm", "Ilosc", "Cena netto", "Razem netto", "Cena brutto", "Razem brutto"]];
+    } else if (displayMode === "brutto") {
+        tableHead = [["Lp", "Rodzaj prac", "Jm", "Ilosc", "Cena brutto", "Razem brutto"]];
     } else {
-        tableHead = [["Lp", "Rodzaj prac", "Jm", "Ilosc", "Cena jedn.", "Razem"]];
+        // netto
+        tableHead = [["Lp", "Rodzaj prac", "Jm", "Ilosc", "Cena netto", "Razem netto"]];
     }
 
     const tableBody = [];
@@ -185,14 +188,19 @@ export async function generateClientPdf(project, config) {
     
     // Display totals based on mode
     if (displayMode === "netto") {
-        pdf.text("Suma netto:  " + formatCurrency(netto), margin, finalY);
-        pdf.text("VAT " + config.vat + "%:  " + formatCurrency(vatAmount), margin, finalY + 6);
-        pdf.text("Suma brutto: " + formatCurrency(brutto), margin, finalY + 12);
+        // Only show netto total, don't show brutto
+        pdf.text("Suma (netto): " + formatCurrency(netto), margin, finalY);
+        if (config.vat > 0) {
+            pdf.text("(VAT " + config.vat + "%: " + formatCurrency(vatAmount) + ")", margin, finalY + 6);
+        }
     } else if (displayMode === "brutto") {
-        pdf.text("Suma brutto: " + formatCurrency(brutto), margin, finalY);
-        pdf.text("(w tym VAT " + config.vat + "%: " + formatCurrency(vatAmount) + ")", margin, finalY + 6);
+        // Only show brutto total, don't show netto breakdown
+        pdf.text("Suma (brutto): " + formatCurrency(brutto), margin, finalY);
+        if (config.vat > 0) {
+            pdf.text("(w tym VAT " + config.vat + "%: " + formatCurrency(vatAmount) + ")", margin, finalY + 6);
+        }
     } else {
-        // both
+        // both - show full breakdown
         pdf.text("Suma netto:  " + formatCurrency(netto), margin, finalY);
         pdf.text("VAT " + config.vat + "%:  " + formatCurrency(vatAmount), margin, finalY + 6);
         pdf.text("Suma brutto: " + formatCurrency(brutto), margin, finalY + 12);
