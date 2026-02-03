@@ -923,8 +923,6 @@ function renderRoom(room) {
     // Add "Dodaj pracę" button at the bottom of the room
     const addWorkBtnContainer = document.createElement("div");
     addWorkBtnContainer.className = "add-work-btn-container";
-    addWorkBtnContainer.style.padding = "10px";
-    addWorkBtnContainer.style.textAlign = "center";
     
     const addWorkBtn = document.createElement("button");
     addWorkBtn.className = "btn secondary";

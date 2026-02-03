@@ -1583,6 +1583,11 @@ textarea.input:focus {
     padding-bottom: 0;
 }
 
+.add-work-btn-container {
+    padding: 10px;
+    text-align: center;
+}
+
 
 /* ========================================= */
 /*     TOOLTIP STYLES                        */
