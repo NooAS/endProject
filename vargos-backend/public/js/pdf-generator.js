@@ -215,7 +215,7 @@ export async function generateClientPdf(project, config) {
         currentY += 18;
     }
 
-    // Add client notes if they exist
+    // Add client notes if they exist (only in client PDF)
     if (project.clientNotes && project.clientNotes.trim()) {
         const pageWidth = pdf.internal.pageSize.getWidth();
         const notesY = currentY + 6;
