@@ -186,24 +186,46 @@ export async function generateClientPdf(project, config) {
 
     pdf.setFontSize(12);
     
+    let currentY = finalY;
+    
     // Display totals based on mode
     if (displayMode === "netto") {
         // Only show netto total, don't show brutto
-        pdf.text("Suma (netto): " + formatCurrency(netto), margin, finalY);
+        pdf.text("Suma (netto): " + formatCurrency(netto), margin, currentY);
         if (config.vat > 0) {
-            pdf.text("(VAT " + config.vat + "%: " + formatCurrency(vatAmount) + ")", margin, finalY + 6);
+            pdf.text("(VAT " + config.vat + "%: " + formatCurrency(vatAmount) + ")", margin, currentY + 6);
+            currentY += 12;
+        } else {
+            currentY += 6;
         }
     } else if (displayMode === "brutto") {
         // Only show brutto total, don't show netto breakdown
-        pdf.text("Suma (brutto): " + formatCurrency(brutto), margin, finalY);
+        pdf.text("Suma (brutto): " + formatCurrency(brutto), margin, currentY);
         if (config.vat > 0) {
-            pdf.text("(w tym VAT " + config.vat + "%: " + formatCurrency(vatAmount) + ")", margin, finalY + 6);
+            pdf.text("(w tym VAT " + config.vat + "%: " + formatCurrency(vatAmount) + ")", margin, currentY + 6);
+            currentY += 12;
+        } else {
+            currentY += 6;
         }
     } else {
         // both - show full breakdown
-        pdf.text("Suma netto:  " + formatCurrency(netto), margin, finalY);
-        pdf.text("VAT " + config.vat + "%:  " + formatCurrency(vatAmount), margin, finalY + 6);
-        pdf.text("Suma brutto: " + formatCurrency(brutto), margin, finalY + 12);
+        pdf.text("Suma netto:  " + formatCurrency(netto), margin, currentY);
+        pdf.text("VAT " + config.vat + "%:  " + formatCurrency(vatAmount), margin, currentY + 6);
+        pdf.text("Suma brutto: " + formatCurrency(brutto), margin, currentY + 12);
+        currentY += 18;
+    }
+
+    // Add client notes if they exist (only in client PDF)
+    if (project.clientNotes && project.clientNotes.trim()) {
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const notesY = currentY + 6;
+        pdf.setFontSize(11);
+        pdf.setFont("Roboto", "bold");
+        pdf.text("Notatki:", margin, notesY);
+        pdf.setFont("Roboto", "normal");
+        pdf.setFontSize(9);
+        const notesLines = pdf.splitTextToSize(project.clientNotes, pageWidth - margin * 2);
+        pdf.text(notesLines, margin, notesY + 6);
     }
 
     pdf.save("wycena-klient.pdf");

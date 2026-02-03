@@ -62,6 +62,7 @@ model Quote {
   name          String
   total         Float
   notes         String?
+  clientNotes   String?
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
   status        String      @default("normal")

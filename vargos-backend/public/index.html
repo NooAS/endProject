@@ -187,6 +187,20 @@
                 </div>
             </div>
 
+            <!-- NOTATKI DLA KLIENTA -->
+            <div class="panel">
+                <div class="panel-title" style="display: flex; justify-content: space-between; align-items: center;">
+                    <span>Notatki dla klienta</span>
+                    <button id="toggleClientNotesBtn" class="btn secondary" style="padding: 6px 12px; font-size: 13px;">
+                        <span id="clientNotesToggleIcon">▼</span> Pokaż/Ukryj
+                    </button>
+                </div>
+
+                <div id="clientNotesContainer" style="display: none; margin-top: 10px;">
+                    <textarea id="projectClientNotes" class="input full-width" rows="5" placeholder="Notatki widoczne w PDF dla klienta" autocomplete="off"></textarea>
+                </div>
+            </div>
+
             <div id="pdfPanelMobilePlaceholder"></div>
         </section>
 
