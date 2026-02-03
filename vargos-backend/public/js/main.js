@@ -109,7 +109,9 @@ if (DOM.applyConfigBtn) {
         const newUseRooms = DOM.cfgUseRooms ? DOM.cfgUseRooms.checked : true;
         const newUseCategories = DOM.cfgUseCategories ? DOM.cfgUseCategories.checked : true;
         const newUseNumbering = DOM.cfgNumbering ? DOM.cfgNumbering.checked : true;
-        const newVat = DOM.cfgVat ? (parseFloat(DOM.cfgVat.value) || 23) : 23;
+        const newVat = DOM.cfgVat ? parseFloat(DOM.cfgVat.value) : 23;
+        // Ensure VAT is a valid number (handle 0 properly)
+        const finalVat = isNaN(newVat) ? 23 : newVat;
         
         // VAT mode
         let vatModeRadio = document.querySelector('input[name="vatMode"]:checked');
@@ -210,7 +212,7 @@ if (DOM.applyConfigBtn) {
         config.useRooms = newUseRooms;
         config.useCategories = newUseCategories;
         config.useNumbering = newUseNumbering;
-        config.vat = newVat;
+        config.vat = finalVat;
         config.vatMode = newVatMode;
         config.mode = newMode;
         
@@ -242,6 +244,10 @@ if (DOM.addGlobalWorkBtn) {
 // --- CATEGORY MODAL ---
 if (DOM.manageCategoriesBtn) {
     DOM.manageCategoriesBtn.addEventListener("click", () => {
+        // When opening categories modal, collapse all categories
+        project.categories.forEach(cat => {
+            collapsedCategories.add(cat.id);
+        });
         openModal(DOM.categoriesModal);
         renderCategoriesModal();
     });
@@ -822,15 +828,6 @@ function renderRoom(room) {
     const actions = document.createElement("div");
     actions.className = "room-actions row";
 
-    const addWorkBtn = document.createElement("button");
-    addWorkBtn.className = "btn secondary";
-    addWorkBtn.textContent = "Dodaj pracę";
-    addWorkBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        addWorkToRoom(room);
-    });
-    actions.appendChild(addWorkBtn);
-
     if (config.useRooms) {
         const deleteRoomBtn = document.createElement("button");
         deleteRoomBtn.className = "btn secondary";
@@ -922,6 +919,22 @@ function renderRoom(room) {
         });
         roomBody.appendChild(worksContainer);
     }
+
+    // Add "Dodaj pracę" button at the bottom of the room
+    const addWorkBtnContainer = document.createElement("div");
+    addWorkBtnContainer.className = "add-work-btn-container";
+    addWorkBtnContainer.style.padding = "10px";
+    addWorkBtnContainer.style.textAlign = "center";
+    
+    const addWorkBtn = document.createElement("button");
+    addWorkBtn.className = "btn secondary";
+    addWorkBtn.textContent = "Dodaj pracę";
+    addWorkBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        addWorkToRoom(room);
+    });
+    addWorkBtnContainer.appendChild(addWorkBtn);
+    roomBody.appendChild(addWorkBtnContainer);
 
     roomCard.appendChild(roomBody);
     roomsContainer.appendChild(roomCard);
