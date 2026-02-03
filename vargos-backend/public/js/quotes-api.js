@@ -51,7 +51,8 @@ export async function saveQuoteToServer(project) {
         name: project.name,
         total: totals.brutto,
         items: items,
-        notes: project.notes || null
+        notes: project.notes || null,
+        clientNotes: project.clientNotes || null
     };
 
     // Если редактируем существующую смету

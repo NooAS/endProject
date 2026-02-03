@@ -56,6 +56,7 @@ export class Project {
         this.pdfCompanyData = null;
         this.pdfObjectAddress = "";
         this.notes = "";
+        this.clientNotes = "";
     }
     setName(name) { this.name = name; }
     addRoom(name) {

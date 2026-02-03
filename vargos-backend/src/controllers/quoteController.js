@@ -4,7 +4,7 @@ const prisma = new PrismaClient();
 export const saveQuote = async(req, res) => {
     try {
         const userId = req.user.userId;
-        const { id, name, total, items, notes } = req.body;
+        const { id, name, total, items, notes, clientNotes } = req.body;
 
         if (!name || !items || !Array.isArray(items)) {
             return res.status(400).json({ message: "Invalid data" });
@@ -26,6 +26,7 @@ export const saveQuote = async(req, res) => {
                     name,
                     total,
                     notes: notes || null,
+                    clientNotes: clientNotes || null,
                     items: {
                         create: items
                     }
@@ -54,6 +55,7 @@ export const saveQuote = async(req, res) => {
                         name,
                         total,
                         notes: notes || null,
+                        clientNotes: clientNotes || null,
                         version: latestVersion + 1,
                         parentQuoteId: parentId,
                         items: {
@@ -69,6 +71,7 @@ export const saveQuote = async(req, res) => {
                         name,
                         total,
                         notes: notes || null,
+                        clientNotes: clientNotes || null,
                         version: 1,
                         items: {
                             create: items

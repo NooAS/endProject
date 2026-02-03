@@ -1879,6 +1879,29 @@ if (projectNotesTextarea) {
     });
 }
 
+// --- CLIENT NOTES TOGGLE ---
+const toggleClientNotesBtn = $id("toggleClientNotesBtn");
+const clientNotesContainer = $id("clientNotesContainer");
+const clientNotesToggleIcon = $id("clientNotesToggleIcon");
+const projectClientNotesTextarea = $id("projectClientNotes");
+
+if (toggleClientNotesBtn && clientNotesContainer) {
+    toggleClientNotesBtn.addEventListener("click", () => {
+        const isVisible = clientNotesContainer.style.display !== "none";
+        clientNotesContainer.style.display = isVisible ? "none" : "block";
+        if (clientNotesToggleIcon) {
+            clientNotesToggleIcon.textContent = isVisible ? "▼" : "▲";
+        }
+    });
+}
+
+// Sync client notes with project
+if (projectClientNotesTextarea) {
+    projectClientNotesTextarea.addEventListener("input", () => {
+        project.clientNotes = projectClientNotesTextarea.value;
+    });
+}
+
 
 // --- Загрузка отдельной сметы с сервера и загрузка в UI ---
 async function loadQuoteFromServer(id) {
@@ -2048,6 +2071,15 @@ async function loadQuoteFromServer(id) {
             const projectNotesTextarea = document.getElementById("projectNotes");
             if (projectNotesTextarea) {
                 projectNotesTextarea.value = q.notes;
+            }
+        }
+
+        // Load client notes
+        if (q.clientNotes) {
+            project.clientNotes = q.clientNotes;
+            const projectClientNotesTextarea = document.getElementById("projectClientNotes");
+            if (projectClientNotesTextarea) {
+                projectClientNotesTextarea.value = q.clientNotes;
             }
         }
 
@@ -2555,6 +2587,8 @@ if (openChartsBtn) {
         // Clear notes if not loading from history
         project.notes = "";
         if (projectNotesTextarea) projectNotesTextarea.value = "";
+        project.clientNotes = "";
+        if (projectClientNotesTextarea) projectClientNotesTextarea.value = "";
     }
     renderProject();
 })();
